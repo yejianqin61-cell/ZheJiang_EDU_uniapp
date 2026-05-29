@@ -41,7 +41,7 @@ Version 1.0 | 2026-05-29
 | # | Permission | Resource | teacher | admin | Notes |
 |---|-----------|----------|:-------:|:-----:|-------|
 | B01 | 创建组卷任务 | paper:generate | E | E | |
-| B02 | 预览已生成试卷 | paper:preview | R | R | 仅预览本人生成的试卷 |
+| B02 | 预览试卷首页 | paper:preview | R | R | 仅预览本人生成的试卷首页(约前5题)，不展示答案/解析/分值/知识点 |
 | B03 | 重新生成试卷 | paper:regenerate | E | E | 每日限制3次 |
 
 ---
