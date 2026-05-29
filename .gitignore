@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Environment (contains secrets)
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# UniApp
+frontend/unpackage/
+frontend/.hbuilderx/
+
+# Docker
+docker-compose.override.yml
+
+# Coverage
+coverage/
+
+# Claude Code (personal settings)
+.claude/
+
+# Misc
+*.tmp
