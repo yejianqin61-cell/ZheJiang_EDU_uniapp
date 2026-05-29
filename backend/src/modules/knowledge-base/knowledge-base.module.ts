@@ -14,11 +14,17 @@ import { Question } from '../../database/entities/question.entity';
 import { KnowledgePoint } from '../../database/entities/knowledge-point.entity';
 import { QuestionKnowledge } from '../../database/entities/question-knowledge.entity';
 
+const imports: any[] = [
+  TypeOrmModule.forFeature([KbFile, OcrTask, Question, KnowledgePoint, QuestionKnowledge]),
+];
+
+// BullMQ requires Redis. Skip queue in local dev without Redis.
+if (process.env.REDIS_HOST) {
+  imports.push(BullModule.registerQueue({ name: 'kb-processing' }));
+}
+
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([KbFile, OcrTask, Question, KnowledgePoint, QuestionKnowledge]),
-    BullModule.registerQueue({ name: 'kb-processing' }),
-  ],
+  imports,
   controllers: [KnowledgeBaseController],
   providers: [UploadService, OCRService, SplitterService, TaggerService, KnowledgeService, ReviewService],
   exports: [UploadService],

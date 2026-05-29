@@ -7,14 +7,14 @@ export class QuestionKnowledge {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid', name: 'question_id' })
+  @Column({ type: 'varchar', name: 'question_id' })
   questionId: string;
 
   @ManyToOne(() => Question, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'question_id' })
   question: Question;
 
-  @Column({ type: 'uuid', name: 'knowledge_point_id' })
+  @Column({ type: 'varchar', name: 'knowledge_point_id' })
   knowledgePointId: string;
 
   @ManyToOne(() => KnowledgePoint, { onDelete: 'CASCADE' })

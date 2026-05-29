@@ -1,7 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
+import axios from 'axios';
 import { User } from '../../database/entities/user.entity';
 
 @Injectable()
@@ -10,13 +12,11 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly jwtService: JwtService,
+    private readonly config: ConfigService,
   ) {}
 
   async login(code: string) {
     const openid = await this.codeToOpenid(code);
-    if (!openid) {
-      throw new UnauthorizedException({ code: 10001, message: '登录code无效' });
-    }
 
     let user = await this.userRepo.findOne({ where: { openid } });
     if (!user) {
@@ -47,10 +47,32 @@ export class AuthService {
     return { accessToken: token };
   }
 
-  private async codeToOpenid(code: string): Promise<string | null> {
-    // TODO: call WeChat API jscode2session
-    // const res = await axios.get('https://api.weixin.qq.com/sns/jscode2session', { params: { appid, secret, js_code: code, grant_type: 'authorization_code' } });
-    // return res.data.openid ?? null;
-    return code; // stub for development
+  private async codeToOpenid(code: string): Promise<string> {
+    const appId = this.config.get<string>('wx.appId');
+    const appSecret = this.config.get<string>('wx.appSecret');
+
+    // Development bypass: if no WeChat credentials configured, accept any code as openid
+    if (!appId || !appSecret) {
+      return code;
+    }
+
+    try {
+      const res = await axios.get('https://api.weixin.qq.com/sns/jscode2session', {
+        params: { appid: appId, secret: appSecret, js_code: code, grant_type: 'authorization_code' },
+        timeout: 5000,
+      });
+
+      if (res.data.errcode) {
+        throw new UnauthorizedException({
+          code: 10001,
+          message: `微信登录失败: ${res.data.errmsg}`,
+        });
+      }
+
+      return res.data.openid;
+    } catch (err) {
+      if (err instanceof UnauthorizedException) throw err;
+      throw new UnauthorizedException({ code: 10002, message: '微信接口调用失败' });
+    }
   }
 }

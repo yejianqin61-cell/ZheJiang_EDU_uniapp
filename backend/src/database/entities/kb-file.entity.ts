@@ -9,7 +9,7 @@ export class KbFile {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid', name: 'uploader_id' })
+  @Column({ type: 'varchar', name: 'uploader_id' })
   uploaderId: string;
 
   @ManyToOne(() => User)

@@ -9,7 +9,7 @@ export class Paper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid', name: 'user_id' })
+  @Column({ type: 'varchar', name: 'user_id' })
   userId: string;
 
   @ManyToOne(() => User)
@@ -19,10 +19,10 @@ export class Paper {
   @Column({ type: 'varchar', length: 256 })
   title: string;
 
-  @Column({ type: 'jsonb' })
+  @Column({ type: 'simple-json' })
   conditions: Record<string, any>;
 
-  @Column({ type: 'uuid', array: true, name: 'question_ids' })
+  @Column({ type: 'simple-array', name: 'question_ids' })
   questionIds: string[];
 
   @Column({ type: 'integer', default: 100, name: 'total_score' })
@@ -40,7 +40,7 @@ export class Paper {
   @Column({ type: 'varchar', length: 512, nullable: true, name: 'export_pdf_url' })
   exportPdfUrl: string | null;
 
-  @Column({ type: 'timestamp', nullable: true, name: 'exported_at' })
+  @Column({ type: 'datetime', nullable: true, name: 'exported_at' })
   exportedAt: Date | null;
 
   @CreateDateColumn({ name: 'created_at' })

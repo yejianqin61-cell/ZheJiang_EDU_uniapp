@@ -9,7 +9,7 @@ export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid', name: 'order_id' })
+  @Column({ type: 'varchar', name: 'order_id' })
   orderId: string;
 
   @ManyToOne(() => Order)
@@ -28,10 +28,10 @@ export class Payment {
   @Column({ type: 'varchar', length: 32, default: 'created' })
   status: string; // created | success | failed | refund
 
-  @Column({ type: 'jsonb', nullable: true, name: 'callback_raw' })
+  @Column({ type: 'simple-json', nullable: true, name: 'callback_raw' })
   callbackRaw: Record<string, any> | null;
 
-  @Column({ type: 'timestamp', nullable: true, name: 'paid_at' })
+  @Column({ type: 'datetime', nullable: true, name: 'paid_at' })
   paidAt: Date | null;
 
   @CreateDateColumn({ name: 'created_at' })

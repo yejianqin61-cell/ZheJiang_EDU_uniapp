@@ -9,7 +9,7 @@ export class OcrTask {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid', name: 'file_id' })
+  @Column({ type: 'varchar', name: 'file_id' })
   fileId: string;
 
   @ManyToOne(() => KbFile, { onDelete: 'CASCADE' })

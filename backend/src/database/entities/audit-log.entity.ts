@@ -6,7 +6,7 @@ export class AuditLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid', nullable: true, name: 'user_id' })
+  @Column({ type: 'varchar', nullable: true, name: 'user_id' })
   userId: string | null;
 
   @ManyToOne(() => User, { nullable: true })
@@ -19,13 +19,13 @@ export class AuditLog {
   @Column({ type: 'varchar', length: 64 })
   resource: string;
 
-  @Column({ type: 'uuid', nullable: true, name: 'resource_id' })
+  @Column({ type: 'varchar', nullable: true, name: 'resource_id' })
   resourceId: string | null;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   detail: Record<string, any> | null;
 
-  @Column({ type: 'inet', nullable: true })
+  @Column({ type: 'varchar', length: 45, nullable: true })
   ip: string | null;
 
   @CreateDateColumn({ name: 'created_at' })

@@ -1,6 +1,6 @@
 import type { ApiResponse } from '../types';
 
-const BASE_URL = 'https://api.example.com/v1';
+const BASE_URL = 'http://localhost:3000/v1';
 
 function getToken(): string {
   return uni.getStorageSync('accessToken') ?? '';

@@ -14,9 +14,8 @@ export class KnowledgePoint {
   @Column({ type: 'varchar', length: 32 })
   grade: string;
 
-  // pgvector column — managed via raw SQL
-  // @Column({ type: 'vector', length: 1536, nullable: true })
-  // embedding: number[] | null;
+  @Column({ type: 'simple-json', nullable: true })
+  embedding: number[] | null; // pgvector on prod, JSON text on SQLite dev
 
   @Column({ type: 'integer', default: 0, name: 'question_count' })
   questionCount: number;

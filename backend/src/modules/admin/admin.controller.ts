@@ -1,11 +1,11 @@
 import { Controller, Get, Delete, Post, Param, Query, Body, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../../../common/guards/jwt.guard';
-import { RolesGuard } from '../../../common/guards/roles.guard';
-import { Roles } from '../../../common/decorators/roles.decorator';
+import { JwtAuthGuard } from '../../common/guards/jwt.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { DashboardService } from './services/dashboard.service';
 import { QuestionManageService } from './services/question-manage.service';
 import { FileManageService } from './services/file-manage.service';
-import { PaginationDto } from '../../../common/dto/pagination.dto';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)

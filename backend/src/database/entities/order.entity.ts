@@ -10,14 +10,14 @@ export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid', name: 'user_id' })
+  @Column({ type: 'varchar', name: 'user_id' })
   userId: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ type: 'uuid', name: 'paper_id' })
+  @Column({ type: 'varchar', name: 'paper_id' })
   paperId: string;
 
   @ManyToOne(() => Paper)
@@ -33,10 +33,10 @@ export class Order {
   @Column({ type: 'varchar', length: 32, default: 'pending' })
   status: string; // pending | paid | cancelled | expired
 
-  @Column({ type: 'timestamp', nullable: true, name: 'paid_at' })
+  @Column({ type: 'datetime', nullable: true, name: 'paid_at' })
   paidAt: Date | null;
 
-  @Column({ type: 'timestamp', name: 'expired_at' })
+  @Column({ type: 'datetime', name: 'expired_at' })
   expiredAt: Date;
 
   @CreateDateColumn({ name: 'created_at' })

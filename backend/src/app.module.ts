@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
+import configuration from './config/configuration';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { PaperModule } from './modules/paper/paper.module';
@@ -13,31 +14,53 @@ import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
+
+    // Database: SQLite for local dev, PostgreSQL for production
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('DB_HOST', 'localhost'),
-        port: config.get<number>('DB_PORT', 5432),
-        username: config.get<string>('DB_USER', 'postgres'),
-        password: config.get<string>('DB_PASSWORD', 'postgres'),
-        database: config.get<string>('DB_NAME', 'ai_paper'),
-        autoLoadEntities: true,
-        synchronize: false, // production: use migrations only
-      }),
+      useFactory: (config: ConfigService) => {
+        const dbType = config.get<string>('DB_TYPE', 'sqlite');
+        if (dbType === 'postgres') {
+          return {
+            type: 'postgres',
+            host: config.get<string>('DB_HOST', 'localhost'),
+            port: config.get<number>('DB_PORT', 5432),
+            username: config.get<string>('DB_USER', 'postgres'),
+            password: config.get<string>('DB_PASSWORD', 'postgres'),
+            database: config.get<string>('DB_NAME', 'ai_paper'),
+            autoLoadEntities: true,
+            synchronize: false,
+          };
+        }
+        // SQL.js — pure JS SQLite, no native deps
+        return {
+          type: 'sqljs',
+          location: 'dev.db',
+          autoSave: true,
+          autoLoadEntities: true,
+          synchronize: true,
+        };
+      },
     }),
-    BullModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        connection: {
-          host: config.get<string>('REDIS_HOST', 'localhost'),
-          port: config.get<number>('REDIS_PORT', 6379),
-        },
-      }),
-    }),
+
+    // BullMQ — only when Redis is configured
+    ...(process.env.REDIS_HOST
+      ? [
+          BullModule.forRootAsync({
+            imports: [ConfigModule],
+            inject: [ConfigService],
+            useFactory: (config: ConfigService) => ({
+              connection: {
+                host: config.get<string>('REDIS_HOST', 'localhost'),
+                port: config.get<number>('REDIS_PORT', 6379),
+              },
+            }),
+          }),
+        ]
+      : []),
+
     AuthModule,
     UserModule,
     PaperModule,
