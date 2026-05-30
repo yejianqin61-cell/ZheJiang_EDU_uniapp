@@ -10,6 +10,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UploadService } from './services/upload.service';
 import { ReviewService } from './services/review.service';
 import { KnowledgeService } from './services/knowledge.service';
+import { PipelineService } from './services/pipeline.service';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Controller('admin')
@@ -20,6 +21,7 @@ export class KnowledgeBaseController {
     private readonly uploadService: UploadService,
     private readonly reviewService: ReviewService,
     private readonly knowledgeService: KnowledgeService,
+    private readonly pipelineService: PipelineService,
   ) {}
 
   // === File Upload ===
@@ -32,7 +34,13 @@ export class KnowledgeBaseController {
     @Body('subject') subject: string,
     @Body('grade') grade: string,
   ) {
-    return this.uploadService.upload(uploaderId, file, subject, grade);
+    return this.uploadService.upload(
+      uploaderId,
+      file,
+      subject,
+      grade,
+      (fileId, rawText) => this.pipelineService.process(fileId, rawText),
+    );
   }
 
   @Get('files/:id')

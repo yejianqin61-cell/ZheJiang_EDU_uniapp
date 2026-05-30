@@ -1,4 +1,5 @@
 import { Controller, Get, Delete, Post, Param, Query, Body, UseGuards } from '@nestjs/common';
+import { IsArray, IsString } from 'class-validator';
 import { JwtAuthGuard } from '../../common/guards/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -6,6 +7,16 @@ import { DashboardService } from './services/dashboard.service';
 import { QuestionManageService } from './services/question-manage.service';
 import { FileManageService } from './services/file-manage.service';
 import { PaginationDto } from '../../common/dto/pagination.dto';
+
+class BatchDeleteDto {
+  @IsArray()
+  questionIds: string[];
+}
+
+class DeleteByFileDto {
+  @IsString()
+  fileId: string;
+}
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -59,13 +70,13 @@ export class AdminController {
   }
 
   @Post('questions/batch-delete')
-  batchDelete(@Body('questionIds') questionIds: string[]) {
-    return this.questionManageService.batchDelete(questionIds);
+  batchDelete(@Body() dto: BatchDeleteDto) {
+    return this.questionManageService.batchDelete(dto.questionIds);
   }
 
   @Post('questions/delete-by-file')
-  deleteByFile(@Body('fileId') fileId: string) {
-    return this.questionManageService.deleteByFile(fileId);
+  deleteByFile(@Body() dto: DeleteByFileDto) {
+    return this.questionManageService.deleteByFile(dto.fileId);
   }
 
   // === File Management ===

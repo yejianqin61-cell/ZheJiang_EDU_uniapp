@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, LessThan, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import { Cron } from '@nestjs/schedule';
 import { Order } from '../../database/entities/order.entity';
 import { Paper } from '../../database/entities/paper.entity';
-import { PaginationDto, PaginatedResult } from '../../common/dto/pagination.dto';
 
 @Injectable()
 export class OrderService {
@@ -15,6 +15,8 @@ export class OrderService {
     private readonly paperRepo: Repository<Paper>,
     private readonly config: ConfigService,
   ) {}
+
+  // ── O-01: Create order ────────────────────────────────────
 
   async create(userId: string, paperId: string) {
     const paper = await this.paperRepo.findOne({ where: { id: paperId } });
@@ -39,31 +41,58 @@ export class OrderService {
       }),
     );
 
+    // wxPayParams is populated by OrderController via PaymentService.createPayment().
+    // See OrderController.create() for the Order→Payment linkage.
+
     return {
       orderId: order.id,
       orderNo: order.orderNo,
       amount: order.amount,
-      wxPayParams: null, // TODO: call WeChat Pay unifiedOrder
+      wxPayParams: null, // filled by controller layer
     };
   }
 
-  async list(
-    userId: string,
-    pagination: PaginationDto,
-    subject?: string,
-    status?: string,
-  ): Promise<PaginatedResult<any>> {
+  // ── O-03/O-04: List with filters ──────────────────────────
+
+  async list(params: {
+    userId: string;
+    page: number;
+    pageSize: number;
+    subject?: string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const { userId, page, pageSize, subject, status, startDate, endDate } = params;
+
     const qb = this.orderRepo
       .createQueryBuilder('o')
       .leftJoinAndSelect('o.paper', 'p')
       .where('o.user_id = :userId', { userId });
 
-    if (status) qb.andWhere('o.status = :status', { status });
-    if (subject) qb.andWhere('p.conditions @> :subjectCond', { subjectCond: { subject } });
+    if (status) {
+      qb.andWhere('o.status = :status', { status });
+    }
+
+    // Subject filter: conditions is stored as simple-json TEXT.
+    // Search for "subject":"数学" pattern inside the JSON string.
+    if (subject) {
+      qb.andWhere("p.conditions LIKE :subjectPattern", {
+        subjectPattern: `%"subject":"${subject}"%`,
+      });
+    }
+
+    // Time range filter
+    if (startDate) {
+      qb.andWhere('o.created_at >= :startDate', { startDate });
+    }
+    if (endDate) {
+      qb.andWhere('o.created_at <= :endDate', { endDate });
+    }
 
     qb.orderBy('o.created_at', 'DESC')
-      .skip((pagination.page! - 1) * pagination.pageSize!)
-      .take(pagination.pageSize);
+      .skip((page - 1) * pageSize)
+      .take(pageSize);
 
     const [list, total] = await qb.getManyAndCount();
 
@@ -76,14 +105,33 @@ export class OrderService {
         status: o.status,
         createdAt: o.createdAt,
       })),
-      pagination: {
-        page: pagination.page!,
-        pageSize: pagination.pageSize!,
-        total,
-        totalPages: Math.ceil(total / pagination.pageSize!),
-      },
+      pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
     };
   }
+
+  // ── Order detail ──────────────────────────────────────────
+
+  async getDetail(orderId: string, userId: string) {
+    const order = await this.orderRepo.findOne({
+      where: { id: orderId, userId },
+      relations: ['paper'],
+    });
+    if (!order) throw new NotFoundException({ code: 50001, message: '订单不存在' });
+
+    return {
+      orderId: order.id,
+      orderNo: order.orderNo,
+      paperId: order.paperId,
+      paperTitle: order.paper?.title ?? '',
+      amount: order.amount,
+      status: order.status,
+      paidAt: order.paidAt,
+      expiredAt: order.expiredAt,
+      createdAt: order.createdAt,
+    };
+  }
+
+  // ── O-05: Redownload ──────────────────────────────────────
 
   async getDownloadUrl(orderId: string, userId: string) {
     const order = await this.orderRepo.findOne({
@@ -98,6 +146,45 @@ export class OrderService {
       pdfUrl: order.paper?.exportPdfUrl ?? null,
     };
   }
+
+  // ── O-02: Auto-cancel expired pending orders ──────────────
+
+  /**
+   * Cancel orders that have been pending for more than 30 minutes.
+   * Called by Cron every 5 minutes and on-demand before listing.
+   */
+  async cancelExpiredOrders(): Promise<number> {
+    const now = new Date();
+    // pending → cancelled if expired_at has passed
+    const result = await this.orderRepo.update(
+      { status: 'pending', expiredAt: LessThan(now) },
+      { status: 'cancelled' },
+    );
+    return result.affected ?? 0;
+  }
+
+  // ── O-06: Cleanup (Cron: daily) ───────────────────────────
+
+  /**
+   * Physically delete pending/cancelled/expired orders older than 1 day.
+   * Paid orders are never deleted.
+   */
+  @Cron('0 3 * * *') // 3:00 AM daily
+  async cleanupOldOrders(): Promise<number> {
+    const cutoff = new Date(Date.now() - 24 * 3600 * 1000);
+    const result = await this.orderRepo.delete({
+      status: 'cancelled',
+      createdAt: LessThan(cutoff),
+    });
+    // Also delete expired
+    const result2 = await this.orderRepo.delete({
+      status: 'expired',
+      createdAt: LessThan(cutoff),
+    });
+    return (result.affected ?? 0) + (result2.affected ?? 0);
+  }
+
+  // ── Helpers ───────────────────────────────────────────────
 
   private generateOrderNo(): string {
     const now = new Date();

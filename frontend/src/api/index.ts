@@ -76,6 +76,10 @@ export function getOrders(page: number, pageSize: number, subject?: string, stat
   return request<any>('GET', url);
 }
 
+export function getOrderDetail(orderId: string) {
+  return request<any>('GET', `/orders/${orderId}`);
+}
+
 export function getPaymentStatus(orderId: string) {
   return request<any>('GET', `/orders/${orderId}/payment-status`);
 }

@@ -1,31 +1,26 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useOrderStore } from '../../stores/order';
-import { getOrderDownload } from '../../api';
 
 const store = useOrderStore();
 
 onMounted(() => { store.fetchOrders(); });
 
-async function handleDownload(orderId: string) {
-  try {
-    const res = await getOrderDownload(orderId);
-    // TODO: trigger file download with res.data.docxUrl or res.data.pdfUrl
-    uni.showToast({ title: '开始下载', icon: 'success' });
-  } catch { /* error handled */ }
+function goDetail(orderId: string) {
+  uni.navigateTo({ url: `/pages/orders/detail/index?orderId=${orderId}` });
 }
 </script>
 
 <template>
   <view class="orders">
     <view v-if="store.orders.length === 0" class="empty">暂无订单</view>
-    <view v-for="o in store.orders" :key="o.orderId" class="order-card">
+    <view v-for="o in store.orders" :key="o.orderId" class="order-card" @tap="goDetail(o.orderId)">
       <view class="order-info">
         <text class="order-title">{{ o.paperTitle }}</text>
         <text class="order-meta">¥{{ (o.amount / 100).toFixed(2) }} | {{ o.createdAt }}</text>
       </view>
       <view class="order-status" :class="o.status">{{ o.status === 'paid' ? '已支付' : o.status === 'pending' ? '待支付' : '已取消' }}</view>
-      <button v-if="o.status === 'paid'" class="btn-download" @tap="handleDownload(o.orderId)">下载</button>
+      <text class="arrow">&#8250;</text>
     </view>
   </view>
 </template>
@@ -40,5 +35,5 @@ async function handleDownload(orderId: string) {
 .order-status { font-size: 22rpx; padding: 4rpx 12rpx; border-radius: 4rpx; margin: 0 16rpx; }
 .order-status.paid { background: #f6ffed; color: #52c41a; }
 .order-status.pending { background: #fff7e6; color: #fa8c16; }
-.btn-download { font-size: 22rpx; padding: 8rpx 20rpx; background: #1677ff; color: #fff; border-radius: 6rpx; }
+.arrow { font-size: 32rpx; color: #ccc; }
 </style>

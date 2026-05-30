@@ -16,7 +16,17 @@ export class PaymentController {
 
   @Public()
   @Post('callback')
-  async callback(@Body() body: any) {
-    return this.paymentService.handleCallback(body);
+  async callback(@Req() req: any, @Body() body: any) {
+    return this.paymentService.handleCallback(req.headers ?? {}, body);
+  }
+
+  /**
+   * Dev-only: simulate a successful payment for testing.
+   * POST /v1/orders/:id/mock-pay
+   */
+  @Post(':id/mock-pay')
+  @UseGuards(JwtAuthGuard)
+  async mockPay(@Param('id') orderId: string) {
+    return this.paymentService.mockPay(orderId);
   }
 }
