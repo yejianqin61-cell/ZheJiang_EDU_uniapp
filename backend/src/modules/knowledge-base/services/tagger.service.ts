@@ -9,6 +9,7 @@ import { Question } from '../../../database/entities/question.entity';
 export class TaggerService {
   private readonly primaryUrl: string;
   private readonly primaryKey: string;
+  private readonly primaryModel: string;
 
   constructor(
     @InjectRepository(Question)
@@ -17,6 +18,7 @@ export class TaggerService {
   ) {
     this.primaryUrl = config.get<string>('llm.primary.apiUrl', '');
     this.primaryKey = config.get<string>('llm.primary.apiKey', '');
+    this.primaryModel = config.get<string>('llm.primary.model', 'qwen-plus-latest');
   }
 
   async tagQuestion(
@@ -88,7 +90,7 @@ export class TaggerService {
     const res = await axios.post(
       this.primaryUrl,
       {
-        model: 'qwen3',
+        model: this.primaryModel,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userContent },

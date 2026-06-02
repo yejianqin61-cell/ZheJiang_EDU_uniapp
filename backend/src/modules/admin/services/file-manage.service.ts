@@ -23,7 +23,7 @@ export class FileManageService {
 
     if (status) qb.andWhere('f.status = :status', { status });
 
-    qb.orderBy('f.created_at', 'DESC')
+    qb.orderBy('f.createdAt', 'DESC')
       .skip((page - 1) * pageSize)
       .take(pageSize);
 

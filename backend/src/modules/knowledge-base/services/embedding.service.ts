@@ -7,11 +7,13 @@ export class EmbeddingService {
   private readonly dimension: number;
   private readonly apiUrl: string;
   private readonly apiKey: string;
+  private readonly model: string;
 
   constructor(private readonly config: ConfigService) {
     this.dimension = config.get<number>('llm.embedding.dimension', 1536);
     this.apiUrl = config.get<string>('llm.embedding.apiUrl', '');
     this.apiKey = config.get<string>('llm.embedding.apiKey', '');
+    this.model = config.get<string>('llm.embedding.model', 'text-embedding-v4');
   }
 
   async embed(text: string): Promise<number[]> {
@@ -39,12 +41,22 @@ export class EmbeddingService {
   }
 
   private async remoteEmbed(text: string): Promise<number[]> {
-    const res = await axios.post(
-      this.apiUrl,
-      { input: text, model: 'text-embedding-ada-002' },
-      { headers: { Authorization: `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' }, timeout: 15000 },
-    );
-    return res.data.data?.[0]?.embedding ?? [];
+    console.log(`[Embedding] Calling ${this.model}...`);
+    try {
+      const res = await axios.post(
+        this.apiUrl,
+        { input: text, model: this.model, dimensions: this.dimension },
+        { headers: { Authorization: `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' }, timeout: 15000 },
+      );
+      const embedding = res.data.data?.[0]?.embedding ?? [];
+      console.log(`[Embedding] Got ${embedding.length}-dim vector`);
+      return embedding;
+    } catch (err: any) {
+      const status = err.response?.status;
+      const body = err.response?.data ?? err.message;
+      console.error(`[Embedding] FAILED — HTTP ${status ?? 'N/A'}:`, JSON.stringify(body).slice(0, 500));
+      throw err;
+    }
   }
 
   // Dev fallback: deterministic pseudo-embedding based on character hashes.

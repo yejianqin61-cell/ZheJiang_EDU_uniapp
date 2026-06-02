@@ -58,10 +58,13 @@ export class RetrievalService {
 
   // === Stage 1: DB Filter ===
   private async dbFilter(subject: string, grade: string): Promise<CandidateQuestion[]> {
-    const questions = await this.questionRepo.find({
-      where: { subject, grade, status: 'approved', isDeleted: false },
-      relations: ['sourceFile'],
-    });
+    const questions = await this.questionRepo
+      .createQueryBuilder('q')
+      .where('q.subject = :subject', { subject })
+      .andWhere('q.grade = :grade', { grade })
+      .andWhere('q.status = :status', { status: 'approved' })
+      .andWhere('q.isDeleted = :del', { del: false })
+      .getMany();
 
     return questions.map((q) => ({ question: q, score: 0.5 }));
   }

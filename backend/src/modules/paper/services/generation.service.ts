@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { Question } from '../../../database/entities/question.entity';
 
-interface GeneratedQuestion {
+export interface GeneratedQuestion {
   index: number;
   type: string;
   content: string;
@@ -14,15 +14,19 @@ interface GeneratedQuestion {
 export class GenerationService {
   private readonly primaryUrl: string;
   private readonly primaryKey: string;
+  private readonly primaryModel: string;
   private readonly fallbackUrl: string;
   private readonly fallbackKey: string;
+  private readonly fallbackModel: string;
   private readonly timeout: number;
 
   constructor(private readonly config: ConfigService) {
     this.primaryUrl = config.get<string>('llm.primary.apiUrl', '');
     this.primaryKey = config.get<string>('llm.primary.apiKey', '');
+    this.primaryModel = config.get<string>('llm.primary.model', 'qwen-plus-latest');
     this.fallbackUrl = config.get<string>('llm.fallback.apiUrl', '');
     this.fallbackKey = config.get<string>('llm.fallback.apiKey', '');
+    this.fallbackModel = config.get<string>('llm.fallback.model', 'deepseek-chat');
     this.timeout = config.get<number>('llm.timeout', 20000);
   }
 
@@ -54,11 +58,12 @@ export class GenerationService {
 
     let result: string;
     try {
-      result = await this.callLLM(this.primaryUrl, this.primaryKey, prompt);
+      result = await this.callLLM(this.primaryUrl, this.primaryKey, this.primaryModel, prompt);
     } catch {
       // Fallback
       if (this.fallbackUrl && this.fallbackKey) {
-        result = await this.callLLM(this.fallbackUrl, this.fallbackKey, prompt);
+        console.log('[LLM] Primary failed, trying fallback...');
+        result = await this.callLLM(this.fallbackUrl, this.fallbackKey, this.fallbackModel, prompt);
       } else {
         throw new Error('LLM generation failed and no fallback configured');
       }
@@ -121,33 +126,54 @@ ${JSON.stringify(candidatesJson, null, 2)}
 4. 给试卷起一个合适的标题`;
   }
 
-  private async callLLM(url: string, key: string, prompt: string): Promise<string> {
-    const res = await axios.post(
-      url,
-      {
-        model: 'qwen3',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-        max_tokens: 4096,
-      },
-      {
-        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-        timeout: this.timeout,
-      },
-    );
-    return res.data.choices?.[0]?.message?.content ?? '';
+  private async callLLM(url: string, key: string, model: string, prompt: string): Promise<string> {
+    console.log(`[LLM] Calling ${model} at ${url}...`);
+    try {
+      const res = await axios.post(
+        url,
+        {
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.3,
+          max_tokens: 4096,
+        },
+        {
+          headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+          timeout: this.timeout,
+        },
+      );
+      const content = res.data.choices?.[0]?.message?.content ?? '';
+      console.log(`[LLM] ${model} returned ${content.length} chars`);
+      return content;
+    } catch (err: any) {
+      const status = err.response?.status;
+      const body = err.response?.data ?? err.message;
+      console.error(`[LLM] ${model} FAILED — HTTP ${status ?? 'N/A'}:`, JSON.stringify(body).slice(0, 500));
+      throw err;
+    }
   }
 
   private validateAndParse(raw: string, expectedCount: number): {
     title?: string;
     questions: GeneratedQuestion[];
   } {
-    // Extract JSON from possible markdown code block
-    const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('LLM response is not valid JSON');
+    // Prefer JSON inside a markdown code block (```json ... ```), fall back to first {...} span
+    let jsonStr: string | undefined;
+    const codeBlock = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (codeBlock) {
+      jsonStr = codeBlock[1].trim();
+    } else {
+      const braceMatch = raw.match(/\{[\s\S]*\}/);
+      jsonStr = braceMatch?.[0];
+    }
+
+    if (!jsonStr) {
+      console.error('[LLM] No JSON found in response:', raw.slice(0, 500));
+      throw new Error('LLM response does not contain valid JSON');
+    }
 
     try {
-      const parsed = JSON.parse(match[0]);
+      const parsed = JSON.parse(jsonStr);
       const questions = (parsed.questions ?? []).map((q: any, i: number) => ({
         index: i + 1,
         type: q.type ?? 'single_choice',
@@ -155,9 +181,11 @@ ${JSON.stringify(candidatesJson, null, 2)}
         options: q.options ?? [],
       }));
 
+      console.log(`[LLM] Parsed ${questions.length} questions (expected ${expectedCount})`);
       return { title: parsed.title, questions };
-    } catch {
-      throw new Error('Failed to parse LLM response');
+    } catch (err: any) {
+      console.error('[LLM] JSON parse error:', err.message, '\nRaw:', jsonStr.slice(0, 500));
+      throw new Error('Failed to parse LLM response JSON');
     }
   }
 

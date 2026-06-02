@@ -67,40 +67,58 @@ export class OrderService {
 
     const qb = this.orderRepo
       .createQueryBuilder('o')
-      .leftJoinAndSelect('o.paper', 'p')
-      .where('o.user_id = :userId', { userId });
+      .where('o.userId = :userId', { userId });
 
     if (status) {
       qb.andWhere('o.status = :status', { status });
     }
 
-    // Subject filter: conditions is stored as simple-json TEXT.
-    // Search for "subject":"数学" pattern inside the JSON string.
+    // Subject filter: load matching paperIds first, then filter orders.
+    // conditions is stored as simple-json TEXT in the paper table.
     if (subject) {
-      qb.andWhere("p.conditions LIKE :subjectPattern", {
-        subjectPattern: `%"subject":"${subject}"%`,
-      });
+      const matchingPapers = await this.paperRepo
+        .createQueryBuilder('p')
+        .select('p.id')
+        .where("p.conditions LIKE :pattern", { pattern: `%"subject":"${subject}"%` })
+        .getMany();
+      const paperIds = matchingPapers.map((p) => p.id);
+      if (paperIds.length > 0) {
+        qb.andWhere('o.paperId IN (:...paperIds)', { paperIds });
+      } else {
+        // No papers match this subject — return empty
+        return {
+          list: [],
+          pagination: { page, pageSize, total: 0, totalPages: 0 },
+        };
+      }
     }
 
     // Time range filter
     if (startDate) {
-      qb.andWhere('o.created_at >= :startDate', { startDate });
+      qb.andWhere('o.createdAt >= :startDate', { startDate });
     }
     if (endDate) {
-      qb.andWhere('o.created_at <= :endDate', { endDate });
+      qb.andWhere('o.createdAt <= :endDate', { endDate });
     }
 
-    qb.orderBy('o.created_at', 'DESC')
+    qb.orderBy('o.createdAt', 'DESC')
       .skip((page - 1) * pageSize)
       .take(pageSize);
 
     const [list, total] = await qb.getManyAndCount();
 
+    // Load paper titles separately (avoid SQL.js join issues)
+    const paperIds = [...new Set(list.map((o) => o.paperId))];
+    const papers = paperIds.length > 0
+      ? await this.paperRepo.createQueryBuilder('p').select(['p.id', 'p.title']).where('p.id IN (:...ids)', { ids: paperIds }).getMany()
+      : [];
+    const titleMap = new Map(papers.map((p) => [p.id, p.title]));
+
     return {
       list: list.map((o) => ({
         orderId: o.id,
         orderNo: o.orderNo,
-        paperTitle: o.paper?.title ?? '',
+        paperTitle: titleMap.get(o.paperId) ?? '',
         amount: o.amount,
         status: o.status,
         createdAt: o.createdAt,
@@ -114,15 +132,16 @@ export class OrderService {
   async getDetail(orderId: string, userId: string) {
     const order = await this.orderRepo.findOne({
       where: { id: orderId, userId },
-      relations: ['paper'],
     });
     if (!order) throw new NotFoundException({ code: 50001, message: '订单不存在' });
+
+    const paper = await this.paperRepo.findOne({ where: { id: order.paperId }, select: ['id', 'title', 'exportDocxUrl', 'exportPdfUrl'] });
 
     return {
       orderId: order.id,
       orderNo: order.orderNo,
       paperId: order.paperId,
-      paperTitle: order.paper?.title ?? '',
+      paperTitle: paper?.title ?? '',
       amount: order.amount,
       status: order.status,
       paidAt: order.paidAt,
@@ -136,14 +155,15 @@ export class OrderService {
   async getDownloadUrl(orderId: string, userId: string) {
     const order = await this.orderRepo.findOne({
       where: { id: orderId, userId },
-      relations: ['paper'],
     });
     if (!order) throw new NotFoundException({ code: 50001, message: '订单不存在' });
     if (order.status !== 'paid') throw new ConflictException({ code: 40001, message: '请先完成支付' });
 
+    const paper = await this.paperRepo.findOne({ where: { id: order.paperId }, select: ['id', 'exportDocxUrl', 'exportPdfUrl'] });
+
     return {
-      docxUrl: order.paper?.exportDocxUrl ?? null,
-      pdfUrl: order.paper?.exportPdfUrl ?? null,
+      docxUrl: paper?.exportDocxUrl ?? null,
+      pdfUrl: paper?.exportPdfUrl ?? null,
     };
   }
 

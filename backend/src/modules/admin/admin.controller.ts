@@ -6,6 +6,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { DashboardService } from './services/dashboard.service';
 import { QuestionManageService } from './services/question-manage.service';
 import { FileManageService } from './services/file-manage.service';
+import { SeedService } from './services/seed.service';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 class BatchDeleteDto {
@@ -26,7 +27,15 @@ export class AdminController {
     private readonly dashboardService: DashboardService,
     private readonly questionManageService: QuestionManageService,
     private readonly fileManageService: FileManageService,
+    private readonly seedService: SeedService,
   ) {}
+
+  // === Dev: Seed test data ===
+
+  @Post('seed')
+  async seed() {
+    return this.seedService.seed();
+  }
 
   // === Dashboard ===
 

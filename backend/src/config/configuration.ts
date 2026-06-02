@@ -15,21 +15,22 @@ export default () => ({
 
   llm: {
     primary: {
-      model: 'qwen3',
+      model: process.env.QWEN3_MODEL ?? 'qwen-plus-latest',
       apiUrl: process.env.QWEN3_API_URL ?? '',
       apiKey: process.env.QWEN3_API_KEY ?? '',
     },
     fallback: {
-      model: 'deepseek-v4',
+      model: process.env.DEEPSEEK_MODEL ?? 'deepseek-chat',
       apiUrl: process.env.DEEPSEEK_API_URL ?? '',
       apiKey: process.env.DEEPSEEK_API_KEY ?? '',
     },
     embedding: {
+      model: process.env.EMBEDDING_MODEL ?? 'text-embedding-v4',
       apiUrl: process.env.EMBEDDING_API_URL ?? '',
       apiKey: process.env.EMBEDDING_API_KEY ?? '',
       dimension: 1536,
     },
-    timeout: 20000,
+    timeout: 30000,
     retryMax: 2,
     circuitBreakerThreshold: 5,
     circuitBreakerWindow: 120000,

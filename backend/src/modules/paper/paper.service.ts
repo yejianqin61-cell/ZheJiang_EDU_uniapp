@@ -63,29 +63,32 @@ export class PaperService {
   }) {
     const startedAt = Date.now();
 
-    // Stage 1: Retrieve candidate questions
-    const candidates = await this.retrievalService.retrieve({
-      subject: dto.subject,
-      grade: dto.grade,
-      knowledgePointIds: dto.knowledgePointIds,
-      difficulty: dto.difficulty,
-      questionCount: dto.questionCount,
-    });
+    // Stage 1: Retrieve candidate questions directly
+    // Note: do NOT use retrievalService.retrieve() — has SQL.js compat issues with repo.find()
+    const allCandidates = await this.questionRepo.createQueryBuilder('q')
+      .where('q.subject = :s', { s: dto.subject })
+      .andWhere('q.grade = :g', { g: dto.grade })
+      .andWhere('q.status = :st', { st: 'approved' })
+      .andWhere('q.isDeleted = :del', { del: false })
+      .getMany();
 
-    if (candidates.length < dto.questionCount) {
+    // Apply difficulty distribution
+    const finalCandidates = this.applyDifficultyFilter(allCandidates, dto.difficulty, dto.questionCount);
+
+    if (finalCandidates.length < dto.questionCount) {
       throw new BadRequestException({
         code: 20002,
-        message: `题库题目不足：需要${dto.questionCount}题，实际匹配${candidates.length}题。请调整条件。`,
+        message: `题库题目不足：需要${dto.questionCount}题，实际匹配${finalCandidates.length}题。请调整条件。`,
       });
     }
 
-    // Stage 2: Generate paper (LLM or dev fallback)
+    // Use finalCandidates going forward
     const generated = await this.generationService.generate(
-      dto.subject, dto.grade, dto.difficulty, candidates,
+      dto.subject, dto.grade, dto.difficulty, finalCandidates,
     );
 
     // Stage 3: Save paper
-    const questionIds = candidates.slice(0, dto.questionCount).map((q) => q.id);
+    const questionIds = finalCandidates.slice(0, dto.questionCount).map((q) => q.id);
     const generateMs = Date.now() - startedAt;
 
     const paper = await this.paperRepo.save(
@@ -94,14 +97,14 @@ export class PaperService {
         title: generated.title,
         conditions: dto as any,
         questionIds,
-        totalScore: dto.questionCount * 5, // default 5 points each
+        totalScore: dto.questionCount * 5,
         status: 'draft',
         generateMs,
       }),
     );
 
     // Stage 4: Save snapshots
-    const snapshots = candidates.slice(0, dto.questionCount).map((q, i) =>
+    const snapshots = finalCandidates.slice(0, dto.questionCount).map((q, i) =>
       this.snapshotRepo.create({
         paperId: paper.id,
         sortOrder: i + 1,
@@ -158,6 +161,33 @@ export class PaperService {
 
     // Re-generate with same conditions
     return this.generate(userId, original.conditions as any);
+  }
+
+  private applyDifficultyFilter(questions: Question[], difficulty: string, count: number): Question[] {
+    if (questions.length === 0) return [];
+
+    if (difficulty === 'mixed') {
+      // Shuffle and return up to count
+      return questions.sort(() => Math.random() - 0.5).slice(0, count);
+    }
+
+    const d = Number(difficulty);
+    const filtered = questions.filter((q) => q.difficulty === d);
+    if (filtered.length >= count) {
+      return filtered.sort(() => Math.random() - 0.5).slice(0, count);
+    }
+    // Not enough of requested difficulty — fill with others
+    const others = questions.filter((q) => q.difficulty !== d);
+    return [...filtered, ...others].slice(0, count);
+  }
+
+  async debugCount(subject: string, grade: string) {
+    const qb = this.questionRepo.createQueryBuilder('q')
+      .where('q.subject = :subject', { subject })
+      .andWhere('q.grade = :grade', { grade })
+      .andWhere('q.status = :status', { status: 'approved' })
+      .andWhere('q.isDeleted = :del', { del: false });
+    return { count: await qb.getCount(), subject, grade };
   }
 
   async getPaperById(paperId: string, userId: string) {

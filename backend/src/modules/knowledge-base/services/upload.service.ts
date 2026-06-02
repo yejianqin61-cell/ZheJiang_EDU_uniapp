@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { readFileSync } from 'fs';
 import { KbFile } from '../../../database/entities/kb-file.entity';
 
 const ALLOWED_EXTS = ['doc', 'docx', 'md', 'pdf', 'png', 'jpg', 'jpeg'];
@@ -45,7 +44,7 @@ export class UploadService {
     let rawText: string | undefined;
 
     if (TEXT_EXTS.includes(ext)) {
-      rawText = readFileSync(file.path, 'utf-8');
+      rawText = file.buffer.toString('utf-8');
       cosUrl = `local://${file.originalname}`;
     } else {
       rawText = this.tryExtractText(file, ext);
@@ -106,7 +105,7 @@ export class UploadService {
   private tryExtractText(file: Express.Multer.File, ext: string): string | undefined {
     // MD and plain text files: read directly
     if (TEXT_EXTS.includes(ext)) {
-      return readFileSync(file.path, 'utf-8');
+      return file.buffer.toString('utf-8');
     }
     // DOCX, PDF: need dedicated parser — return undefined for now, pipeline will handle
     return undefined;

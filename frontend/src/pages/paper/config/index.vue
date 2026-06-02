@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref } from 'vue';
 import { usePaperStore } from '../../../stores/paper';
 
 const paper = usePaperStore();
@@ -12,10 +12,10 @@ const gradeMap: Record<string, string[]> = {
 };
 const subjects = ['语文','数学','英语','物理','化学','生物','政治','历史','地理'];
 
-let selectedStage = '';
+const selectedStage = ref('');
 
 function selectStage(stage: string) {
-  selectedStage = stage;
+  selectedStage.value = stage;
 }
 
 function selectGrade(grade: string) {
@@ -28,6 +28,14 @@ function selectSubject(subject: string) {
 }
 
 async function handleGenerate() {
+  if (!paper.condition.subject) {
+    uni.showToast({ title: '请选择科目', icon: 'none' });
+    return;
+  }
+  if (!paper.condition.grade) {
+    uni.showToast({ title: '请选择年级', icon: 'none' });
+    return;
+  }
   await paper.generate();
   if (paper.currentPaper) {
     uni.navigateTo({ url: '/pages/paper/preview/index' });

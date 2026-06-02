@@ -16,7 +16,10 @@ async function handlePay() {
   try {
     await order.create(paper.currentPaper.paperId);
     uni.navigateTo({ url: '/pages/payment/index' });
-  } catch { /* error handled in api */ }
+  } catch (e: any) {
+    console.error('创建订单失败:', e);
+    uni.showToast({ title: e?.message ?? '创建订单失败', icon: 'none' });
+  }
 }
 </script>
 

@@ -22,7 +22,7 @@ export class DashboardService {
       .createQueryBuilder('q')
       .select('q.subject', 'subject')
       .addSelect('COUNT(*)', 'count')
-      .where('q.is_deleted = FALSE')
+      .where('q.isDeleted = :del', { del: false })
       .andWhere('q.status = :status', { status: 'approved' })
       .groupBy('q.subject')
       .getRawMany();
@@ -31,7 +31,7 @@ export class DashboardService {
       .createQueryBuilder('q')
       .select('q.grade', 'grade')
       .addSelect('COUNT(*)', 'count')
-      .where('q.is_deleted = FALSE')
+      .where('q.isDeleted = :del', { del: false })
       .andWhere('q.status = :status', { status: 'approved' })
       .groupBy('q.grade')
       .getRawMany();
@@ -40,7 +40,7 @@ export class DashboardService {
       .createQueryBuilder('q')
       .select('q.difficulty', 'level')
       .addSelect('COUNT(*)', 'count')
-      .where('q.is_deleted = FALSE')
+      .where('q.isDeleted = :del', { del: false })
       .andWhere('q.status = :status', { status: 'approved' })
       .groupBy('q.difficulty')
       .getRawMany();

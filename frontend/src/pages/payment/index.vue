@@ -1,26 +1,50 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useOrderStore } from '../../stores/order';
-import { getPaymentStatus } from '../../api';
 
 const order = useOrderStore();
 const paying = ref(false);
 
+const isDev = computed(() =>
+  order.currentOrder?.wxPayParams?.paySign === 'DEV_MOCK_SIGN'
+);
+
 async function handleWxPay() {
-  if (!order.currentOrder?.wxPayParams) return;
+  if (!order.currentOrder) return;
   paying.value = true;
   try {
-    await uni.requestPayment({
-      // @ts-ignore
-      timeStamp: order.currentOrder.wxPayParams.timeStamp,
-      nonceStr: order.currentOrder.wxPayParams.nonceStr,
-      package: order.currentOrder.wxPayParams.package,
-      signType: order.currentOrder.wxPayParams.signType,
-      paySign: order.currentOrder.wxPayParams.paySign,
-    });
+    if (isDev.value) {
+      // Dev: call mock-pay API directly instead of wx.requestPayment
+      const BASE_URL = 'http://localhost:3000/v1';
+      const token = uni.getStorageSync('accessToken');
+      await new Promise<void>((resolve, reject) => {
+        uni.request({
+          method: 'POST',
+          url: `${BASE_URL}/orders/${order.currentOrder!.orderId}/mock-pay`,
+          header: { Authorization: `Bearer ${token}` },
+          success: (res: any) => {
+            if (res.data?.code === 0) resolve();
+            else reject(new Error(res.data?.message ?? 'pay failed'));
+          },
+          fail: reject,
+        });
+      });
+    } else {
+      // Production: real WeChat Pay JSAPI
+      const p = order.currentOrder.wxPayParams!;
+      await uni.requestPayment({
+        // @ts-ignore
+        timeStamp: p.timeStamp,
+        nonceStr: p.nonceStr,
+        package: p.package,
+        signType: p.signType,
+        paySign: p.paySign,
+      });
+    }
     uni.showToast({ title: '支付成功', icon: 'success' });
     uni.navigateBack({ delta: 2 });
-  } catch {
+  } catch (e: any) {
+    console.error('Payment error:', e);
     uni.showToast({ title: '支付取消或失败', icon: 'none' });
   } finally {
     paying.value = false;

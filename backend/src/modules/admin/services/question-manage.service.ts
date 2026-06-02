@@ -27,21 +27,34 @@ export class QuestionManageService {
     fileId?: string;
     keyword?: string;
   }): Promise<PaginatedResult<Question>> {
+    // Resolve knowledgePointId → question IDs first (avoids join issues)
+    if (params.knowledgePointId) {
+      const qkEntries = await this.qkRepo.find({
+        where: { knowledgePointId: params.knowledgePointId },
+        select: ['questionId'],
+        take: 5000,
+      });
+      const qIds = qkEntries.map((e) => e.questionId);
+      if (qIds.length === 0) {
+        return { list: [], pagination: { page: params.page, pageSize: params.pageSize, total: 0, totalPages: 0 } };
+      }
+      // Add question ID filter below
+      return this.list({ ...params, knowledgePointId: undefined, _questionIds: qIds } as any);
+    }
+
     const qb = this.questionRepo
       .createQueryBuilder('q')
-      .leftJoinAndSelect('q.sourceFile', 'f')
-      .leftJoin('q.questionKnowledge', 'qk')
-      .where('q.is_deleted = FALSE')
+      .where('q.isDeleted = :del', { del: false })
       .andWhere('q.status = :status', { status: 'approved' });
 
     if (params.subject) qb.andWhere('q.subject = :subject', { subject: params.subject });
     if (params.grade) qb.andWhere('q.grade = :grade', { grade: params.grade });
     if (params.difficulty !== undefined) qb.andWhere('q.difficulty = :difficulty', { difficulty: params.difficulty });
-    if (params.fileId) qb.andWhere('q.source_file_id = :fileId', { fileId: params.fileId });
-    if (params.knowledgePointId) qb.andWhere('qk.knowledge_point_id = :kpId', { kpId: params.knowledgePointId });
+    if (params.fileId) qb.andWhere('q.sourceFileId = :fileId', { fileId: params.fileId });
+    if ((params as any)._questionIds) qb.andWhere('q.id IN (:...ids)', { ids: (params as any)._questionIds });
     if (params.keyword) qb.andWhere('q.content LIKE :kw', { kw: `%${params.keyword}%` });
 
-    qb.orderBy('q.created_at', 'DESC')
+    qb.orderBy('q.createdAt', 'DESC')
       .skip((params.page - 1) * params.pageSize)
       .take(params.pageSize);
 

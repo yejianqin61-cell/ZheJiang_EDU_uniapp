@@ -79,7 +79,7 @@ export class KnowledgeService {
     if (grade) qb.andWhere('kp.grade = :grade', { grade });
     if (keyword) qb.andWhere('kp.name LIKE :keyword', { keyword: `%${keyword}%` });
 
-    qb.orderBy('kp.question_count', 'DESC')
+    qb.orderBy('kp.questionCount', 'DESC')
       .skip((pagination.page - 1) * pagination.pageSize)
       .take(pagination.pageSize);
 

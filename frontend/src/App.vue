@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onLaunch } from '@dcloudio/uni-app';
-import { useAuthStore } from './stores/auth';
 
 onLaunch(() => {
-  const auth = useAuthStore();
-  auth.checkLogin();
+  console.log('[App] Launched');
+  // Note: profile fetch is deferred until user explicitly logs in,
+  // to avoid network timeouts during WeChat cold start.
 });
 </script>
 

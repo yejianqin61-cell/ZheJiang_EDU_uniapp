@@ -6,10 +6,12 @@ import axios from 'axios';
 export class SplitterService {
   private readonly primaryUrl: string;
   private readonly primaryKey: string;
+  private readonly primaryModel: string;
 
   constructor(private readonly config: ConfigService) {
     this.primaryUrl = config.get<string>('llm.primary.apiUrl', '');
     this.primaryKey = config.get<string>('llm.primary.apiKey', '');
+    this.primaryModel = config.get<string>('llm.primary.model', 'qwen-plus-latest');
   }
 
   async split(rawText: string): Promise<string[]> {
@@ -28,7 +30,7 @@ export class SplitterService {
     const res = await axios.post(
       this.primaryUrl,
       {
-        model: 'qwen3',
+        model: this.primaryModel,
         messages: [
           { role: 'system', content: SPLIT_PROMPT },
           { role: 'user', content: rawText },

@@ -17,14 +17,12 @@ export class ReviewService {
   ): Promise<PaginatedResult<Question>> {
     const qb = this.questionRepo
       .createQueryBuilder('q')
-      .leftJoinAndSelect('q.sourceFile', 'f')
-      .leftJoinAndSelect('q.reviewedBy', 'r')
       .where('q.status = :status', { status: 'parsed' })
-      .andWhere('q.is_deleted = :isDeleted', { isDeleted: false });
+      .andWhere('q.isDeleted = :isDeleted', { isDeleted: false });
 
-    if (fileId) qb.andWhere('q.source_file_id = :fileId', { fileId });
+    if (fileId) qb.andWhere('q.sourceFileId = :fileId', { fileId });
 
-    qb.orderBy('q.created_at', 'ASC')
+    qb.orderBy('q.createdAt', 'ASC')
       .skip((pagination.page - 1) * pagination.pageSize)
       .take(pagination.pageSize);
 
