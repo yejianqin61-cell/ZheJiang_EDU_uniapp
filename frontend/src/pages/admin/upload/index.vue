@@ -49,6 +49,10 @@ function chooseFile() {
     <view class="info"><text>文本类 ≤ 50MB | 图片类 ≤ 10MB</text></view>
 
     <button class="btn-upload" :loading="uploading" @tap="chooseFile">选择文件上传</button>
+
+    <view class="progress-link" @tap="uni.navigateTo({ url: '/pages/admin/upload/progress/index' })">
+      查看上传记录 →
+    </view>
   </view>
 </template>
 
@@ -61,4 +65,5 @@ function chooseFile() {
 .tag.active { background: #1677ff; color: #fff; }
 .info { font-size: 24rpx; color: #999; margin-bottom: 12rpx; }
 .btn-upload { margin-top: 40rpx; background: #1677ff; color: #fff; border-radius: 12rpx; height: 88rpx; line-height: 88rpx; }
+.progress-link { text-align: center; margin-top: 30rpx; font-size: 28rpx; color: #1677ff; }
 </style>

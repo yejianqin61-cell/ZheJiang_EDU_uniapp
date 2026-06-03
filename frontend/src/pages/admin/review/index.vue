@@ -37,9 +37,9 @@ async function handleReview(action: 'approve' | 'reject') {
       <button class="btn-reject" @tap="handleReview('reject')">拒绝选中</button>
     </view>
 
-    <view v-for="q in questions" :key="q.id" class="question-card" @tap="toggleSelect(q.id)">
-      <view class="q-check"><view :class="{ checked: selected.has(q.id) }"></view></view>
-      <view class="q-body">
+    <view v-for="q in questions" :key="q.id" class="question-card">
+      <view class="q-check" @tap.stop="toggleSelect(q.id)"><view :class="{ checked: selected.has(q.id) }"></view></view>
+      <view class="q-body" @tap="uni.navigateTo({ url: `/pages/admin/review/detail/index?id=${q.id}` })">
         <text class="q-content">{{ q.content }}</text>
         <text class="q-answer">答案: {{ q.answer }}</text>
         <text class="q-diff">难度: {{ ['','简单','中等','困难'][q.difficulty] }}</text>

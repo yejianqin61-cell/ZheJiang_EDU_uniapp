@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, LessThan, Repository } from 'typeorm';
+import { Cron } from '@nestjs/schedule';
 import { Question } from '../../../database/entities/question.entity';
 import { QuestionKnowledge } from '../../../database/entities/question-knowledge.entity';
 import { KnowledgePoint } from '../../../database/entities/knowledge-point.entity';
@@ -133,5 +134,23 @@ export class QuestionManageService {
       { isDeleted: true },
     );
     return { deleted: result.affected ?? 0 };
+  }
+
+  /**
+   * Auto-cleanup: hard-delete rejected questions older than 30 days.
+   * Runs daily at 3:30 AM.
+   */
+  @Cron('30 3 * * *')
+  async cleanupRejectedQuestions(): Promise<number> {
+    const cutoff = new Date(Date.now() - 30 * 24 * 3600 * 1000);
+    const result = await this.questionRepo.delete({
+      status: 'rejected',
+      createdAt: LessThan(cutoff),
+    });
+    const deleted = result.affected ?? 0;
+    if (deleted > 0) {
+      console.log(`[Cron] Cleaned up ${deleted} rejected questions older than 30 days`);
+    }
+    return deleted;
   }
 }

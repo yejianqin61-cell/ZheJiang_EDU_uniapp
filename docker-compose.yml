@@ -1,0 +1,87 @@
+version: "3.9"
+
+# ============================================
+# AI智能组卷小程序 — 生产部署编排
+# ============================================
+
+services:
+  # ---- PostgreSQL 15 + pgvector ----
+  db:
+    image: pgvector/pgvector:pg15
+    container_name: ai-paper-db
+    environment:
+      POSTGRES_DB: ai_paper
+      POSTGRES_USER: ai_paper
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ai_paper_dev}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/src/database/migrations/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_paper"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ---- Redis 7 ----
+  redis:
+    image: redis:7-alpine
+    container_name: ai-paper-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ---- NestJS Backend ----
+  backend:
+    build: ./backend
+    container_name: ai-paper-backend
+    environment:
+      NODE_ENV: production
+      DB_TYPE: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ai_paper
+      DB_PASSWORD: ${DB_PASSWORD:-ai_paper_dev}
+      DB_NAME: ai_paper
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET}
+      QWEN3_API_URL: ${QWEN3_API_URL}
+      QWEN3_API_KEY: ${QWEN3_API_KEY}
+      EMBEDDING_API_URL: ${EMBEDDING_API_URL}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
+      WX_APP_ID: ${WX_APP_ID}
+      WX_APP_SECRET: ${WX_APP_SECRET}
+      WX_MCH_ID: ${WX_MCH_ID}
+      WX_API_V3_KEY: ${WX_API_V3_KEY}
+      WX_MCH_SERIAL_NO: ${WX_MCH_SERIAL_NO}
+      WX_MCH_PRIVATE_KEY: ${WX_MCH_PRIVATE_KEY}
+      WX_PAY_NOTIFY_URL: ${WX_PAY_NOTIFY_URL}
+      COS_SECRET_ID: ${COS_SECRET_ID}
+      COS_SECRET_KEY: ${COS_SECRET_KEY}
+      COS_BUCKET: ${COS_BUCKET}
+      COS_REGION: ${COS_REGION}
+      EXPORT_SERVICE_URL: http://export:5000
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ---- Python Export Service ----
+  export:
+    build: ./export-service
+    container_name: ai-paper-export
+    ports:
+      - "5000:5000"
+
+volumes:
+  pgdata:

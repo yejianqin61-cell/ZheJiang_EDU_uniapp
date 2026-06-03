@@ -37,6 +37,13 @@ export class AdminController {
     return this.seedService.seed();
   }
 
+  // === User role management ===
+
+  @Post('users/:id/set-role')
+  async setUserRole(@Param('id') userId: string, @Body('role') role: string) {
+    return this.seedService.setUserRole(userId, role);
+  }
+
   // === Dashboard ===
 
   @Get('questions/stats')

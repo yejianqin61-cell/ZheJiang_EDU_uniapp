@@ -15,14 +15,20 @@ export class AuthService {
     private readonly config: ConfigService,
   ) {}
 
-  async login(code: string) {
+  async login(code: string, nickname?: string) {
     const openid = await this.codeToOpenid(code);
 
     let user = await this.userRepo.findOne({ where: { openid } });
     if (!user) {
+      // Dev: admin_test code → auto admin role
+      const role = openid === 'admin_test' ? 'admin' : 'teacher';
       user = await this.userRepo.save(
-        this.userRepo.create({ openid, role: 'teacher' }),
+        this.userRepo.create({ openid, role, nickname: nickname ?? null }),
       );
+    } else if (nickname && !user.nickname) {
+      // Sync nickname on first login where we have it
+      await this.userRepo.update(user.id, { nickname });
+      user.nickname = nickname;
     }
 
     const token = this.jwtService.sign({ sub: user.id, openid, role: user.role });

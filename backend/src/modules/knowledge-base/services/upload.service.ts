@@ -3,19 +3,24 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import * as mammoth from 'mammoth';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pdfParse = require('pdf-parse');
 import { KbFile } from '../../../database/entities/kb-file.entity';
+import { CosService } from '../../../common/cos.service';
 
 const ALLOWED_EXTS = ['doc', 'docx', 'md', 'pdf', 'png', 'jpg', 'jpeg'];
 const MAX_SIZE_TEXT = 50 * 1024 * 1024;
 const MAX_SIZE_IMAGE = 10 * 1024 * 1024;
 const IMAGE_EXTS = ['png', 'jpg', 'jpeg'];
-const TEXT_EXTS = ['md'];
+const TEXT_EXTS = ['md', 'docx', 'pdf'];
 
 @Injectable()
 export class UploadService {
   constructor(
     @InjectRepository(KbFile)
     private readonly fileRepo: Repository<KbFile>,
+    private readonly cosService: CosService,
     @Optional()
     @InjectQueue('kb-processing')
     private readonly kbQueue?: Queue,
@@ -26,7 +31,7 @@ export class UploadService {
     file: Express.Multer.File,
     subject: string,
     grade: string,
-    pipeline?: (fileId: string, rawText?: string) => Promise<void>,
+    pipeline?: (fileId: string, rawText?: string, imageBase64?: string) => Promise<void>,
   ) {
     const ext = file.originalname.split('.').pop()?.toLowerCase() ?? '';
     if (!ALLOWED_EXTS.includes(ext)) {
@@ -39,17 +44,24 @@ export class UploadService {
       throw new BadRequestException({ code: 60002, message: '文件大小超出限制' });
     }
 
-    // Dev: read text content locally. Prod: COS URL.
-    let cosUrl: string;
+    // Extract text & upload file to COS (or local fallback)
     let rawText: string | undefined;
+    let imageBase64: string | undefined;
 
-    if (TEXT_EXTS.includes(ext)) {
-      rawText = file.buffer.toString('utf-8');
-      cosUrl = `local://${file.originalname}`;
+    if (isImage) {
+      imageBase64 = file.buffer.toString('base64');
     } else {
-      rawText = this.tryExtractText(file, ext);
-      cosUrl = `local://${file.originalname}`;
+      rawText = await this.extractText(file, ext);
     }
+
+    // Upload file to COS (or local fallback)
+    const cosKey = `uploads/${Date.now()}_${file.originalname}`;
+    const uploadResult = await this.cosService.upload(
+      cosKey,
+      file.buffer,
+      file.mimetype,
+    );
+    const cosUrl = uploadResult.url;
 
     const kbFile = await this.fileRepo.save(
       this.fileRepo.create({
@@ -69,12 +81,13 @@ export class UploadService {
       await this.kbQueue.add('process-file', {
         fileId: kbFile.id,
         rawText,
+        imageBase64,
         needOCR: isImage,
       });
     } else if (pipeline) {
       // Synchronous dev path — fire and forget (don't await)
-      pipeline(kbFile.id, rawText).catch((err) => {
-        console.error(`Pipeline failed for file ${kbFile.id}:`, err.message);
+      pipeline(kbFile.id, rawText, imageBase64).catch((err) => {
+        console.error(`[Pipeline] FAILED for file ${kbFile.id}:`, err?.message ?? err, err?.stack?.split('\n')[1] ?? '');
       });
     }
 
@@ -102,12 +115,27 @@ export class UploadService {
     };
   }
 
-  private tryExtractText(file: Express.Multer.File, ext: string): string | undefined {
-    // MD and plain text files: read directly
-    if (TEXT_EXTS.includes(ext)) {
-      return file.buffer.toString('utf-8');
+  private async extractText(
+    file: Express.Multer.File,
+    ext: string,
+  ): Promise<string | undefined> {
+    switch (ext) {
+      case 'md':
+        return file.buffer.toString('utf-8');
+
+      case 'docx': {
+        const result = await mammoth.extractRawText({ buffer: file.buffer });
+        return result.value?.trim() || undefined;
+      }
+
+      case 'pdf': {
+        const data = await pdfParse(file.buffer);
+        return data.text?.trim() || undefined;
+      }
+
+      // Images — handled by OCR in the pipeline
+      default:
+        return undefined;
     }
-    // DOCX, PDF: need dedicated parser — return undefined for now, pipeline will handle
-    return undefined;
   }
 }

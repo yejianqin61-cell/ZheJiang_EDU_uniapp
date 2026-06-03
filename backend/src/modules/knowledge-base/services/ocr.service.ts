@@ -17,28 +17,37 @@ export class OCRService {
     this.apiUrl = config.get<string>('ocr.apiUrl', '');
   }
 
-  async processFile(fileId: string, fileUrl: string, isImage: boolean): Promise<string> {
+  /**
+   * Process a file through OCR.
+   * @param imageBase64 — base64-encoded image data (without data: prefix)
+   */
+  async processFile(
+    fileId: string,
+    imageBase64?: string,
+  ): Promise<string> {
     const task = await this.ocrTaskRepo.save(
       this.ocrTaskRepo.create({ fileId, status: 'processing' }),
     );
 
+    const startedAt = Date.now();
+
     try {
       let text: string;
 
-      if (isImage && this.apiUrl) {
-        text = await this.remoteOCR(fileUrl);
-      } else if (isImage) {
-        // Dev fallback: no OCR engine available
-        text = `[OCR not available in dev mode for image: ${fileUrl}]`;
+      if (imageBase64) {
+        // Preferred: use tesseract.js for local OCR
+        text = await this.localOCR(imageBase64);
+      } else if (this.apiUrl) {
+        // Fallback: remote PaddleOCR service
+        text = await this.remoteOCR(fileId);
       } else {
-        // Text-based file: OCR not needed, text extracted during upload
-        text = '';
+        text = '[OCR unavailable — no image data or OCR service configured]';
       }
 
       await this.ocrTaskRepo.update(task.id, {
         status: 'completed',
         resultText: text,
-        durationMs: 0,
+        durationMs: Date.now() - startedAt,
       });
 
       return text;
@@ -49,6 +58,18 @@ export class OCRService {
       });
       throw err;
     }
+  }
+
+  private async localOCR(base64: string): Promise<string> {
+    // Dynamic import to avoid tesseract.js penalty when unused
+    const Tesseract = require('tesseract.js');
+    console.log('[OCR] Starting tesseract.js (chi_sim)...');
+    const { data } = await Tesseract.recognize(
+      Buffer.from(base64, 'base64'),
+      'chi_sim',
+    );
+    console.log(`[OCR] Recognized ${data.text.length} chars`);
+    return data.text?.trim() ?? '';
   }
 
   private async remoteOCR(fileUrl: string): Promise<string> {

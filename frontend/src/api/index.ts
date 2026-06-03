@@ -43,8 +43,8 @@ async function request<T>(
 }
 
 // === Auth ===
-export function login(code: string) {
-  return request<{ accessToken: string; user: any }>('POST', '/auth/login', { code });
+export function login(code: string, nickname?: string) {
+  return request<{ accessToken: string; user: any }>('POST', '/auth/login', { code, ...(nickname ? { nickname } : {}) });
 }
 
 // === Paper ===

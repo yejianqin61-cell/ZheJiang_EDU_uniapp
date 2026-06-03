@@ -11,6 +11,9 @@ export default () => ({
     appSecret: process.env.WX_APP_SECRET ?? '',
     mchId: process.env.WX_MCH_ID ?? '',
     apiV3Key: process.env.WX_API_V3_KEY ?? '',
+    mchSerialNo: process.env.WX_MCH_SERIAL_NO ?? '',
+    mchPrivateKey: process.env.WX_MCH_PRIVATE_KEY ?? '',
+    payNotifyUrl: process.env.WX_PAY_NOTIFY_URL ?? '',
   },
 
   llm: {

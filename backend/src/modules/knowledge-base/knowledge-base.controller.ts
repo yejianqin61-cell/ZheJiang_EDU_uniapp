@@ -39,7 +39,7 @@ export class KnowledgeBaseController {
       file,
       subject,
       grade,
-      (fileId, rawText) => this.pipelineService.process(fileId, rawText),
+      (fileId, rawText, imageBase64) => this.pipelineService.process(fileId, rawText, imageBase64),
     );
   }
 

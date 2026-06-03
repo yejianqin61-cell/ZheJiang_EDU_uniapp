@@ -25,10 +25,8 @@ export class PaymentService {
    * Returns wxPayParams for frontend wx.requestPayment().
    */
   async createPayment(orderId: string, openid: string) {
-    const order = await this.orderRepo.findOne({
-      where: { id: orderId },
-      relations: ['paper'],
-    });
+    const order = await this.orderRepo.findOne({ where: { id: orderId } });
+    const paper = order ? await this.paperRepo.findOne({ where: { id: order.paperId } }) : null;
     if (!order) throw new NotFoundException({ code: 50001, message: '订单不存在' });
     if (order.status !== 'pending') {
       throw new ConflictException({ code: 30002, message: '订单状态不允许支付' });
@@ -54,7 +52,7 @@ export class PaymentService {
       const result = await this.wxPayClient.unifiedOrder({
         outTradeNo,
         amount: order.amount,
-        description: order.paper?.title ?? 'AI智能组卷',
+        description: paper?.title ?? 'AI智能组卷',
         openid,
       });
       wxPayParams = result.wxPayParams;
@@ -97,12 +95,7 @@ export class PaymentService {
     }
 
     // Step 2: Decrypt resource
-    let callback: {
-      out_trade_no: string;
-      transaction_id: string;
-      trade_state: string;
-      amount: { total: number };
-    };
+    let callback: Record<string, any>;
 
     try {
       const resource = body?.resource;

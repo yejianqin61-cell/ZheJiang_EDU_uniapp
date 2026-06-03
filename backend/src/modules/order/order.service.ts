@@ -186,22 +186,21 @@ export class OrderService {
   // ── O-06: Cleanup (Cron: daily) ───────────────────────────
 
   /**
-   * Physically delete pending/cancelled/expired orders older than 1 day.
+   * Physically delete pending/cancelled/expired orders older than 7 days.
    * Paid orders are never deleted.
    */
   @Cron('0 3 * * *') // 3:00 AM daily
   async cleanupOldOrders(): Promise<number> {
-    const cutoff = new Date(Date.now() - 24 * 3600 * 1000);
-    const result = await this.orderRepo.delete({
-      status: 'cancelled',
-      createdAt: LessThan(cutoff),
-    });
-    // Also delete expired
-    const result2 = await this.orderRepo.delete({
-      status: 'expired',
-      createdAt: LessThan(cutoff),
-    });
-    return (result.affected ?? 0) + (result2.affected ?? 0);
+    const cutoff = new Date(Date.now() - 7 * 24 * 3600 * 1000);
+    let count = 0;
+    for (const status of ['cancelled', 'expired']) {
+      const result = await this.orderRepo.delete({
+        status,
+        createdAt: LessThan(cutoff),
+      });
+      count += result.affected ?? 0;
+    }
+    return count;
   }
 
   // ── Helpers ───────────────────────────────────────────────

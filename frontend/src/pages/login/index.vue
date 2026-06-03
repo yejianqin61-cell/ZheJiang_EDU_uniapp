@@ -20,7 +20,7 @@ async function handleLogin() {
   try {
     await auth.login();
     uni.showToast({ title: '登录成功', icon: 'success' });
-    setTimeout(() => uni.navigateBack(), 600);
+    setTimeout(() => uni.switchTab({ url: '/pages/index/index' }), 600);
   } catch (e: any) {
     errorMsg.value = e?.message ?? '登录失败，请重试';
   } finally {
@@ -33,12 +33,13 @@ async function handleDevLogin() {
   loading.value = true;
   errorMsg.value = '';
   try {
-    const res = await apiLogin(devCode.value.trim());
+    const nickname = devCode.value.trim() === 'admin_test' ? '管理员' : '教师';
+    const res = await apiLogin(devCode.value.trim(), nickname);
     uni.setStorageSync('accessToken', res.data.accessToken);
     auth.token = res.data.accessToken;
     auth.user = res.data.user;
     uni.showToast({ title: '登录成功', icon: 'success' });
-    setTimeout(() => uni.navigateBack(), 600);
+    setTimeout(() => uni.switchTab({ url: '/pages/index/index' }), 600);
   } catch (e: any) {
     errorMsg.value = e?.message ?? '登录失败';
   } finally {

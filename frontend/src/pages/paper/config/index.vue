@@ -24,7 +24,22 @@ function selectGrade(grade: string) {
 
 function selectSubject(subject: string) {
   paper.condition.subject = subject;
+  paper.condition.knowledgePointIds = [];
   paper.fetchKnowledgePoints();
+}
+
+function toggleKp(kpId: string) {
+  const ids = paper.condition.knowledgePointIds ?? [];
+  const idx = ids.indexOf(kpId);
+  if (idx >= 0) {
+    ids.splice(idx, 1);
+  } else {
+    ids.push(kpId);
+  }
+}
+
+function isKpSelected(kpId: string): boolean {
+  return (paper.condition.knowledgePointIds ?? []).includes(kpId);
 }
 
 async function handleGenerate() {
@@ -60,6 +75,15 @@ async function handleGenerate() {
     <view class="section"><text class="label">科目</text>
       <view class="tags">
         <view v-for="s in subjects" :key="s" class="tag" :class="{ active: paper.condition.subject === s }" @tap="selectSubject(s)">{{ s }}</view>
+      </view>
+    </view>
+
+    <view v-if="paper.knowledgePoints.length > 0" class="section">
+      <text class="label">知识点（可选，不选则不限）</text>
+      <view class="tags">
+        <view v-for="kp in paper.knowledgePoints" :key="kp.id"
+              class="tag" :class="{ active: isKpSelected(kp.id) }"
+              @tap="toggleKp(kp.id)">{{ kp.name }} ({{ kp.questionCount }})</view>
       </view>
     </view>
 

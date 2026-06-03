@@ -8,10 +8,16 @@ import { Question } from '../../database/entities/question.entity';
 import { QuestionKnowledge } from '../../database/entities/question-knowledge.entity';
 import { KnowledgePoint } from '../../database/entities/knowledge-point.entity';
 import { KbFile } from '../../database/entities/kb-file.entity';
+import { User } from '../../database/entities/user.entity';
+import { KnowledgeBaseModule } from '../knowledge-base/knowledge-base.module';
+import { SeedService } from './services/seed.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Question, QuestionKnowledge, KnowledgePoint, KbFile])],
+  imports: [
+    TypeOrmModule.forFeature([Question, QuestionKnowledge, KnowledgePoint, KbFile, User]),
+    KnowledgeBaseModule,
+  ],
   controllers: [AdminController],
-  providers: [DashboardService, QuestionManageService, FileManageService],
+  providers: [DashboardService, QuestionManageService, FileManageService, SeedService],
 })
 export class AdminModule {}

@@ -22,7 +22,11 @@ export class PipelineService {
    * Run the full ingestion pipeline for a file.
    * Called synchronously in dev mode (no BullMQ), or by the queue worker in prod.
    */
-  async process(fileId: string, rawText?: string): Promise<void> {
+  async process(
+    fileId: string,
+    rawText?: string,
+    imageBase64?: string,
+  ): Promise<void> {
     const file = await this.fileRepo.findOne({ where: { id: fileId } });
     if (!file) return;
 
@@ -31,8 +35,11 @@ export class PipelineService {
       let text = rawText ?? '';
 
       const isImage = ['png', 'jpg', 'jpeg'].includes(file.fileType);
-      if (isImage || (!text && file.fileType === 'pdf')) {
-        text = await this.ocrService.processFile(fileId, file.cosUrl, isImage);
+      console.log(`[Pipeline] file=${fileId} type=${file.fileType} hasText=${!!rawText} hasImage=${!!imageBase64}`);
+      if (isImage) {
+        console.log(`[Pipeline] Starting OCR for ${fileId} (base64 len=${imageBase64?.length ?? 0})`);
+        text = await this.ocrService.processFile(fileId, imageBase64);
+        console.log(`[Pipeline] OCR done for ${fileId}: ${text?.length ?? 0} chars`);
       }
 
       if (!text || text.trim().length === 0) {

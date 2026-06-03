@@ -52,4 +52,9 @@ export class PaperController {
   getPaper(@Param('id') id: string, @CurrentUser('id') userId: string) {
     return this.paperService.getPaperById(id, userId);
   }
+
+  @Get('debug/count')
+  async debugCount(@Query('subject') subject: string, @Query('grade') grade: string) {
+    return this.paperService.debugCount(subject, grade);
+  }
 }

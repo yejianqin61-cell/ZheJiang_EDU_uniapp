@@ -41,7 +41,7 @@ export class ExportService {
 
     // Save file and update paper
     const filename = `${paper.title}.docx`;
-    const fileId = this.localFileService.save(filename, buffer);
+    const fileId = await this.localFileService.save(filename, buffer);
 
     await this.paperRepo.update(paperId, {
       exportDocxUrl: this.localFileService.getDownloadUrl(fileId),
@@ -76,7 +76,7 @@ export class ExportService {
     }
 
     const filename = `${paper.title}.pdf`;
-    const fileId = this.localFileService.save(filename, buffer);
+    const fileId = await this.localFileService.save(filename, buffer);
 
     await this.paperRepo.update(paperId, {
       exportPdfUrl: this.localFileService.getDownloadUrl(fileId),
@@ -116,7 +116,10 @@ export class ExportService {
   private buildPayload(title: string, snapshots: PaperQuestionSnapshot[]) {
     return {
       title,
-      questions: snapshots.map((s) => s.snapshot),
+      questions: snapshots.map((s) => ({
+        index: s.sortOrder,
+        ...s.snapshot,
+      })),
     };
   }
 

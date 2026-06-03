@@ -14,7 +14,13 @@ export class DownloadController {
   @Public()
   @Get(':fileId')
   async download(@Param('fileId') fileId: string, @Res() res: Response) {
-    const buffer = this.localFileService.read(fileId);
+    // If COS is available, redirect to signed URL
+    const downloadUrl = this.localFileService.getDownloadUrl(fileId);
+    if (downloadUrl.startsWith('http')) {
+      return res.redirect(302, downloadUrl);
+    }
+
+    const buffer = await this.localFileService.read(fileId);
     if (!buffer) {
       throw new NotFoundException({ code: 50001, message: '文件不存在或已过期' });
     }

@@ -1,9 +1,10 @@
 import {
   Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn,
-  ManyToOne, JoinColumn,
+  ManyToOne, OneToMany, JoinColumn,
 } from 'typeorm';
 import { KbFile } from './kb-file.entity';
 import { User } from './user.entity';
+import { QuestionKnowledge } from './question-knowledge.entity';
 
 @Entity('question')
 export class Question {
@@ -43,6 +44,9 @@ export class Question {
 
   @Column({ type: 'varchar', length: 32, default: 'parsed' })
   status: string; // parsed | approved | rejected
+
+  @OneToMany(() => QuestionKnowledge, (qk) => qk.question)
+  questionKnowledge: QuestionKnowledge[];
 
   @Column({ type: 'simple-json', nullable: true })
   embedding: number[] | null; // pgvector on prod, JSON text on SQLite dev

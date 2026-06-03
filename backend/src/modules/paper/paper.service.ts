@@ -6,6 +6,7 @@ import { Paper } from '../../database/entities/paper.entity';
 import { PaperQuestionSnapshot } from '../../database/entities/paper-question-snapshot.entity';
 import { Question } from '../../database/entities/question.entity';
 import { KnowledgePoint } from '../../database/entities/knowledge-point.entity';
+import { QuestionKnowledge } from '../../database/entities/question-knowledge.entity';
 import { RetrievalService } from './services/retrieval.service';
 import { GenerationService } from './services/generation.service';
 
@@ -22,6 +23,8 @@ export class PaperService {
     private readonly questionRepo: Repository<Question>,
     @InjectRepository(KnowledgePoint)
     private readonly kpRepo: Repository<KnowledgePoint>,
+    @InjectRepository(QuestionKnowledge)
+    private readonly qkRepo: Repository<QuestionKnowledge>,
     private readonly retrievalService: RetrievalService,
     private readonly generationService: GenerationService,
     config: ConfigService,
@@ -65,12 +68,23 @@ export class PaperService {
 
     // Stage 1: Retrieve candidate questions directly
     // Note: do NOT use retrievalService.retrieve() — has SQL.js compat issues with repo.find()
-    const allCandidates = await this.questionRepo.createQueryBuilder('q')
+    let allCandidates = await this.questionRepo.createQueryBuilder('q')
       .where('q.subject = :s', { s: dto.subject })
       .andWhere('q.grade = :g', { g: dto.grade })
       .andWhere('q.status = :st', { st: 'approved' })
       .andWhere('q.isDeleted = :del', { del: false })
       .getMany();
+
+    // Stage 1.5: Filter by knowledge points if specified
+    if (dto.knowledgePointIds && dto.knowledgePointIds.length > 0) {
+      const qkEntries = await this.qkRepo
+        .createQueryBuilder('qk')
+        .select('DISTINCT qk.questionId')
+        .where('qk.knowledgePointId IN (:...kpIds)', { kpIds: dto.knowledgePointIds })
+        .getRawMany();
+      const matchingIds = new Set(qkEntries.map((e: any) => e.questionId ?? e.qk_questionId));
+      allCandidates = allCandidates.filter((q) => matchingIds.has(q.id));
+    }
 
     // Apply difficulty distribution
     const finalCandidates = this.applyDifficultyFilter(allCandidates, dto.difficulty, dto.questionCount);

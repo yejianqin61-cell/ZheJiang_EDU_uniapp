@@ -38,5 +38,19 @@ coverage/
 # Claude Code (personal settings)
 .claude/
 
+# Dev runtime
+backend/dev.db
+backend/exports/
+backend/storage/
+backend/logs/
+*.traineddata
+
+# Test artifacts
+backend/temp.json
+backend/test-*.docx
+backend/test-*.md
+backend/test-*.png
+backend/real-test.docx
+
 # Misc
 *.tmp
