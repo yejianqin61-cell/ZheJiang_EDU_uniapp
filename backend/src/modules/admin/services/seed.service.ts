@@ -68,6 +68,96 @@ const SAMPLE_QUESTIONS = [
     options: [],
     answer: '240', analysis: '体积 = 8×5×6 = 240立方分米 = 240升。',
   },
+  // ── 五年级语文 ──
+  {
+    type: 'single_choice', subject: '语文', grade: '五年级', difficulty: 1,
+    content: '"白璧无瑕"中"瑕"的意思是（ ）',
+    options: ['A. 缺点', 'B. 斑点', 'C. 玉上的斑点', 'D. 污点'],
+    answer: 'C', analysis: '"瑕"本义指玉上的斑点，比喻缺点或不足。"白璧无瑕"意为洁白的玉上没有斑点，形容完美无缺。',
+  },
+  {
+    type: 'single_choice', subject: '语文', grade: '五年级', difficulty: 1,
+    content: '下列词语中书写完全正确的是（ ）',
+    options: ['A. 金壁辉煌', 'B. 金碧辉煌', 'C. 金璧辉煌', 'D. 金毕辉煌'],
+    answer: 'B', analysis: '"金碧辉煌"形容建筑物等华丽精致、光彩夺目。"碧"指青绿色。',
+  },
+  {
+    type: 'fill_blank', subject: '语文', grade: '五年级', difficulty: 2,
+    content: '补充诗句：随风潜入夜，（ ）。——杜甫《春夜喜雨》',
+    options: [],
+    answer: '润物细无声', analysis: '出自杜甫《春夜喜雨》，全句描写春雨悄无声息地滋润万物。',
+  },
+  {
+    type: 'true_false', subject: '语文', grade: '五年级', difficulty: 1,
+    content: '"亡羊补牢"这个成语告诉我们要及时改正错误，防止损失扩大。（ ）',
+    options: [],
+    answer: '正确', analysis: '"亡羊补牢"出自《战国策》，意为丢失羊后修补羊圈，比喻受到损失后及时补救。',
+  },
+  {
+    type: 'short_answer', subject: '语文', grade: '五年级', difficulty: 2,
+    content: '请写出三个含有"马"字的成语，并任选一个解释其意思。',
+    options: [],
+    answer: '马到成功、一马当先、万马奔腾（等）。解释略。',
+    analysis: '成语积累是五年级语文学习的重要内容，需要学生掌握常用成语及其寓意。',
+  },
+  {
+    type: 'single_choice', subject: '语文', grade: '五年级', difficulty: 2,
+    content: '下列句子中，没有语病的是（ ）',
+    options: ['A. 他经常回忆过去的往事', 'B. 同学们都积极参加了体育比赛', 'C. 大约过了十分钟左右', 'D. 我断定他可能不会来'],
+    answer: 'B', analysis: 'A"过去的"和"往"重复；C"大约"和"左右"重复；D"断定"和"可能"矛盾。',
+  },
+  {
+    type: 'fill_blank', subject: '语文', grade: '五年级', difficulty: 2,
+    content: '"桂林山水甲天下"中"甲"的意思是（ ）。这句话是说桂林的山水（ ）。',
+    options: [],
+    answer: '第一/居首位；天下第一/最美',
+    analysis: '"甲"在这里是"居第一位"的意思，这句话赞美桂林山水天下最美。',
+  },
+  {
+    type: 'single_choice', subject: '语文', grade: '五年级', difficulty: 3,
+    content: '对下面这句话理解最准确的是："书籍是人类进步的阶梯。"——高尔基',
+    options: ['A. 书籍可以当梯子使用', 'B. 读书能让人往高处走', 'C. 阅读书籍能促进人类文明不断发展', 'D. 高尔基喜欢爬楼梯'],
+    answer: 'C', analysis: '高尔基用"阶梯"作比喻，形象地说明了读书对人类进步的重要作用。',
+  },
+  {
+    type: 'short_answer', subject: '语文', grade: '五年级', difficulty: 3,
+    content: '阅读下面这段话，回答问题。\n"春天来了，小草从土里钻出来，嫩嫩的，绿绿的。园子里，田野里，一大片一大片满是的。"\n这段话运用了什么修辞手法？有什么表达效果？',
+    options: [],
+    answer: '运用了拟人和反复的修辞手法。"钻"把小草人格化，生动形象地写出了小草的旺盛生命力；"嫩嫩的，绿绿的"反复强调，突出了小草的鲜嫩可爱。',
+    analysis: '考查学生对修辞手法的识别和赏析能力，是五年级阅读理解的重点。',
+  },
+  // ── 三年级数学 ──
+  {
+    type: 'single_choice', subject: '数学', grade: '三年级', difficulty: 1,
+    content: '56 ÷ 8 =（ ）',
+    options: ['A. 6', 'B. 7', 'C. 8', 'D. 9'],
+    answer: 'B', analysis: '根据乘法口诀：七八五十六，所以56÷8=7。',
+  },
+  {
+    type: 'fill_blank', subject: '数学', grade: '三年级', difficulty: 1,
+    content: '一个长方形的长是8厘米，宽是5厘米，它的周长是（ ）厘米。',
+    options: [],
+    answer: '26', analysis: '长方形周长 = (长+宽) × 2 = (8+5) × 2 = 26厘米。',
+  },
+  {
+    type: 'single_choice', subject: '数学', grade: '三年级', difficulty: 2,
+    content: '3时 =（ ）分',
+    options: ['A. 30', 'B. 60', 'C. 120', 'D. 180'],
+    answer: 'D', analysis: '1时=60分，3时=3×60=180分。',
+  },
+  {
+    type: 'true_false', subject: '数学', grade: '三年级', difficulty: 1,
+    content: '0乘任何数都得0。（ ）',
+    options: [],
+    answer: '正确', analysis: '0乘以任何数都等于0，这是乘法的基本性质。',
+  },
+  {
+    type: 'short_answer', subject: '数学', grade: '三年级', difficulty: 2,
+    content: '小明有48张邮票，小红的邮票是小明的3倍。小红有多少张邮票？两人一共有多少张？',
+    options: [],
+    answer: '小红144张；一共192张',
+    analysis: '小红：48×3=144张；一共：48+144=192张。',
+  },
 ];
 
 // Knowledge points mapped to seed question indices (1-based)
@@ -82,6 +172,22 @@ const SEED_KP_MAP: Record<string, number[]> = {
   '正方体体积': [8],      // Q8: 正方体体积
   '质数与合数': [9],      // Q9: 质数都是奇数
   '体积与容积': [10],     // Q10: 长方体水箱
+  // 五年级语文
+  '字义辨析': [11],        // Q11: 白璧无瑕
+  '字形书写': [12],        // Q12: 金碧辉煌
+  '古诗积累': [13],        // Q13: 随风潜入夜
+  '成语理解': [14],        // Q14: 亡羊补牢
+  '成语积累': [15],        // Q15: 含"马"成语
+  '病句辨析': [16],        // Q16: 没有语病的句子
+  '词语理解': [17],        // Q17: 桂林山水甲天下
+  '名言理解': [18],        // Q18: 书籍是人类进步的阶梯
+  '修辞手法': [19],        // Q19: 春天来了
+  // 三年级数学
+  '表内除法': [20],        // Q20: 56÷8
+  '长方形周长': [21],      // Q21: 周长计算
+  '时间换算': [22],        // Q22: 3时=多少分
+  '乘法性质': [23],        // Q23: 0乘任何数
+  '倍数应用': [24],        // Q24: 邮票问题
 };
 
 @Injectable()

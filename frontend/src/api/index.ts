@@ -1,6 +1,25 @@
 import type { ApiResponse } from '../types';
 
-const BASE_URL = 'http://localhost:3000/v1';
+// 自动检测环境：
+// - H5 开发: localhost
+// - H5 生产: 当前域名（Caddy 反代 /v1/* → backend:3000）
+// - 微信小程序: 生产域名（需在微信公众平台配置 request 合法域名）
+const BASE_URL = (() => {
+  // #ifdef H5
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return 'http://localhost:3000/v1';
+  }
+  return `${window.location.protocol}//${host}/v1`;
+  // #endif
+
+  // #ifdef MP-WEIXIN
+  // 替换为你的生产域名（微信小程序不支持相对路径，必须完整URL）
+  return 'https://your-domain.com/v1';
+  // #endif
+
+  return 'http://localhost:3000/v1';
+})();
 
 function getToken(): string {
   return uni.getStorageSync('accessToken') ?? '';
