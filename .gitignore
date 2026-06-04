@@ -54,3 +54,4 @@ backend/real-test.docx
 
 # Misc
 *.tmp
+__pycache__/

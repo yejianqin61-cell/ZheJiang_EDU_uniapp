@@ -39,11 +39,12 @@ import { HealthController } from './health.controller';
             synchronize: false,
           };
         }
-        // SQL.js — pure JS SQLite, no native deps
+        // SQL.js — pure JS SQLite, no native deps.
+        // Use DB_PATH env var to override (e.g. ':memory:' for isolated tests).
         return {
           type: 'sqljs',
-          location: 'dev.db',
-          autoSave: true,
+          location: process.env.DB_PATH ?? 'dev.db',
+          autoSave: process.env.DB_PATH === ':memory:' ? false : true,
           autoLoadEntities: true,
           synchronize: true,
         };

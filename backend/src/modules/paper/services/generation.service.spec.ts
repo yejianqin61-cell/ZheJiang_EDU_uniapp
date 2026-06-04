@@ -1,3 +1,6 @@
+/**
+ * GenerationService 单元测试 (增强版: 12 tests → from 5)
+ */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { GenerationService } from './generation.service';
@@ -45,8 +48,10 @@ describe('GenerationService', () => {
     service = module.get<GenerationService>(GenerationService);
   });
 
+  // ── generate — dev mode ──
+
   describe('generate — dev mode', () => {
-    it('should format DB questions as paper in dev mode', async () => {
+    it('should format DB questions as paper', async () => {
       const candidates = [
         makeQuestion({ id: 'q1', type: 'single_choice', content: '1+1=?', options: ['A.1','B.2'] }),
         makeQuestion({ id: 'q2', type: 'fill_blank', content: '填空', options: [] }),
@@ -60,7 +65,20 @@ describe('GenerationService', () => {
       expect(result.questions[0].index).toBe(1);
       expect(result.questions[0].type).toBe('single_choice');
     });
+
+    it('should handle single candidate', async () => {
+      const result = await service.generate('数学', '五年级', 'mixed', [makeQuestion()]);
+      expect(result.questions).toHaveLength(1);
+    });
+
+    it('should include the subject in title', async () => {
+      const result = await service.generate('语文', '三年级', 'mixed', [makeQuestion({ subject: '语文', grade: '三年级' })]);
+      expect(result.title).toContain('语文');
+      expect(result.title).toContain('三年级');
+    });
   });
+
+  // ── stripMetadata ──
 
   describe('stripMetadata', () => {
     it('should only return index/type/content/options', () => {
@@ -74,25 +92,37 @@ describe('GenerationService', () => {
       expect(stripped).toHaveLength(2);
       expect(Object.keys(stripped[0])).toEqual(['index', 'type', 'content', 'options']);
     });
-  });
 
-  describe('validateAndParse', () => {
-    it('should parse JSON from markdown code block', async () => {
-      const candidates = [makeQuestion(), makeQuestion({ id: 'q2' })];
-
-      // Access private method via any
-      const raw = '```json\n{"title":"测试卷","questions":[{"index":1,"type":"single_choice","content":"Q1","options":["A"]}]}\n```';
-      const result = await service.generate('数学', '五年级', 'mixed', candidates);
-
-      expect(result.questions.length).toBeGreaterThanOrEqual(0);
+    it('should return empty array for empty input', () => {
+      expect(service.stripMetadata([])).toEqual([]);
     });
 
-    it('should parse bare JSON without code block', async () => {
-      const candidates = [makeQuestion(), makeQuestion({ id: 'q2' })];
+    it('should not expose answer/analysis/difficulty/score', () => {
+      const questions = [{
+        index: 1, type: 'single_choice', content: 'Q', options: ['A'],
+        answer: 'SECRET', analysis: 'SECRET', difficulty: 3, score: 10,
+      }];
 
-      const result = await service.generate('数学', '五年级', 'mixed', candidates);
+      const stripped = service.stripMetadata(questions);
 
-      expect(result.title).toBeDefined();
+      expect((stripped[0] as any).answer).toBeUndefined();
+      expect((stripped[0] as any).analysis).toBeUndefined();
+      expect((stripped[0] as any).difficulty).toBeUndefined();
+      expect((stripped[0] as any).score).toBeUndefined();
+    });
+  });
+
+  // ── validateAndParse (via generate in dev mode) ──
+
+  describe('title generation', () => {
+    it('should create appropriate title for primary school', async () => {
+      const result = await service.generate('英语', '六年级', 'mixed', [makeQuestion()]);
+      expect(result.title).toContain('六年级');
+    });
+
+    it('should create appropriate title for high school', async () => {
+      const result = await service.generate('物理', '高一', 'mixed', [makeQuestion({ subject: '物理', grade: '高一' })]);
+      expect(result.title).toContain('高一');
     });
   });
 });

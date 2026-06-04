@@ -21,7 +21,14 @@ describe('AuthService', () => {
       save: jest.fn(),
       create: jest.fn((dto) => dto),
       update: jest.fn().mockResolvedValue({ affected: 1 }),
+      createQueryBuilder: jest.fn().mockReturnValue({
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest.fn(), // set per-test via userRepo.findOne
+      }),
     };
+    // Wire createQueryBuilder().getOne() to userRepo.findOne for backward compat
+    userRepo.createQueryBuilder().getOne.mockImplementation(() => userRepo.findOne());
     jwtService = { sign: jest.fn().mockReturnValue('jwt.token.here') };
 
     const module: TestingModule = await Test.createTestingModule({

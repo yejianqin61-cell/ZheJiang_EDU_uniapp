@@ -94,5 +94,33 @@ describe('Common — Interceptors & Filters', () => {
 
       expect(() => guard.canActivate(context)).toThrow();
     });
+
+    it('should throw ForbiddenException when user is null', () => {
+      const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['admin']) } as any;
+      const guard = new RolesGuard(reflector);
+      const context = {
+        getHandler: jest.fn(),
+        getClass: jest.fn(),
+        switchToHttp: () => ({ getRequest: () => ({ user: null }) }),
+      } as any;
+
+      expect(() => guard.canActivate(context)).toThrow();
+    });
+  });
+
+  // ── JwtAuthGuard ──
+
+  describe('JwtAuthGuard', () => {
+    it('should be defined', () => {
+      const reflector = { get: jest.fn() } as any;
+      const guard = new JwtAuthGuard(reflector);
+      expect(guard).toBeDefined();
+    });
+
+    it('should extend AuthGuard with jwt strategy', () => {
+      const reflector = { get: jest.fn() } as any;
+      const guard = new JwtAuthGuard(reflector);
+      expect(guard.canActivate).toBeDefined();
+    });
   });
 });
