@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Question } from '../../../database/entities/question.entity';
 import { User } from '../../../database/entities/user.entity';
+import { KnowledgePoint } from '../../../database/entities/knowledge-point.entity';
+import { QuestionKnowledge } from '../../../database/entities/question-knowledge.entity';
 import { EmbeddingService } from '../../knowledge-base/services/embedding.service';
 
 const SAMPLE_QUESTIONS = [
@@ -68,6 +70,20 @@ const SAMPLE_QUESTIONS = [
   },
 ];
 
+// Knowledge points mapped to seed question indices (1-based)
+const SEED_KP_MAP: Record<string, number[]> = {
+  '分数比较': [1],        // Q1: 分数中最大的是
+  '小数与分数': [2],      // Q2: 0.25化为分数
+  '三角形面积': [3],      // Q3: 三角形面积
+  '小数除法': [4],        // Q4: 除以0.01
+  '相遇问题': [5],        // Q5: 两车相遇
+  '小数乘法': [6],        // Q6: 3.14×100
+  '分数除法': [7],        // Q7: 绳子平均分
+  '正方体体积': [8],      // Q8: 正方体体积
+  '质数与合数': [9],      // Q9: 质数都是奇数
+  '体积与容积': [10],     // Q10: 长方体水箱
+};
+
 @Injectable()
 export class SeedService {
   constructor(
@@ -75,22 +91,28 @@ export class SeedService {
     private readonly questionRepo: Repository<Question>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(KnowledgePoint)
+    private readonly kpRepo: Repository<KnowledgePoint>,
+    @InjectRepository(QuestionKnowledge)
+    private readonly qkRepo: Repository<QuestionKnowledge>,
     private readonly embeddingService: EmbeddingService,
   ) {}
 
-  async seed(): Promise<{ inserted: number }> {
+  async seed(): Promise<{ inserted: number; knowledgePoints: number }> {
     // Check if data already exists
     const count = await this.questionRepo.count({ where: { status: 'approved', isDeleted: false } });
     if (count >= 10) {
-      return { inserted: 0 };
+      return { inserted: 0, knowledgePoints: 0 };
     }
 
+    // Step 1: Create questions
+    const savedQuestions: Question[] = [];
     for (const q of SAMPLE_QUESTIONS) {
       let embedding: number[] | null = null;
       try {
         embedding = await this.embeddingService.embed(q.content);
       } catch { /* embedding API unavailable, use null */ }
-      await this.questionRepo.save(
+      const saved = await this.questionRepo.save(
         this.questionRepo.create({
           ...q,
           embedding: embedding as any,
@@ -98,9 +120,46 @@ export class SeedService {
           isDeleted: false,
         }),
       );
+      savedQuestions.push(saved);
     }
 
-    return { inserted: await this.questionRepo.count({ where: { status: 'approved' } }) };
+    // Step 2: Create knowledge points + associations
+    let kpCount = 0;
+    for (const [kpName, questionIndices] of Object.entries(SEED_KP_MAP)) {
+      let kp = await this.kpRepo.findOne({ where: { name: kpName, subject: '数学', grade: '五年级' } });
+      if (!kp) {
+        let kpEmbedding: number[] | null = null;
+        try { kpEmbedding = await this.embeddingService.embed(kpName); } catch {}
+        kp = await this.kpRepo.save(
+          this.kpRepo.create({
+            name: kpName,
+            subject: '数学',
+            grade: '五年级',
+            embedding: kpEmbedding as any,
+            questionCount: questionIndices.length,
+          }),
+        );
+      }
+
+      for (const idx of questionIndices) {
+        const question = savedQuestions[idx - 1]; // 1-based to 0-based
+        if (question) {
+          await this.qkRepo.save(
+            this.qkRepo.create({
+              questionId: question.id,
+              knowledgePointId: kp.id,
+              confidence: 0.9,
+            }),
+          );
+        }
+      }
+      kpCount++;
+    }
+
+    return {
+      inserted: savedQuestions.length,
+      knowledgePoints: kpCount,
+    };
   }
 
   async setUserRole(userId: string, role: string): Promise<{ userId: string; role: string }> {

@@ -43,11 +43,6 @@ export class PaperController {
     return this.paperService.generate(userId, dto);
   }
 
-  @Post(':id/regenerate')
-  regenerate(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    return this.paperService.regenerate(id, userId);
-  }
-
   @Get(':id')
   getPaper(@Param('id') id: string, @CurrentUser('id') userId: string) {
     return this.paperService.getPaperById(id, userId);

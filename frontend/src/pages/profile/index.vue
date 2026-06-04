@@ -4,7 +4,7 @@ import { useAuthStore } from '../../stores/auth';
 import { getUserStats } from '../../api';
 
 const auth = useAuthStore();
-const stats = ref({ totalPapers: 0, totalPaid: 0, todayRegenerates: 0 });
+const stats = ref({ totalPapers: 0, totalPaid: 0 });
 const statsLoaded = ref(false);
 
 onMounted(async () => {
@@ -52,10 +52,6 @@ function handleLogout() {
       <view class="stat-card">
         <text class="stat-num">{{ statsLoaded ? stats.totalPaid : '-' }}</text>
         <text class="stat-label">已支付</text>
-      </view>
-      <view class="stat-card">
-        <text class="stat-num">{{ statsLoaded ? `${stats.todayRegenerates}/3` : '-' }}</text>
-        <text class="stat-label">今日重生成</text>
       </view>
     </view>
 

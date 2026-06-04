@@ -18,7 +18,9 @@ export class AuthService {
   async login(code: string, nickname?: string) {
     const openid = await this.codeToOpenid(code);
 
-    let user = await this.userRepo.findOne({ where: { openid } });
+    let user = await this.userRepo.createQueryBuilder('u')
+      .where('u.openid = :openid', { openid })
+      .getOne();
     if (!user) {
       // Dev: admin_test code → auto admin role
       const role = openid === 'admin_test' ? 'admin' : 'teacher';

@@ -42,7 +42,9 @@ async function handleWxPay() {
       });
     }
     uni.showToast({ title: '支付成功', icon: 'success' });
-    uni.navigateBack({ delta: 2 });
+    setTimeout(() => {
+      uni.redirectTo({ url: `/pages/orders/detail/index?orderId=${order.currentOrder!.orderId}&paperId=${order.currentOrder!.paperId ?? ''}` });
+    }, 800);
   } catch (e: any) {
     console.error('Payment error:', e);
     uni.showToast({ title: '支付取消或失败', icon: 'none' });

@@ -28,22 +28,15 @@ export class UserService {
   }
 
   async getStats(userId: string) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const totalPapers = await this.paperRepo.createQueryBuilder('p')
+      .where('p.user_id = :uid', { uid: userId })
+      .getCount();
 
-    const [totalPapers, totalPaid, todayPapers] = await Promise.all([
-      this.paperRepo.count({ where: { userId } }),
-      this.orderRepo.count({ where: { userId, status: 'paid' } }),
-      this.paperRepo.count({
-        where: { userId, createdAt: Between(today, tomorrow) },
-      }),
-    ]);
+    const totalPaid = await this.orderRepo.createQueryBuilder('o')
+      .where('o.user_id = :uid', { uid: userId })
+      .andWhere('o.status = :st', { st: 'paid' })
+      .getCount();
 
-    // Regenerates today = papers created today minus the first one (if any were created today)
-    const todayRegenerates = Math.max(0, todayPapers - 1);
-
-    return { totalPapers, totalPaid, todayRegenerates };
+    return { totalPapers, totalPaid };
   }
 }

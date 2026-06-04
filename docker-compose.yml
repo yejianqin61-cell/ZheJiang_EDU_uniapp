@@ -3,8 +3,36 @@ version: "3.9"
 # ============================================
 # AI智能组卷小程序 — 生产部署编排
 # ============================================
+#
+# 启动: docker compose up -d
+# 查看: docker compose ps
+# 日志: docker compose logs -f backend
+#
+# 服务:
+#   caddy   — HTTPS 反向代理 (:443 → :3000)
+#   backend — NestJS API
+#   db      — PostgreSQL 15 + pgvector
+#   redis   — Redis 7 (BullMQ)
+#   export  — Python DOCX/PDF 导出
+# ============================================
 
 services:
+  # ---- Caddy Reverse Proxy (Auto HTTPS) ----
+  caddy:
+    image: caddy:2-alpine
+    container_name: ai-paper-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    depends_on:
+      - backend
+    restart: unless-stopped
   # ---- PostgreSQL 15 + pgvector ----
   db:
     image: pgvector/pgvector:pg15
@@ -85,3 +113,5 @@ services:
 
 volumes:
   pgdata:
+  caddy_data:
+  caddy_config:

@@ -9,18 +9,48 @@ const grades = ['一年级','二年级','三年级','四年级','五年级','六
 const uploading = ref(false);
 
 function chooseFile() {
+  if (!subject.value || !grade.value) {
+    uni.showToast({ title: '请先选择学科和年级', icon: 'none' });
+    return;
+  }
+  // #ifdef H5
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.doc,.docx,.md,.pdf,.png,.jpg,.jpeg';
+  input.onchange = async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    uploading.value = true;
+    uni.showToast({ title: '上传中...', icon: 'loading', duration: 99999 });
+    try {
+      const result: any = await uploadFile(file, subject.value, grade.value);
+      uni.hideToast();
+      uni.showToast({ title: '上传成功，AI解析中...', icon: 'success' });
+      setTimeout(() => {
+        uni.redirectTo({ url: `/pages/admin/review/index?fileId=${result.data?.fileId}` });
+      }, 1000);
+    } catch (e) {
+      uni.showToast({ title: '上传失败', icon: 'none' });
+    } finally {
+      uploading.value = false;
+    }
+  };
+  input.click();
+  // #endif
+  // #ifndef H5
   uni.chooseMessageFile({
     count: 1,
     type: 'file',
-    success: async (res) => {
-      if (!subject.value || !grade.value) {
-        uni.showToast({ title: '请先选择学科和年级', icon: 'none' });
-        return;
-      }
+    success: async (res: any) => {
       uploading.value = true;
+      uni.showToast({ title: '上传中...', icon: 'loading', duration: 99999 });
       try {
-        await uploadFile(res.tempFiles[0].path, subject.value, grade.value);
-        uni.showToast({ title: '上传成功，正在处理', icon: 'success' });
+        const result: any = await uploadFile(res.tempFiles[0].path, subject.value, grade.value);
+        uni.hideToast();
+        uni.showToast({ title: '上传成功，AI解析中...', icon: 'success' });
+        setTimeout(() => {
+          uni.redirectTo({ url: `/pages/admin/review/index?fileId=${result.data?.fileId}` });
+        }, 1000);
       } catch {
         uni.showToast({ title: '上传失败', icon: 'none' });
       } finally {
@@ -28,6 +58,7 @@ function chooseFile() {
       }
     },
   });
+  // #endif
 }
 </script>
 

@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { onLoad } from '@dcloudio/uni-app';
 import { ref } from 'vue';
-import { getOrderDetail, getOrderDownload } from '../../../api';
+import { getOrderDetail, getOrderDownload, exportDocx } from '../../../api';
 import type { OrderItem } from '../../../types';
 
 const orderId = ref('');
 const order = ref<OrderItem | null>(null);
 const downloading = ref(false);
+const exporting = ref(false);
 const loading = ref(true);
+const paperId = ref('');
 
 const statusLabel: Record<string, string> = {
   paid: '已支付',
@@ -18,6 +20,7 @@ const statusLabel: Record<string, string> = {
 
 onLoad(async (options) => {
   orderId.value = options?.orderId ?? '';
+  paperId.value = options?.paperId ?? '';
   if (!orderId.value) {
     uni.showToast({ title: '订单不存在', icon: 'none' });
     setTimeout(() => uni.navigateBack(), 800);
@@ -26,6 +29,9 @@ onLoad(async (options) => {
   try {
     const res = await getOrderDetail(orderId.value);
     order.value = res.data;
+    paperId.value = res.data.paperId ?? '';
+    // Check if already exported
+    await checkExistingExport();
   } catch {
     uni.showToast({ title: '订单加载失败', icon: 'none' });
   } finally {
@@ -33,36 +39,63 @@ onLoad(async (options) => {
   }
 });
 
-async function handleDownload() {
-  if (!orderId.value || downloading.value) return;
-  downloading.value = true;
+let downloadUrl = '';
+
+async function checkExistingExport() {
   try {
     const res = await getOrderDownload(orderId.value);
-    const url = res.data.pdfUrl ?? res.data.docxUrl;
-    if (!url) {
-      uni.showToast({ title: '暂无导出文件', icon: 'none' });
-      return;
-    }
-    // #ifdef H5
-    window.open(url, '_blank');
-    // #endif
-    // #ifndef H5
-    uni.downloadFile({
-      url,
-      success: (r) => {
-        if (r.statusCode === 200) {
-          uni.openDocument({ filePath: r.tempFilePath, showMenu: true });
-        }
-      },
-      fail: () => uni.showToast({ title: '下载失败', icon: 'none' }),
-    });
-    // #endif
-    uni.showToast({ title: '开始下载', icon: 'success' });
+    downloadUrl = res.data.docxUrl ?? res.data.pdfUrl ?? '';
+  } catch { /* not exported yet */ }
+}
+
+async function handleExportAndDownload() {
+  if (!paperId.value || exporting.value) return;
+  exporting.value = true;
+  try {
+    uni.showToast({ title: '正在生成试卷...', icon: 'loading', duration: 3000 });
+    const res = await exportDocx(paperId.value);
+    downloadUrl = res.data.downloadUrl ?? '';
+    uni.showToast({ title: '导出成功', icon: 'success' });
+    // Download
+    triggerDownload(downloadUrl);
   } catch {
-    /* error handled in request */
+    uni.showToast({ title: '导出失败，请重试', icon: 'none' });
   } finally {
-    downloading.value = false;
+    exporting.value = false;
   }
+}
+
+async function handleDownload() {
+  if (downloading.value) return;
+  if (downloadUrl) {
+    triggerDownload(downloadUrl);
+  } else {
+    // Not exported yet — export first
+    await handleExportAndDownload();
+  }
+}
+
+function triggerDownload(url: string) {
+  if (!url) {
+    uni.showToast({ title: '暂无导出文件', icon: 'none' });
+    return;
+  }
+  // Prepend backend base URL for relative paths
+  const fullUrl = url.startsWith('http') ? url : `http://localhost:3000${url}`;
+  // #ifdef H5
+  window.open(fullUrl, '_blank');
+  // #endif
+  // #ifndef H5
+  uni.downloadFile({
+    url: fullUrl,
+    success: (r) => {
+      if (r.statusCode === 200) {
+        uni.openDocument({ filePath: r.tempFilePath, showMenu: true });
+      }
+    },
+    fail: () => uni.showToast({ title: '下载失败', icon: 'none' }),
+  });
+  // #endif
 }
 </script>
 
@@ -88,14 +121,24 @@ async function handleDownload() {
       </view>
     </view>
 
-    <button
-      v-if="order.status === 'paid'"
-      class="btn-download"
-      :loading="downloading"
-      @tap="handleDownload"
-    >
-      下载试卷
-    </button>
+    <view v-if="order.status === 'paid'" class="actions">
+      <button
+        v-if="!downloadUrl"
+        class="btn-export"
+        :loading="exporting"
+        @tap="handleExportAndDownload"
+      >
+        导出并下载 DOCX
+      </button>
+      <button
+        v-else
+        class="btn-download"
+        :loading="downloading"
+        @tap="handleDownload"
+      >
+        下载试卷
+      </button>
+    </view>
   </view>
 
   <view v-else class="empty">
@@ -165,11 +208,22 @@ async function handleDownload() {
   color: #fa8c16;
 }
 
+.actions { margin-top: 20rpx; }
 .btn-download {
   width: 100%;
   height: 96rpx;
   line-height: 96rpx;
   background: #1677ff;
+  color: #fff;
+  font-size: 32rpx;
+  border-radius: 12rpx;
+  border: none;
+}
+.btn-export {
+  width: 100%;
+  height: 96rpx;
+  line-height: 96rpx;
+  background: #52c41a;
   color: #fff;
   font-size: 32rpx;
   border-radius: 12rpx;

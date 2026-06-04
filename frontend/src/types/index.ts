@@ -72,6 +72,7 @@ export interface PaperResult {
 export interface OrderItem {
   orderId: string;
   orderNo: string;
+  paperId?: string;
   paperTitle: string;
   amount: number;
   status: string;
@@ -82,6 +83,7 @@ export interface CreateOrderResult {
   orderId: string;
   orderNo: string;
   amount: number;
+  paperId?: string;
   wxPayParams: Record<string, string> | null;
 }
 

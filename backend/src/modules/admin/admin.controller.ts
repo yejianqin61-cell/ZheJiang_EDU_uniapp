@@ -7,6 +7,7 @@ import { DashboardService } from './services/dashboard.service';
 import { QuestionManageService } from './services/question-manage.service';
 import { FileManageService } from './services/file-manage.service';
 import { SeedService } from './services/seed.service';
+import { BulkSeedService } from './services/bulk-seed.service';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 class BatchDeleteDto {
@@ -28,6 +29,7 @@ export class AdminController {
     private readonly questionManageService: QuestionManageService,
     private readonly fileManageService: FileManageService,
     private readonly seedService: SeedService,
+    private readonly bulkSeedService: BulkSeedService,
   ) {}
 
   // === Dev: Seed test data ===
@@ -35,6 +37,17 @@ export class AdminController {
   @Post('seed')
   async seed() {
     return this.seedService.seed();
+  }
+
+  // === Bulk seed (LLM-generated questions for all grades) ===
+
+  @Post('seed-subject')
+  async seedSubject(
+    @Body('subject') subject: string,
+    @Body('perGrade') perGrade?: number,
+    @Body('grade') grade?: string,
+  ) {
+    return this.bulkSeedService.seedSubject(subject, perGrade ?? 5, grade);
   }
 
   // === User role management ===

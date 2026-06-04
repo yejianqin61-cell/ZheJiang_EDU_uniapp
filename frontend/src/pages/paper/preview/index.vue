@@ -46,7 +46,6 @@ async function handlePay() {
 
     <view class="bottom-bar">
       <button class="btn-pay" @tap="handlePay">支付并导出</button>
-      <button class="btn-retry" @tap="paper.regenerate">重新生成</button>
     </view>
   </view>
 </template>

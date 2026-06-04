@@ -12,8 +12,8 @@ export class DownloadController {
    * Files expire after 24h (enforced by cleanup or TTL check).
    */
   @Public()
-  @Get(':fileId')
-  async download(@Param('fileId') fileId: string, @Res() res: Response) {
+  @Get('*')
+  async download(@Param('0') fileId: string, @Res() res: Response) {
     // If COS is available, redirect to signed URL
     const downloadUrl = this.localFileService.getDownloadUrl(fileId);
     if (downloadUrl.startsWith('http')) {

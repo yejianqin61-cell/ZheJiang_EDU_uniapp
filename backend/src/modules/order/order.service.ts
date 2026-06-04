@@ -48,6 +48,7 @@ export class OrderService {
       orderId: order.id,
       orderNo: order.orderNo,
       amount: order.amount,
+      paperId: order.paperId,
       wxPayParams: null, // filled by controller layer
     };
   }

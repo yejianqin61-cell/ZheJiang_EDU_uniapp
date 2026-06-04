@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname as pathDirname } from 'path';
 
 export interface UploadResult {
   url: string;    // COS URL or local file path
@@ -160,6 +160,10 @@ export class CosService {
 
   private async saveLocal(key: string, buffer: Buffer): Promise<UploadResult> {
     const filePath = join(this.localDir, key);
+    const dir = pathDirname(filePath);
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
     writeFileSync(filePath, buffer);
     return { url: filePath, key, isLocal: true };
   }

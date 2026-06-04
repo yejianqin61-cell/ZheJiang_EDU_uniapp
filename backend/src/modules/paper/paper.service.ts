@@ -1,7 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
+import { In, Repository } from 'typeorm';
 import { Paper } from '../../database/entities/paper.entity';
 import { PaperQuestionSnapshot } from '../../database/entities/paper-question-snapshot.entity';
 import { Question } from '../../database/entities/question.entity';
@@ -12,7 +11,6 @@ import { GenerationService } from './services/generation.service';
 
 @Injectable()
 export class PaperService {
-  private readonly regenerateDailyLimit: number;
 
   constructor(
     @InjectRepository(Paper)
@@ -27,10 +25,7 @@ export class PaperService {
     private readonly qkRepo: Repository<QuestionKnowledge>,
     private readonly retrievalService: RetrievalService,
     private readonly generationService: GenerationService,
-    config: ConfigService,
-  ) {
-    this.regenerateDailyLimit = config.get<number>('paper.regenerateDailyLimit', 3);
-  }
+  ) {}
 
   getConfigOptions() {
     return {
@@ -77,12 +72,12 @@ export class PaperService {
 
     // Stage 1.5: Filter by knowledge points if specified
     if (dto.knowledgePointIds && dto.knowledgePointIds.length > 0) {
-      const qkEntries = await this.qkRepo
-        .createQueryBuilder('qk')
-        .select('DISTINCT qk.questionId')
-        .where('qk.knowledgePointId IN (:...kpIds)', { kpIds: dto.knowledgePointIds })
-        .getRawMany();
-      const matchingIds = new Set(qkEntries.map((e: any) => e.questionId ?? e.qk_questionId));
+      // Use repo.find() instead of getRawMany() to avoid SQL.js column name issues
+      const qkEntries = await this.qkRepo.find({
+        where: { knowledgePointId: In(dto.knowledgePointIds) },
+        select: ['questionId'],
+      });
+      const matchingIds = new Set(qkEntries.map((e) => e.questionId));
       allCandidates = allCandidates.filter((q) => matchingIds.has(q.id));
     }
 
@@ -143,38 +138,6 @@ export class PaperService {
       questions: this.generationService.stripMetadata(generated.questions),
       generateTime: +(generateMs / 1000).toFixed(1),
     };
-  }
-
-  async regenerate(paperId: string, userId: string) {
-    const original = await this.paperRepo.findOne({
-      where: { id: paperId, userId },
-    });
-    if (!original) {
-      throw new NotFoundException({ code: 30001, message: '试卷不存在' });
-    }
-
-    // Check daily limit
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const todayCount = await this.paperRepo.count({
-      where: { userId, createdAt: Between(today, tomorrow) },
-    });
-
-    if (todayCount >= this.regenerateDailyLimit) {
-      throw new BadRequestException({
-        code: 20004,
-        message: `超过每日重新生成次数限制（${this.regenerateDailyLimit}次）`,
-      });
-    }
-
-    // Mark old paper as expired (not draft anymore)
-    await this.paperRepo.update(paperId, { status: 'draft' });
-
-    // Re-generate with same conditions
-    return this.generate(userId, original.conditions as any);
   }
 
   private applyDifficultyFilter(questions: Question[], difficulty: string, count: number): Question[] {

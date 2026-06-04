@@ -11,13 +11,14 @@ import { KbFile } from '../../database/entities/kb-file.entity';
 import { User } from '../../database/entities/user.entity';
 import { KnowledgeBaseModule } from '../knowledge-base/knowledge-base.module';
 import { SeedService } from './services/seed.service';
+import { BulkSeedService } from './services/bulk-seed.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Question, QuestionKnowledge, KnowledgePoint, KbFile, User]),
+    TypeOrmModule.forFeature([Question, QuestionKnowledge, KnowledgePoint, KbFile, User, KnowledgePoint, QuestionKnowledge]),
     KnowledgeBaseModule,
   ],
   controllers: [AdminController],
-  providers: [DashboardService, QuestionManageService, FileManageService, SeedService],
+  providers: [DashboardService, QuestionManageService, FileManageService, SeedService, BulkSeedService],
 })
 export class AdminModule {}

@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue';
 import { getAdminFiles } from '../../../../api';
 
 interface FileItem {
-  fileId: string;
+  id: string;
   filename: string;
   fileType: string;
   subject: string;
@@ -58,7 +58,7 @@ onMounted(loadFiles);
     <view v-else-if="files.length === 0" class="empty">暂无上传记录</view>
 
     <view v-else class="file-list">
-      <view v-for="f in files" :key="f.fileId" class="file-card">
+      <view v-for="f in files" :key="f.id" class="file-card">
         <view class="file-row">
           <text class="file-name">{{ f.filename }}</text>
           <text class="file-status" :class="f.status">{{ statusMap[f.status] ?? f.status }}</text>
@@ -69,7 +69,7 @@ onMounted(loadFiles);
         </view>
         <view v-if="f.status === 'failed' && f.errorMsg" class="file-error">{{ f.errorMsg }}</view>
         <view class="file-time">{{ formatTime(f.createdAt) }}</view>
-        <view v-if="f.status === 'completed'" class="file-action" @tap="uni.navigateTo({ url: `/pages/admin/review/index?fileId=${f.fileId}` })">
+        <view v-if="f.status === 'completed'" class="file-action" @tap="uni.navigateTo({ url: `/pages/admin/review/index?fileId=${f.id}` })">
           查看题目 →
         </view>
       </view>

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { PaperCondition, PaperResult, KnowledgePointItem } from '../types';
 import {
-  getConfigOptions, getKnowledgePoints, generatePaper, regeneratePaper,
+  getConfigOptions, getKnowledgePoints, generatePaper,
 } from '../api';
 
 export const usePaperStore = defineStore('paper', () => {
@@ -34,23 +34,12 @@ export const usePaperStore = defineStore('paper', () => {
     }
   }
 
-  async function regenerate() {
-    if (!currentPaper.value) return;
-    loading.value = true;
-    try {
-      const res = await regeneratePaper(currentPaper.value.paperId);
-      currentPaper.value = res.data;
-    } finally {
-      loading.value = false;
-    }
-  }
-
   function reset() {
     currentPaper.value = null;
   }
 
   return {
     condition, currentPaper, knowledgePoints, loading,
-    fetchKnowledgePoints, generate, regenerate, reset,
+    fetchKnowledgePoints, generate, reset,
   };
 });

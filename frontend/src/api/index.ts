@@ -60,10 +60,6 @@ export function generatePaper(dto: any) {
   return request<any>('POST', '/papers/generate', dto);
 }
 
-export function regeneratePaper(paperId: string) {
-  return request<any>('POST', `/papers/${paperId}/regenerate`);
-}
-
 // === Orders ===
 export function createOrder(paperId: string) {
   return request<any>('POST', '/orders', { paperId });
@@ -111,11 +107,29 @@ export function getDashboardStats() {
   return request<any>('GET', '/admin/questions/stats');
 }
 
-export function uploadFile(filePath: string, subject: string, grade: string) {
+export function uploadFile(fileOrPath: string | File, subject: string, grade: string) {
   return new Promise((resolve, reject) => {
+    // #ifdef H5
+    if (fileOrPath instanceof File) {
+      const formData = new FormData();
+      formData.append('file', fileOrPath);
+      formData.append('subject', subject);
+      formData.append('grade', grade);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', BASE_URL + '/admin/files/upload');
+      xhr.setRequestHeader('Authorization', `Bearer ${getToken()}`);
+      xhr.onload = () => {
+        try { resolve(JSON.parse(xhr.responseText)); }
+        catch { reject(xhr.responseText); }
+      };
+      xhr.onerror = () => reject(xhr.statusText);
+      xhr.send(formData);
+      return;
+    }
+    // #endif
     uni.uploadFile({
       url: BASE_URL + '/admin/files/upload',
-      filePath,
+      filePath: fileOrPath as string,
       name: 'file',
       formData: { subject, grade },
       header: { 'Authorization': `Bearer ${getToken()}` },
