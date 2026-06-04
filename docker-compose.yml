@@ -64,10 +64,18 @@ services:
       timeout: 3s
       retries: 5
 
-  # ---- NestJS Backend ----
+  # ---- NestJS Backend (PM2 Cluster) ----
   backend:
     build: ./backend
     container_name: ai-paper-backend
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
     environment:
       NODE_ENV: production
       DB_TYPE: postgres

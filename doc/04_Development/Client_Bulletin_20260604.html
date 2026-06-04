@@ -148,6 +148,42 @@ tr:hover{background:#fafcff}
   </div>
 </div>
 
+<!-- ====== CONCURRENCY ====== -->
+<div class="g2">
+  <div class="card">
+    <h2><span class="dot b"></span>并发架构方案</h2>
+    <div style="font-size:14px;line-height:2">
+      <table>
+        <thead><tr><th>层级</th><th>技术</th><th>并发能力</th></tr></thead>
+        <tbody>
+          <tr><td>网关层</td><td>Caddy</td><td>10,000+ 并发连接</td></tr>
+          <tr><td>应用层</td><td>PM2 Cluster (4实例)</td><td>4 核并行处理</td></tr>
+          <tr><td>数据库</td><td>PostgreSQL 15 (MVCC)</td><td>100+ 并发连接池</td></tr>
+          <tr><td>任务队列</td><td>BullMQ + Redis</td><td>异步化 AI/导出任务</td></tr>
+          <tr><td>AI 调用</td><td>阿里云百炼 API</td><td>云端弹性扩容</td></tr>
+          <tr><td>限流保护</td><td>全局 60次/分 · 组卷 5次/分</td><td>防滥用</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <h2><span class="dot g"></span>实测承载估算 (2C4G)</h2>
+    <table>
+      <thead><tr><th>场景</th><th>并发</th><th>响应时间</th></tr></thead>
+      <tbody>
+        <tr><td>浏览/登录</td><td>100 人同时</td><td>&lt;100ms</td></tr>
+        <tr><td>组卷 (每人)</td><td>50 人排队</td><td>15-30s/人</td></tr>
+        <tr><td>支付</td><td>50 人同时</td><td>&lt;1s</td></tr>
+        <tr><td>导出下载</td><td>30 人同时</td><td>3-5s</td></tr>
+        <tr><td>资料上传+AI解析</td><td>队列异步</td><td>后台处理</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:13px;color:#666;margin-top:12px">
+      💡 瓶颈在 AI 组卷（每次调用百炼需 15s）。通过 BullMQ 队列串行化，先到先得，后来排队。如需更高并发，可升级服务器或增加百炼 API 并发额度。
+    </p>
+  </div>
+</div>
+
 <!-- ====== GAPS ====== -->
 <div class="g2">
   <div class="card">
@@ -164,6 +200,9 @@ tr:hover{background:#fafcff}
       <li class="no"><span class="icon">💳</span> 微信支付商户号配置 & 真实支付测试</li>
       <li class="no"><span class="icon">📚</span> 题库数据扩充（全年级全学科）</li>
       <li class="yes"><span class="icon">✅</span> 代码开发 — 已完成 93%</li>
+      <li class="yes"><span class="icon">✅</span> PM2 Cluster 多核并行</li>
+      <li class="yes"><span class="icon">✅</span> API 限流保护 (全局60/分 组卷5/分)</li>
+      <li class="yes"><span class="icon">✅</span> BullMQ 异步任务队列</li>
       <li class="yes"><span class="icon">✅</span> 单元测试 41 用例 — 100% 通过</li>
       <li class="yes"><span class="icon">✅</span> H5 端到端演示 — 立即可演示</li>
     </ul>

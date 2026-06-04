@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { IsString, IsNotEmpty, IsOptional, IsInt, Min, Max, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
+import { Throttle } from '@nestjs/throttler';
 import { PaperService } from './paper.service';
 import { JwtAuthGuard } from '../../common/guards/jwt.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -38,6 +39,7 @@ export class PaperController {
     return this.paperService.getKnowledgePoints(subject, grade);
   }
 
+  @Throttle({ default: { ttl: 60000, limit: 5 } })  // 5 paper generations / minute
   @Post('generate')
   generate(@CurrentUser('id') userId: string, @Body() dto: GenerateDto) {
     return this.paperService.generate(userId, dto);

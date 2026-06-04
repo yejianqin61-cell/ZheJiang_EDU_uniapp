@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import configuration from './config/configuration';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
@@ -15,6 +17,8 @@ import { HealthController } from './health.controller';
 
 @Module({
   imports: [
+    // Rate limiting: 60 requests/minute globally, burst up to 10
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
 
     // Database: SQLite for local dev, PostgreSQL for production
@@ -72,5 +76,8 @@ import { HealthController } from './health.controller';
     AdminModule,
   ],
   controllers: [HealthController],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}

@@ -14,10 +14,11 @@ FROM node:20-alpine
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm ci --omit=dev && npm cache clean --force && npm install -g pm2
 
 COPY --from=build /app/dist/ ./dist/
 COPY src/database/migrations/ ./src/database/migrations/
+COPY ecosystem.config.js ./
 
 EXPOSE 3000
-CMD ["node", "dist/main.js"]
+CMD ["pm2-runtime", "start", "ecosystem.config.js"]
