@@ -22,8 +22,13 @@ export class AuthService {
       .where('u.openid = :openid', { openid })
       .getOne();
     if (!user) {
-      // Dev: admin_test code → auto admin role
-      const role = openid === 'admin_test' ? 'admin' : 'teacher';
+      // 管理员判定（优先级从高到低）：
+      // 1. 生产环境: 读取 ADMIN_OPENIDS 环境变量（逗号分隔的 openid 列表）
+      // 2. 开发环境: admin_test → admin
+      // 3. 其他: teacher
+      const adminOpenids = (process.env.ADMIN_OPENIDS ?? '').split(',').map(s => s.trim()).filter(Boolean);
+      const isAdmin = adminOpenids.includes(openid) || openid === 'admin_test';
+      const role = isAdmin ? 'admin' : 'teacher';
       user = await this.userRepo.save(
         this.userRepo.create({ openid, role, nickname: nickname ?? null }),
       );

@@ -33,7 +33,9 @@ export class UploadService {
     grade: string,
     pipeline?: (fileId: string, rawText?: string, imageBase64?: string) => Promise<void>,
   ) {
-    const ext = file.originalname.split('.').pop()?.toLowerCase() ?? '';
+    // Multer 对中文文件名使用 latin1 解码，需手动转回 UTF-8
+    const originalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    const ext = originalname.split('.').pop()?.toLowerCase() ?? '';
     if (!ALLOWED_EXTS.includes(ext)) {
       throw new BadRequestException({ code: 60001, message: `不支持的文件格式: .${ext}` });
     }
@@ -55,7 +57,7 @@ export class UploadService {
     }
 
     // Upload file to COS (or local fallback)
-    const cosKey = `uploads/${Date.now()}_${file.originalname}`;
+    const cosKey = `uploads/${Date.now()}_${originalname}`;
     const uploadResult = await this.cosService.upload(
       cosKey,
       file.buffer,
@@ -66,7 +68,7 @@ export class UploadService {
     const kbFile = await this.fileRepo.save(
       this.fileRepo.create({
         uploaderId,
-        filename: file.originalname,
+        filename: originalname,
         fileType: ext,
         fileSize: file.size,
         subject,
@@ -96,6 +98,14 @@ export class UploadService {
       filename: kbFile.filename,
       status: kbFile.status,
     };
+  }
+
+  async listFiles(page: number, pageSize: number, status?: string) {
+    const qb = this.fileRepo.createQueryBuilder('f');
+    if (status) qb.andWhere('f.status = :status', { status });
+    qb.orderBy('f.createdAt', 'DESC').skip((page - 1) * pageSize).take(pageSize);
+    const [list, total] = await qb.getManyAndCount();
+    return { list, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } };
   }
 
   async getFileStatus(fileId: string) {

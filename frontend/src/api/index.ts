@@ -15,7 +15,8 @@ const BASE_URL = (() => {
 
   // #ifdef MP-WEIXIN
   // 替换为你的生产域名（微信小程序不支持相对路径，必须完整URL）
-  return 'https://your-domain.com/v1';
+  // 本地开发用 localhost；上线前替换为 https://你的域名/v1
+  return 'http://localhost:3000/v1';
   // #endif
 
   return 'http://localhost:3000/v1';
@@ -46,10 +47,16 @@ async function request<T>(
           uni.reLaunch({ url: '/pages/login/index' });
           return;
         }
+        // 防御：服务器返回非 JSON（如 HTML 域名停放页）时 body 不是对象
+        if (!body || typeof body !== 'object') {
+          uni.showToast({ title: '服务器响应异常', icon: 'none' });
+          reject(new Error('Invalid response'));
+          return;
+        }
         if (body.code === 0) {
           resolve(body);
         } else {
-          uni.showToast({ title: body.message, icon: 'none' });
+          uni.showToast({ title: body.message || '请求失败', icon: 'none' });
           reject(body);
         }
       },
@@ -162,6 +169,12 @@ export function getFileStatus(fileId: string) {
   return request<any>('GET', `/admin/files/${fileId}`);
 }
 
+export function getUploadFiles(page: number, pageSize: number, status?: string) {
+  let url = `/admin/files?page=${page}&pageSize=${pageSize}`;
+  if (status) url += `&status=${status}`;
+  return request<any>('GET', url);
+}
+
 export function getPendingReviews(page: number, pageSize: number, fileId?: string) {
   let url = `/admin/reviews?page=${page}&pageSize=${pageSize}`;
   if (fileId) url += `&fileId=${fileId}`;
@@ -202,14 +215,4 @@ export function batchDeleteQuestions(questionIds: string[]) {
 
 export function deleteQuestionsByFile(fileId: string) {
   return request<any>('POST', '/admin/questions/delete-by-file', { fileId });
-}
-
-export function getAdminFiles(page: number, pageSize: number, status?: string) {
-  let url = `/admin/files?page=${page}&pageSize=${pageSize}`;
-  if (status) url += `&status=${status}`;
-  return request<any>('GET', url);
-}
-
-export function deleteFile(fileId: string) {
-  return request<any>('DELETE', `/admin/files/${fileId}`);
 }

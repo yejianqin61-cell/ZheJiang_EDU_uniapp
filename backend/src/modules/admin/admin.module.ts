@@ -3,7 +3,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminController } from './admin.controller';
 import { DashboardService } from './services/dashboard.service';
 import { QuestionManageService } from './services/question-manage.service';
-import { FileManageService } from './services/file-manage.service';
 import { Question } from '../../database/entities/question.entity';
 import { QuestionKnowledge } from '../../database/entities/question-knowledge.entity';
 import { KnowledgePoint } from '../../database/entities/knowledge-point.entity';
@@ -19,6 +18,6 @@ import { BulkSeedService } from './services/bulk-seed.service';
     KnowledgeBaseModule,
   ],
   controllers: [AdminController],
-  providers: [DashboardService, QuestionManageService, FileManageService, SeedService, BulkSeedService],
+  providers: [DashboardService, QuestionManageService, SeedService, BulkSeedService],
 })
 export class AdminModule {}

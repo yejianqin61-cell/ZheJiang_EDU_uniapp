@@ -1,11 +1,10 @@
 import { Controller, Get, Delete, Post, Param, Query, Body, UseGuards } from '@nestjs/common';
-import { IsArray, IsString } from 'class-validator';
+import { IsArray } from 'class-validator';
 import { JwtAuthGuard } from '../../common/guards/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { DashboardService } from './services/dashboard.service';
 import { QuestionManageService } from './services/question-manage.service';
-import { FileManageService } from './services/file-manage.service';
 import { SeedService } from './services/seed.service';
 import { BulkSeedService } from './services/bulk-seed.service';
 import { PaginationDto } from '../../common/dto/pagination.dto';
@@ -15,11 +14,6 @@ class BatchDeleteDto {
   questionIds: string[];
 }
 
-class DeleteByFileDto {
-  @IsString()
-  fileId: string;
-}
-
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')
@@ -27,7 +21,6 @@ export class AdminController {
   constructor(
     private readonly dashboardService: DashboardService,
     private readonly questionManageService: QuestionManageService,
-    private readonly fileManageService: FileManageService,
     private readonly seedService: SeedService,
     private readonly bulkSeedService: BulkSeedService,
   ) {}
@@ -104,22 +97,7 @@ export class AdminController {
   }
 
   @Post('questions/delete-by-file')
-  deleteByFile(@Body() dto: DeleteByFileDto) {
-    return this.questionManageService.deleteByFile(dto.fileId);
-  }
-
-  // === File Management ===
-
-  @Get('files')
-  listFiles(
-    @Query() pagination: PaginationDto,
-    @Query('status') status?: string,
-  ) {
-    return this.fileManageService.list(pagination.page!, pagination.pageSize!, status);
-  }
-
-  @Delete('files/:id')
-  deleteFile(@Param('id') id: string) {
-    return this.fileManageService.delete(id);
+  deleteByFile(@Body('fileId') fileId: string) {
+    return this.questionManageService.deleteByFile(fileId);
   }
 }

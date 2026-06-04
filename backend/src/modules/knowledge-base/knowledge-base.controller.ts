@@ -43,6 +43,14 @@ export class KnowledgeBaseController {
     );
   }
 
+  @Get('files')
+  async listFiles(
+    @Query() pagination: PaginationDto,
+    @Query('status') status?: string,
+  ) {
+    return this.uploadService.listFiles(pagination.page!, pagination.pageSize!, status);
+  }
+
   @Get('files/:id')
   async getFileStatus(@Param('id') id: string) {
     return this.uploadService.getFileStatus(id);

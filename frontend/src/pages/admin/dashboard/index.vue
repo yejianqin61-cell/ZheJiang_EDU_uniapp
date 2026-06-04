@@ -110,11 +110,10 @@ function renderCharts(data: DashboardStats) {
 
     <view class="section"><text class="section-title">快捷入口</text>
       <view class="nav-grid">
-        <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/upload/index' })"><text>上传资料</text></view>
-        <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/review/index' })"><text>入库审核</text></view>
-        <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/questions/index' })"><text>题库管理</text></view>
-        <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/knowledge/index' })"><text>知识点中心</text></view>
-        <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/files/index' })"><text>文件管理</text></view>
+        <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/upload/index' })"><text>📤 上传资料</text></view>
+        <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/review/index' })"><text>✅ 入库审核</text></view>
+        <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/questions/index' })"><text>📋 题库管理</text></view>
+        <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/knowledge/index' })"><text>📚 知识点</text></view>
       </view>
     </view>
   </view>

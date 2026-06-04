@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { getAdminFiles } from '../../../../api';
+import { getUploadFiles } from '../../../../api';
 
 interface FileItem {
   id: string;
@@ -27,7 +27,7 @@ const statusMap: Record<string, string> = {
 async function loadFiles() {
   loading.value = true;
   try {
-    const res = await getAdminFiles(1, 50, statusFilter.value || undefined);
+    const res = await getUploadFiles(1, 50, statusFilter.value || undefined);
     files.value = res.data.list ?? [];
   } finally {
     loading.value = false;

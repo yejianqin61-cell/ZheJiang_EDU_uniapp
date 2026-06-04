@@ -18,8 +18,7 @@
         { "path": "review/index", "style": { "navigationBarTitleText": "入库审核" } },
         { "path": "questions/index", "style": { "navigationBarTitleText": "题库管理" } },
         { "path": "questions/detail/index", "style": { "navigationBarTitleText": "题目详情" } },
-        { "path": "knowledge/index", "style": { "navigationBarTitleText": "知识点中心" } },
-        { "path": "files/index", "style": { "navigationBarTitleText": "文件管理" } }
+        { "path": "knowledge/index", "style": { "navigationBarTitleText": "知识点中心" } }
       ]
     }
   ],
