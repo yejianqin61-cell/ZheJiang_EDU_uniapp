@@ -20,8 +20,6 @@ def export_docx():
     Request JSON:
     {
       "title": "试卷标题",
-      "subject": "数学",
-      "grade": "五年级",
       "questions": [
         {
           "index": 1,
