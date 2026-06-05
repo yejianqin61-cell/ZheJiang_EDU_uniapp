@@ -33,7 +33,7 @@ export default () => ({
       apiKey: process.env.EMBEDDING_API_KEY ?? '',
       dimension: 1536,
     },
-    timeout: 30000,
+    timeout: 60000,
     retryMax: 2,
     circuitBreakerThreshold: 5,
     circuitBreakerWindow: 120000,

@@ -8,5 +8,8 @@
     "db:migrate": "cd backend && npm run migration:run",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build:mp-weixin"
+  },
+  "devDependencies": {
+    "puppeteer": "^25.1.0"
   }
 }

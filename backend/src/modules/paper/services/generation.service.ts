@@ -59,13 +59,20 @@ export class GenerationService {
     let result: string;
     try {
       result = await this.callLLM(this.primaryUrl, this.primaryKey, this.primaryModel, prompt);
-    } catch {
-      // Fallback
-      if (this.fallbackUrl && this.fallbackKey) {
-        console.log('[LLM] Primary failed, trying fallback...');
-        result = await this.callLLM(this.fallbackUrl, this.fallbackKey, this.fallbackModel, prompt);
-      } else {
-        throw new Error('LLM generation failed and no fallback configured');
+    } catch (err1) {
+      console.log('[LLM] Primary attempt failed, retrying in 2s...');
+      try {
+        // Wait 2s then retry primary once
+        await new Promise(r => setTimeout(r, 2000));
+        result = await this.callLLM(this.primaryUrl, this.primaryKey, this.primaryModel, prompt);
+      } catch (err2) {
+        // Fallback
+        if (this.fallbackUrl && this.fallbackKey) {
+          console.log('[LLM] Primary failed twice, trying fallback...');
+          result = await this.callLLM(this.fallbackUrl, this.fallbackKey, this.fallbackModel, prompt);
+        } else {
+          throw new Error('LLM generation failed after retry');
+        }
       }
     }
 
