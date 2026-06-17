@@ -74,7 +74,7 @@ export interface OrderDetail {
 export interface CreateOrderResult {
   orderId: string
   orderNo: string
-  type: 'download' | 'print'
+  type: 'download' | 'print' | 'exercise'
   amount: number
   unitPrice: number
   copies?: number | null
