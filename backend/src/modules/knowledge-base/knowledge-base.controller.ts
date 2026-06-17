@@ -24,9 +24,10 @@ export class KnowledgeBaseController {
     private readonly pipelineService: PipelineService,
   ) {}
 
-  // === File Upload ===
+  // === File Upload (teacher + admin) ===
 
   @Post('files/upload')
+  @Roles('teacher', 'admin')
   @UseInterceptors(FileInterceptor('file'))
   async upload(
     @CurrentUser('id') uploaderId: string,
@@ -52,6 +53,7 @@ export class KnowledgeBaseController {
   }
 
   @Get('files/:id')
+  @Roles('teacher', 'admin')
   async getFileStatus(@Param('id') id: string) {
     return this.uploadService.getFileStatus(id);
   }
@@ -69,6 +71,11 @@ export class KnowledgeBaseController {
     );
   }
 
+  @Get('reviews/:id')
+  async getReviewDetail(@Param('id') questionId: string) {
+    return this.reviewService.getDetail(questionId);
+  }
+
   @Post('reviews/batch')
   async batchReview(
     @CurrentUser('id') reviewerId: string,
@@ -76,6 +83,22 @@ export class KnowledgeBaseController {
     @Body('action') action: 'approve' | 'reject',
   ) {
     return this.reviewService.batchReview(reviewerId, questionIds, action);
+  }
+
+  @Post('reviews/:id/approve')
+  async approveQuestion(
+    @CurrentUser('id') reviewerId: string,
+    @Param('id') questionId: string,
+  ) {
+    return this.reviewService.batchReview(reviewerId, [questionId], 'approve');
+  }
+
+  @Post('reviews/:id/reject')
+  async rejectQuestion(
+    @CurrentUser('id') reviewerId: string,
+    @Param('id') questionId: string,
+  ) {
+    return this.reviewService.batchReview(reviewerId, [questionId], 'reject');
   }
 
   // === Knowledge Points (read-only) ===

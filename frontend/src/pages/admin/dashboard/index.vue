@@ -114,6 +114,9 @@ function renderCharts(data: DashboardStats) {
         <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/review/index' })"><text>✅ 入库审核</text></view>
         <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/questions/index' })"><text>📋 题库管理</text></view>
         <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/knowledge/index' })"><text>📚 知识点</text></view>
+        <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/orders/index' })"><text>📦 订单管理</text></view>
+        <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/pricing/index' })"><text>💰 定价配置</text></view>
+        <view class="nav-item" @tap="uni.navigateTo({ url: '/pages/admin/withdrawals/index' })"><text>💳 提现管理</text></view>
       </view>
     </view>
   </view>

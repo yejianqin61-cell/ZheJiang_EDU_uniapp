@@ -7,7 +7,12 @@ const baseConfig: Config = {
   rootDir: '.',
   transform: { '^.+\\.ts$': 'ts-jest' },
   testEnvironment: 'node',
-  moduleNameMapper: { '^src/(.*)$': '<rootDir>/src/$1' },
+  moduleNameMapper: {
+    '^src/(.*)$': '<rootDir>/src/$1',
+    '^pdfjs-dist$': '<rootDir>/src/__mocks__/pdfjs-dist.ts',
+    '^pdf-parse$': '<rootDir>/src/__mocks__/pdf-parse.ts',
+  },
+  modulePathIgnorePatterns: ['<rootDir>/dist/'],
   coveragePathIgnorePatterns: ['/node_modules/', '/entities/', '/migrations/', '/dto/', '\\.module\\.ts$'],
   coverageDirectory: './coverage',
 };
@@ -22,7 +27,7 @@ const config: Config = {
       ...baseConfig,
       displayName: 'unit',
       testRegex: 'src/.*\\.spec\\.ts$',
-      testPathIgnorePatterns: ['/node_modules/'],
+      testPathIgnorePatterns: ['/node_modules/', '/dist/'],
       testTimeout: 15000,
       collectCoverageFrom: [
         'src/**/*.service.ts',
@@ -46,7 +51,7 @@ const config: Config = {
       ...baseConfig,
       displayName: 'integration',
       testRegex: 'test/.*\\.(int|e2e)-spec\\.ts$',
-      testPathIgnorePatterns: ['/node_modules/'],
+      testPathIgnorePatterns: ['/node_modules/', '/dist/'],
       testTimeout: 30000,  // 集成测试 30s 超时（启动 AppModule 较慢）
       // 不收集覆盖率
       collectCoverageFrom: [],

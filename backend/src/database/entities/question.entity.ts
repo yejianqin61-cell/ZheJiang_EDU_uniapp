@@ -20,11 +20,20 @@ export class Question {
   @Column({ type: 'simple-json', nullable: true })
   options: string[] | null;
 
-  @Column({ type: 'text' })
+  // answer and analysis removed per production requirement:
+  // uploaded questions do not carry answers; papers must not expose them.
+  // Columns kept in DB for backward compatibility but always empty.
+  @Column({ type: 'text', default: '' })
   answer: string;
 
   @Column({ type: 'text', nullable: true })
   analysis: string | null;
+
+  @Column({ type: 'simple-json', nullable: true, default: '[]' })
+  images: { url: string; caption?: string; width?: number; height?: number; position: number }[] | null;
+
+  @Column({ type: 'boolean', default: false, name: 'content_has_images' })
+  contentHasImages: boolean;
 
   @Column({ type: 'integer' })
   difficulty: number; // 1 | 2 | 3

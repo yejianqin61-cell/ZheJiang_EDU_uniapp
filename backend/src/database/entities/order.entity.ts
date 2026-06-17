@@ -4,6 +4,7 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 import { Paper } from './paper.entity';
+import { ShippingAddress } from './shipping-address.entity';
 
 @Entity('order')
 export class Order {
@@ -26,6 +27,35 @@ export class Order {
 
   @Column({ type: 'varchar', length: 32, unique: true, name: 'order_no' })
   orderNo: string;
+
+  // ── New fields for dual-mode ──────────────────────────────
+
+  @Column({ type: 'varchar', length: 16, default: 'download' })
+  type: 'download' | 'print';
+
+  @Column({ type: 'integer', nullable: true })
+  copies: number | null;
+
+  @Column({ type: 'varchar', nullable: true, name: 'shipping_address_id' })
+  shippingAddressId: string | null;
+
+  @ManyToOne(() => ShippingAddress, { nullable: true })
+  @JoinColumn({ name: 'shipping_address_id' })
+  shippingAddress: ShippingAddress | null;
+
+  @Column({ type: 'simple-json', nullable: true, name: 'shipping_snapshot' })
+  shippingSnapshot: Record<string, any> | null;
+
+  @Column({ type: 'simple-json', nullable: true, name: 'pricing_snapshot' })
+  pricingSnapshot: Record<string, any> | null;
+
+  @Column({ type: 'integer', default: 0, name: 'unit_price' })
+  unitPrice: number; // cents
+
+  @Column({ type: 'varchar', length: 32, nullable: true, name: 'print_status' })
+  printStatus: 'printing' | 'shipped' | 'delivered' | null;
+
+  // ── Existing fields ───────────────────────────────────────
 
   @Column({ type: 'integer' })
   amount: number; // cents

@@ -128,7 +128,6 @@ async function handleReview(action: 'approve' | 'reject') {
         <view class="q-check" @tap.stop="toggleSelect(q.id)"><view :class="{ checked: selected.has(q.id) }"></view></view>
         <view class="q-body" @tap="uni.navigateTo({ url: `/pages/admin/review/detail/index?id=${q.id}` })">
           <text class="q-content">{{ q.content }}</text>
-          <text class="q-answer">答案: {{ q.answer }}</text>
           <text class="q-diff">难度: {{ ['','简单','中等','困难'][q.difficulty] }}</text>
         </view>
       </view>

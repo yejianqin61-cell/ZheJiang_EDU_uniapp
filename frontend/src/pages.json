@@ -5,8 +5,17 @@
     { "path": "pages/paper/config/index", "style": { "navigationBarTitleText": "组卷条件" } },
     { "path": "pages/paper/preview/index", "style": { "navigationBarTitleText": "试卷预览" } },
     { "path": "pages/payment/index", "style": { "navigationBarTitleText": "支付" } },
-    { "path": "pages/orders/index", "style": { "navigationBarTitleText": "历史订单" } },
+    { "path": "pages/print/checkout/index", "style": { "navigationBarTitleText": "打印服务" } },
+    { "path": "pages/orders/index", "style": { "navigationBarTitleText": "我的订单" } },
     { "path": "pages/orders/detail/index", "style": { "navigationBarTitleText": "订单详情" } },
+    { "path": "pages/address/list/index", "style": { "navigationBarTitleText": "收货地址" } },
+    { "path": "pages/address/edit/index", "style": { "navigationBarTitleText": "编辑地址" } },
+    { "path": "pages/contribute/index", "style": { "navigationBarTitleText": "我的贡献" } },
+    { "path": "pages/contribute/detail/index", "style": { "navigationBarTitleText": "批次详情" } },
+    { "path": "pages/contribute/upload/index", "style": { "navigationBarTitleText": "上传题目" } },
+    { "path": "pages/contribute/preview/index", "style": { "navigationBarTitleText": "题目预览" } },
+    { "path": "pages/profile/balance/index", "style": { "navigationBarTitleText": "我的余额" } },
+    { "path": "pages/profile/withdraw/index", "style": { "navigationBarTitleText": "申请提现" } },
     { "path": "pages/profile/index", "style": { "navigationBarTitleText": "个人中心" } }
   ],
   "subPackages": [
@@ -15,10 +24,15 @@
       "pages": [
         { "path": "dashboard/index", "style": { "navigationBarTitleText": "题库总览" } },
         { "path": "upload/index", "style": { "navigationBarTitleText": "上传资料" } },
+        { "path": "upload/progress/index", "style": { "navigationBarTitleText": "上传进度" } },
         { "path": "review/index", "style": { "navigationBarTitleText": "入库审核" } },
+        { "path": "review/detail/index", "style": { "navigationBarTitleText": "审核详情" } },
         { "path": "questions/index", "style": { "navigationBarTitleText": "题库管理" } },
         { "path": "questions/detail/index", "style": { "navigationBarTitleText": "题目详情" } },
-        { "path": "knowledge/index", "style": { "navigationBarTitleText": "知识点中心" } }
+        { "path": "knowledge/index", "style": { "navigationBarTitleText": "知识点中心" } },
+        { "path": "pricing/index", "style": { "navigationBarTitleText": "定价配置" } },
+        { "path": "orders/index", "style": { "navigationBarTitleText": "订单管理" } },
+        { "path": "withdrawals/index", "style": { "navigationBarTitleText": "提现管理" } }
       ]
     }
   ],

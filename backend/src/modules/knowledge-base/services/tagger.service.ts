@@ -40,8 +40,8 @@ export class TaggerService {
         type: parsed.type,
         content: questionText,
         options: parsed.options,
-        answer: parsed.answer,
-        analysis: parsed.analysis,
+        answer: '',     // production: no answers in question bank
+        analysis: '',   // production: no analysis in question bank
         difficulty: parsed.difficulty,
         subject,
         grade,

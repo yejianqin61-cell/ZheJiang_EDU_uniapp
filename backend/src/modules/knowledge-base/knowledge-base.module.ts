@@ -10,15 +10,21 @@ import { EmbeddingService } from './services/embedding.service';
 import { KnowledgeService } from './services/knowledge.service';
 import { ReviewService } from './services/review.service';
 import { PipelineService } from './services/pipeline.service';
+import { ImageExtractorService } from './services/image-extractor.service';
+import { ImageMatcherService } from './services/image-matcher.service';
 import { CosService } from '../../common/cos.service';
 import { KbFile } from '../../database/entities/kb-file.entity';
 import { OcrTask } from '../../database/entities/ocr-task.entity';
 import { Question } from '../../database/entities/question.entity';
 import { KnowledgePoint } from '../../database/entities/knowledge-point.entity';
 import { QuestionKnowledge } from '../../database/entities/question-knowledge.entity';
+import { User } from '../../database/entities/user.entity';
+import { PricingConfig } from '../../database/entities/pricing-config.entity';
+import { BalanceModule } from '../balance/balance.module';
 
 const imports: any[] = [
-  TypeOrmModule.forFeature([KbFile, OcrTask, Question, KnowledgePoint, QuestionKnowledge]),
+  TypeOrmModule.forFeature([KbFile, OcrTask, Question, KnowledgePoint, QuestionKnowledge, User, PricingConfig]),
+  BalanceModule,
 ];
 
 // BullMQ requires Redis. Skip queue in local dev without Redis.
@@ -29,7 +35,7 @@ if (process.env.REDIS_HOST) {
 @Module({
   imports,
   controllers: [KnowledgeBaseController],
-  providers: [UploadService, OCRService, SplitterService, TaggerService, EmbeddingService, KnowledgeService, ReviewService, PipelineService, CosService],
+  providers: [UploadService, OCRService, SplitterService, TaggerService, EmbeddingService, KnowledgeService, ReviewService, PipelineService, CosService, ImageExtractorService, ImageMatcherService],
   exports: [UploadService, EmbeddingService],
 })
 export class KnowledgeBaseModule {}

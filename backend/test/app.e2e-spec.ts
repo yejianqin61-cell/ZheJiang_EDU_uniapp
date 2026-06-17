@@ -170,7 +170,7 @@ describe('API E2E', () => {
       await request(app.getHttpServer())
         .post('/v1/orders')
         .set('Authorization', `Bearer ${teacherToken}`)
-        .send({ paperId: 'non-existent' })
+        .send({ paperId: 'non-existent', type: 'download' })
         .expect(404);
     });
 

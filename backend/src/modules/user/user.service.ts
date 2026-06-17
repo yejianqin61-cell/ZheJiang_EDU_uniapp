@@ -24,6 +24,7 @@ export class UserService {
       role: user.role,
       nickname: user.nickname,
       avatarUrl: user.avatarUrl,
+      phone: user.phone ? user.phone.slice(0, 3) + '****' + user.phone.slice(-4) : null,
     };
   }
 

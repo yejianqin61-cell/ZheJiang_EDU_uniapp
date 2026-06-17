@@ -1,33 +1,15 @@
-import type { ApiResponse } from '../types';
+import type { ApiResponse, PricingConfig } from '../types';
+import { getApiBase } from '../config/env';
 
-// 自动检测环境：
-// - H5 开发: localhost
-// - H5 生产: 当前域名（Caddy 反代 /v1/* → backend:3000）
-// - 微信小程序: 生产域名（需在微信公众平台配置 request 合法域名）
-const BASE_URL = (() => {
-  // #ifdef H5
-  const host = window.location.hostname;
-  if (host === 'localhost' || host === '127.0.0.1') {
-    return 'http://localhost:3000/v1';
-  }
-  return `${window.location.protocol}//${host}/v1`;
-  // #endif
-
-  // #ifdef MP-WEIXIN
-  // 替换为你的生产域名（微信小程序不支持相对路径，必须完整URL）
-  // 本地开发用 localhost；上线前替换为 https://你的域名/v1
-  return 'http://localhost:3000/v1';
-  // #endif
-
-  return 'http://localhost:3000/v1';
-})();
+// === Base Config ===
+const BASE_URL = getApiBase();
 
 function getToken(): string {
   return uni.getStorageSync('accessToken') ?? '';
 }
 
 async function request<T>(
-  method: 'GET' | 'POST' | 'DELETE',
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
   url: string,
   data?: Record<string, any>,
 ): Promise<ApiResponse<T>> {
@@ -47,7 +29,6 @@ async function request<T>(
           uni.reLaunch({ url: '/pages/login/index' });
           return;
         }
-        // 防御：服务器返回非 JSON（如 HTML 域名停放页）时 body 不是对象
         if (!body || typeof body !== 'object') {
           uni.showToast({ title: '服务器响应异常', icon: 'none' });
           reject(new Error('Invalid response'));
@@ -56,7 +37,8 @@ async function request<T>(
         if (body.code === 0) {
           resolve(body);
         } else {
-          uni.showToast({ title: body.message || '请求失败', icon: 'none' });
+          const msg = Array.isArray(body.message) ? body.message.join('; ') : (body.message || '请求失败');
+          uni.showToast({ title: String(msg).slice(0, 30), icon: 'none' });
           reject(body);
         }
       },
@@ -86,16 +68,21 @@ export function generatePaper(dto: any) {
   return request<any>('POST', '/papers/generate', dto);
 }
 
-// === Orders ===
-export function createOrder(paperId: string) {
-  return request<any>('POST', '/orders', { paperId });
+// === Orders (dual-mode) ===
+export function createOrder(dto: { paperId: string; type: 'download' | 'print'; copies?: number; shippingAddressId?: string }) {
+  return request<any>('POST', '/orders', dto);
 }
+export { createOrder as createDownloadOrder }; // alias for backward compat
 
-export function getOrders(page: number, pageSize: number, subject?: string, status?: string) {
-  let url = `/orders?page=${page}&pageSize=${pageSize}`;
-  if (subject) url += `&subject=${subject}`;
-  if (status) url += `&status=${status}`;
-  return request<any>('GET', url);
+export function getOrders(params: {
+  page: number; pageSize: number; type?: string; scope?: string;
+  subject?: string; status?: string; startDate?: string; endDate?: string;
+}) {
+  const qs = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== '')
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+    .join('&');
+  return request<any>('GET', `/orders?${qs}`);
 }
 
 export function getOrderDetail(orderId: string) {
@@ -128,9 +115,50 @@ export function getUserStats() {
   return request<any>('GET', '/users/me/stats');
 }
 
+// === Pricing (public) ===
+export function getPublicPricing() {
+  return request<PricingConfig>('GET', '/pricing/public');
+}
+
+// === Shipping Addresses ===
+export function getShippingAddresses() {
+  return request<any[]>('GET', '/shipping-addresses');
+}
+
+export function createShippingAddress(data: {
+  receiverName: string; phone: string; province: string;
+  city: string; district: string; detail: string; isDefault?: boolean;
+}) {
+  return request<{ id: string }>('POST', '/shipping-addresses', data);
+}
+
+export function updateShippingAddress(id: string, data: Record<string, any>) {
+  return request<void>('PUT', `/shipping-addresses/${id}`, data);
+}
+
+export function deleteShippingAddress(id: string) {
+  return request<void>('DELETE', `/shipping-addresses/${id}`);
+}
+
 // === Admin ===
 export function getDashboardStats() {
   return request<any>('GET', '/admin/questions/stats');
+}
+
+export function getAdminPricing() {
+  return request<PricingConfig>('GET', '/admin/pricing');
+}
+
+export function updateAdminPricing(data: {
+  download?: { unitPrice: number };
+  print?: Array<{ tier: number; minQuantity: number; maxQuantity: number | null; unitPrice: number }>;
+  cashback?: { unitPrice: number };
+}) {
+  return request<void>('PUT', '/admin/pricing', data as any);
+}
+
+export function updatePrintStatus(orderId: string, printStatus: string | null) {
+  return request<void>('PUT', `/admin/orders/${orderId}/print-status`, { printStatus: printStatus ?? 'null' });
 }
 
 export function uploadFile(fileOrPath: string | File, subject: string, grade: string) {
@@ -215,4 +243,71 @@ export function batchDeleteQuestions(questionIds: string[]) {
 
 export function deleteQuestionsByFile(fileId: string) {
   return request<any>('POST', '/admin/questions/delete-by-file', { fileId });
+}
+
+// === Contributions (teacher upload) ===
+export function uploadContribution(filePath: string, subject: string, grade: string) {
+  return new Promise((resolve, reject) => {
+    uni.uploadFile({
+      url: BASE_URL + '/admin/files/upload',
+      filePath,
+      name: 'file',
+      formData: { subject, grade },
+      header: { 'Authorization': `Bearer ${getToken()}` },
+      success: (res) => resolve(JSON.parse(res.data)),
+      fail: reject,
+    });
+  });
+}
+
+export function getContributions(page: number, pageSize: number) {
+  return request<any>('GET', `/contributions?page=${page}&pageSize=${pageSize}`);
+}
+
+export function getContributionDetail(fileId: string) {
+  return request<any>('GET', `/contributions/${fileId}`);
+}
+
+export function submitContribution(fileId: string) {
+  return request<any>('POST', `/contributions/${fileId}/submit`);
+}
+
+// === Balance ===
+export function getMyBalance() {
+  return request<any>('GET', '/users/me/balance');
+}
+
+export function getBalanceLog(page: number, pageSize: number, type?: string) {
+  let url = `/users/me/balance-log?page=${page}&pageSize=${pageSize}`;
+  if (type) url += `&type=${type}`;
+  return request<any>('GET', url);
+}
+
+// === Withdrawal ===
+export function createWithdrawal(amount: number) {
+  return request<any>('POST', '/withdrawals', { amount });
+}
+
+export function getWithdrawals(page: number, pageSize: number) {
+  return request<any>('GET', `/withdrawals?page=${page}&pageSize=${pageSize}`);
+}
+
+export function getAdminWithdrawals(page: number, pageSize: number, status?: string) {
+  let url = `/admin/withdrawals?page=${page}&pageSize=${pageSize}`;
+  if (status) url += `&status=${status}`;
+  return request<any>('GET', url);
+}
+
+export function reviewWithdrawal(id: string, action: 'approve' | 'reject', rejectReason?: string) {
+  return request<any>('PUT', `/admin/withdrawals/${id}`, { action, ...(rejectReason ? { rejectReason } : {}) });
+}
+
+// === Balance Payment ===
+export function payByBalance(orderId: string) {
+  return request<any>('POST', `/orders/${orderId}/balance-pay`);
+}
+
+// === Admin Export (download print order DOCX) ===
+export function adminExportOrder(orderId: string) {
+  return request<{ downloadUrl: string }>('GET', `/admin/orders/${orderId}/export`);
 }

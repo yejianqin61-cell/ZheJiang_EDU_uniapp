@@ -1,0 +1,191 @@
+// ===================== 容器 =====================
+.container {
+  max-width: $page-max-width;
+  margin: 0 auto;
+  padding: $spacing-lg;
+}
+
+// ===================== 页面卡片 =====================
+.page-card {
+  background: $bg-color-white;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow-light;
+  padding: $spacing-lg;
+}
+
+// ===================== 页面标题 =====================
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-lg;
+
+  &__title {
+    font-size: $font-size-xl;
+    font-weight: 600;
+    color: $text-color;
+  }
+
+  &__subtitle {
+    font-size: $font-size-sm;
+    color: $text-color-secondary;
+    margin-top: $spacing-xs;
+  }
+}
+
+// ===================== 面包屑 =====================
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  font-size: $font-size-sm;
+  color: $text-color-secondary;
+  margin-bottom: $spacing-md;
+
+  a {
+    color: $text-color-secondary;
+    &:hover {
+      color: $color-primary;
+    }
+  }
+
+  &__separator {
+    color: $text-color-placeholder;
+  }
+
+  &__current {
+    color: $text-color;
+  }
+}
+
+// ===================== 工具类 =====================
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-secondary { color: $text-color-secondary; }
+.text-primary { color: $color-primary; }
+.text-success { color: $color-success; }
+.text-warning { color: $color-warning; }
+.text-danger { color: $color-danger; }
+
+.mt-sm { margin-top: $spacing-sm; }
+.mt-md { margin-top: $spacing-md; }
+.mt-lg { margin-top: $spacing-lg; }
+.mb-sm { margin-bottom: $spacing-sm; }
+.mb-md { margin-bottom: $spacing-md; }
+.mb-lg { margin-bottom: $spacing-lg; }
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gap-sm { gap: $spacing-sm; }
+.gap-md { gap: $spacing-md; }
+
+// ===================== 管理后台布局 =====================
+.admin-layout {
+  display: flex;
+  min-height: calc(100vh - #{$top-nav-height});
+}
+
+.admin-sidebar {
+  width: $sidebar-width;
+  background: $bg-color-white;
+  border-right: 1px solid $border-color;
+  padding: $spacing-md 0;
+  flex-shrink: 0;
+  overflow-y: auto;
+
+  .el-menu {
+    border-right: none;
+  }
+}
+
+.admin-content {
+  flex: 1;
+  padding: $spacing-lg;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+// ===================== 筛选栏（题库/审核列表通用） =====================
+.filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  background: $bg-color-white;
+  border-radius: $border-radius;
+  margin-bottom: $spacing-md;
+
+  .el-select, .el-input {
+    width: 160px;
+  }
+
+  .el-button {
+    margin-left: auto;
+  }
+}
+
+// ===================== 统计卡片 =====================
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.stat-card {
+  background: $bg-color-white;
+  border-radius: $border-radius;
+  padding: $spacing-lg;
+  box-shadow: $box-shadow-light;
+  text-align: center;
+
+  &__value {
+    font-size: 32px;
+    font-weight: 700;
+    color: $color-primary;
+  }
+
+  &__label {
+    font-size: $font-size-sm;
+    color: $text-color-secondary;
+    margin-top: $spacing-xs;
+  }
+}
+
+// ===================== 响应式 =====================
+@media (max-width: 768px) {
+  .container {
+    padding: $spacing-md;
+  }
+
+  .admin-layout {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid $border-color;
+  }
+
+  .filter-bar {
+    .el-select, .el-input {
+      width: 100%;
+    }
+  }
+
+  .stat-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

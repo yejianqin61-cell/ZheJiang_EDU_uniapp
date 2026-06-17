@@ -4,8 +4,8 @@ module.exports = {
   apps: [{
     name: 'ai-paper-backend',
     script: './dist/main.js',
-    instances: 'max',          // one per CPU core
-    exec_mode: 'cluster',
+    instances: 1,               // single instance for SQLite (no shared memory)
+    exec_mode: 'fork',
     max_memory_restart: '512M',
     env: {
       NODE_ENV: 'production',

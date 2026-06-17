@@ -51,7 +51,7 @@ async function handleBatchDelete() {
 }
 
 function handleDetail(id: string) {
-  uni.navigateTo({ url: `/pages/admin/questions/detail?id=${id}` });
+  uni.navigateTo({ url: `/pages/admin/questions/detail/index?id=${id}` });
 }
 </script>
 

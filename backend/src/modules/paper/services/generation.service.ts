@@ -94,8 +94,6 @@ export class GenerationService {
       type: q.type,
       content: q.content,
       options: q.options,
-      answer: q.answer,
-      analysis: q.analysis,
       difficulty: q.difficulty,
     }));
 

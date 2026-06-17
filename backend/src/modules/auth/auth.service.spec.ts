@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../../database/entities/user.entity';
 import { UnauthorizedException } from '@nestjs/common';
+import { SmsService } from './services/sms.service';
 import axios from 'axios';
 
 jest.mock('axios');
@@ -46,6 +47,7 @@ describe('AuthService', () => {
             }),
           },
         },
+        { provide: SmsService, useValue: { sendCode: jest.fn(), verifyCode: jest.fn() } },
       ],
     }).compile();
 
@@ -57,7 +59,7 @@ describe('AuthService', () => {
       userRepo.findOne.mockResolvedValue(null);
       userRepo.save.mockResolvedValue({ id: 'u1', openid: 'test_user', role: 'teacher', nickname: null, avatarUrl: null });
 
-      const result = await service.login('test_user');
+      const result = await service.loginByWxCode('test_user');
 
       expect(result.accessToken).toBe('jwt.token.here');
       expect(result.user.role).toBe('teacher');
@@ -68,7 +70,7 @@ describe('AuthService', () => {
     it('should return existing user without creating', async () => {
       userRepo.findOne.mockResolvedValue({ id: 'u2', openid: 'test_user', role: 'teacher', nickname: null, avatarUrl: null });
 
-      const result = await service.login('test_user');
+      const result = await service.loginByWxCode('test_user');
 
       expect(result.user.id).toBe('u2');
       expect(userRepo.save).not.toHaveBeenCalled();
@@ -78,7 +80,7 @@ describe('AuthService', () => {
       userRepo.findOne.mockResolvedValue(null);
       userRepo.save.mockImplementation((e: any) => Promise.resolve({ ...e, id: 'u3' }));
 
-      const result = await service.login('admin_test');
+      const result = await service.loginByWxCode('admin_test');
 
       expect(result.user.role).toBe('admin');
       expect(userRepo.create).toHaveBeenCalledWith(
@@ -90,7 +92,7 @@ describe('AuthService', () => {
       userRepo.findOne.mockResolvedValue(null);
       userRepo.save.mockImplementation((e: any) => Promise.resolve({ ...e, id: 'u4' }));
 
-      await service.login('teacher1', '张老师');
+      await service.loginByWxCode('teacher1', '张老师');
 
       expect(userRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({ nickname: '张老师' }),
@@ -100,7 +102,7 @@ describe('AuthService', () => {
     it('should update nickname if missing on subsequent login', async () => {
       userRepo.findOne.mockResolvedValue({ id: 'u5', openid: 'old', role: 'teacher', nickname: null, avatarUrl: null });
 
-      await service.login('old', '李老师');
+      await service.loginByWxCode('old', '李老师');
 
       expect(userRepo.update).toHaveBeenCalledWith('u5', { nickname: '李老师' });
     });
@@ -114,6 +116,7 @@ describe('AuthService', () => {
           { provide: getRepositoryToken(User), useValue: userRepo },
           { provide: JwtService, useValue: jwtService },
           { provide: ConfigService, useValue: { get: jest.fn((k: string) => k === 'wx.appId' ? 'wx123' : k === 'wx.appSecret' ? 'sec123' : null) } },
+          { provide: SmsService, useValue: { sendCode: jest.fn(), verifyCode: jest.fn() } },
         ],
       }).compile();
 
@@ -124,7 +127,7 @@ describe('AuthService', () => {
       mockedAxios.get.mockResolvedValue({ data: { openid: 'real_openid_123' } });
       userRepo.findOne.mockResolvedValue({ id: 'u6', openid: 'real_openid_123', role: 'teacher', nickname: null, avatarUrl: null });
 
-      const result = await service.login('wx_code_abc');
+      const result = await service.loginByWxCode('wx_code_abc');
 
       expect(mockedAxios.get).toHaveBeenCalledWith(
         'https://api.weixin.qq.com/sns/jscode2session',
@@ -137,7 +140,7 @@ describe('AuthService', () => {
     it('should throw on WeChat API error', async () => {
       mockedAxios.get.mockResolvedValue({ data: { errcode: 40029, errmsg: 'invalid code' } });
 
-      await expect(service.login('bad_code')).rejects.toThrow(UnauthorizedException);
+      await expect(service.loginByWxCode('bad_code')).rejects.toThrow(UnauthorizedException);
     });
   });
 

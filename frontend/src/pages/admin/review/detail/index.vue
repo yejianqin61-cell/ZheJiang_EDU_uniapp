@@ -76,16 +76,6 @@ async function handleReview(action: 'approve' | 'reject') {
         </view>
       </view>
 
-      <view class="card">
-        <text class="section-title">AI 识别答案</text>
-        <text class="answer-text">{{ question.answer || '(未识别)' }}</text>
-      </view>
-
-      <view class="card" v-if="question.analysis">
-        <text class="section-title">AI 识别解析</text>
-        <text class="analysis-text">{{ question.analysis }}</text>
-      </view>
-
       <view class="card" v-if="question.knowledgePoints?.length">
         <text class="section-title">AI 识别知识点</text>
         <view class="kp-tags">

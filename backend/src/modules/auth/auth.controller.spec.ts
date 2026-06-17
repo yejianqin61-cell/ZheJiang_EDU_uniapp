@@ -1,9 +1,7 @@
-/**
- * AuthController 单元测试
- */
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { SmsService } from './services/sms.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -11,39 +9,36 @@ describe('AuthController', () => {
 
   beforeEach(async () => {
     authService = {
-      login: jest.fn().mockResolvedValue({
-        accessToken: 'jwt.token',
-        user: { id: 'u1', role: 'teacher', nickname: '测试', avatarUrl: null },
-      }),
+      loginByPhone: jest.fn().mockResolvedValue({ accessToken: 'jwt.token', role: 'teacher', phone: '138****8000' }),
+      loginByWxCode: jest.fn().mockResolvedValue({ accessToken: 'jwt.token', user: { id: 'u1', role: 'teacher' } }),
       refresh: jest.fn().mockResolvedValue({ accessToken: 'jwt.new.token' }),
     };
+    const smsService = { sendCode: jest.fn(), verifyCode: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [{ provide: AuthService, useValue: authService }],
+      providers: [
+        { provide: AuthService, useValue: authService },
+        { provide: SmsService, useValue: smsService },
+      ],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
   });
 
-  describe('POST /auth/login', () => {
-    it('should login with code and return token', async () => {
-      const result = await controller.login({ code: 'test', nickname: '测试' });
-      expect(result.accessToken).toBe('jwt.token');
-      expect(result.user.role).toBe('teacher');
-    });
-
-    it('should login without nickname', async () => {
-      const result = await controller.login({ code: 'test' });
-      expect(result.accessToken).toBeDefined();
-    });
+  it('POST /auth/send-sms → send verification code', async () => {
+    const result = await controller.sendSms({ phone: '13800138000' });
+    expect(result.message).toBe('验证码已发送');
   });
 
-  describe('POST /auth/refresh', () => {
-    it('should refresh token', async () => {
-      const result = await controller.refresh('user-1');
-      expect(result.accessToken).toBe('jwt.new.token');
-      expect(authService.refresh).toHaveBeenCalledWith('user-1');
-    });
+  it('POST /auth/login (phone) → login with SMS code', async () => {
+    const result = await controller.login({ phone: '13800138000', smsCode: '123456' });
+    expect(result.accessToken).toBe('jwt.token');
+    expect(authService.loginByPhone).toHaveBeenCalledWith('13800138000', '123456');
+  });
+
+  it('POST /auth/login (code) → legacy WeChat login', async () => {
+    const result = await controller.login({ code: 'wx_test' });
+    expect((result as any).user.id).toBe('u1');
   });
 });

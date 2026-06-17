@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import axios from 'axios';
 import { User } from '../../database/entities/user.entity';
+import { SmsService } from './services/sms.service';
 
 @Injectable()
 export class AuthService {
@@ -13,19 +14,42 @@ export class AuthService {
     private readonly userRepo: Repository<User>,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    private readonly smsService: SmsService,
   ) {}
 
-  async login(code: string, nickname?: string) {
+  // ========== 短信验证码登录 ==========
+
+  async loginByPhone(phone: string, smsCode: string) {
+    // 验证短信验证码
+    this.smsService.verifyCode(phone, smsCode);
+
+    let user = await this.userRepo.findOne({ where: { phone } });
+    if (!user) {
+      // 首次登录 → 自动注册
+      const adminPhones = (process.env.ADMIN_PHONES ?? '').split(',').map(s => s.trim()).filter(Boolean);
+      const isAdmin = adminPhones.includes(phone);
+      user = await this.userRepo.save(
+        this.userRepo.create({ phone, phoneVerified: true, role: isAdmin ? 'admin' : 'teacher' }),
+      );
+    }
+
+    const token = this.jwtService.sign({ sub: user.id, phone, role: user.role });
+    return {
+      accessToken: token,
+      role: user.role,
+      phone: user.phone,
+    };
+  }
+
+  // ========== 微信 code 登录（保留兼容） ==========
+
+  async loginByWxCode(code: string, nickname?: string) {
     const openid = await this.codeToOpenid(code);
 
     let user = await this.userRepo.createQueryBuilder('u')
       .where('u.openid = :openid', { openid })
       .getOne();
     if (!user) {
-      // 管理员判定（优先级从高到低）：
-      // 1. 生产环境: 读取 ADMIN_OPENIDS 环境变量（逗号分隔的 openid 列表）
-      // 2. 开发环境: admin_test → admin
-      // 3. 其他: teacher
       const adminOpenids = (process.env.ADMIN_OPENIDS ?? '').split(',').map(s => s.trim()).filter(Boolean);
       const isAdmin = adminOpenids.includes(openid) || openid === 'admin_test';
       const role = isAdmin ? 'admin' : 'teacher';
@@ -33,7 +57,6 @@ export class AuthService {
         this.userRepo.create({ openid, role, nickname: nickname ?? null }),
       );
     } else if (nickname && !user.nickname) {
-      // Sync nickname on first login where we have it
       await this.userRepo.update(user.id, { nickname });
       user.nickname = nickname;
     }
@@ -51,20 +74,23 @@ export class AuthService {
     };
   }
 
+  // ========== Token 刷新 ==========
+
   async refresh(userId: string) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
       throw new UnauthorizedException({ code: 10003, message: '用户不存在' });
     }
-    const token = this.jwtService.sign({ sub: user.id, openid: user.openid, role: user.role });
+    const token = this.jwtService.sign({ sub: user.id, phone: user.phone, openid: user.openid, role: user.role });
     return { accessToken: token };
   }
+
+  // ========== 微信 code → openid ==========
 
   private async codeToOpenid(code: string): Promise<string> {
     const appId = this.config.get<string>('wx.appId');
     const appSecret = this.config.get<string>('wx.appSecret');
 
-    // Development bypass: if no WeChat credentials configured, accept any code as openid
     if (!appId || !appSecret) {
       return code;
     }

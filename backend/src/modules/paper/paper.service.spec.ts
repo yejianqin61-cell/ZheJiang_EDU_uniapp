@@ -204,8 +204,7 @@ describe('PaperService', () => {
 
       const result = await service.getPaperById('paper-1', 'u1');
 
-      expect((result.questions[0] as any).answer).toBe('A');
-      expect((result.questions[0] as any).analysis).toBe('解析');
+      expect((result.questions[0] as any).answer).toBeUndefined(); // production: no answers
       expect(result.totalScore).toBe(25);
     });
 

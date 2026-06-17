@@ -1,7 +1,7 @@
 version: "3.9"
 
 # ============================================
-# AI智能组卷小程序 — 生产部署编排
+# AI智能组卷 — 生产部署编排
 # ============================================
 #
 # 启动: docker compose up -d
@@ -9,11 +9,12 @@ version: "3.9"
 # 日志: docker compose logs -f backend
 #
 # 服务:
-#   caddy   — HTTPS 反向代理 (:443 → :3000)
-#   backend — NestJS API
-#   db      — PostgreSQL 15 + pgvector
-#   redis   — Redis 7 (BullMQ)
-#   export  — Python DOCX/PDF 导出
+#   caddy    — HTTPS 反向代理 (:443 → frontend :80, /v1 → backend :3000)
+#   frontend — Nginx 静态文件 (Vue3 SPA)
+#   backend  — NestJS API
+#   db       — PostgreSQL 15 + pgvector
+#   redis    — Redis 7 (BullMQ + 短信验证码缓存)
+#   export   — Python DOCX/PDF 导出
 # ============================================
 
 services:
@@ -31,8 +32,18 @@ services:
     environment:
       DOMAIN: ${DOMAIN:-localhost}
     depends_on:
+      - frontend
       - backend
     restart: unless-stopped
+
+  # ---- Frontend (Nginx SPA) ----
+  frontend:
+    build:
+      context: ./frontend-web
+      dockerfile: Dockerfile
+    container_name: ai-paper-frontend
+    restart: unless-stopped
+
   # ---- PostgreSQL 15 + pgvector ----
   db:
     image: pgvector/pgvector:pg15
@@ -44,6 +55,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./backend/src/database/migrations/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql
+      - ./backend/src/database/migrations/003_web_migration.sql:/docker-entrypoint-initdb.d/003_web_migration.sql
     ports:
       - "5432:5432"
     healthcheck:
@@ -64,7 +76,7 @@ services:
       timeout: 3s
       retries: 5
 
-  # ---- NestJS Backend (PM2 Cluster) ----
+  # ---- NestJS Backend ----
   backend:
     build: ./backend
     container_name: ai-paper-backend
@@ -87,18 +99,20 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET}
-      ADMIN_OPENIDS: ${ADMIN_OPENIDS:-}
+      ADMIN_PHONES: ${ADMIN_PHONES:-}
       QWEN3_API_URL: ${QWEN3_API_URL}
       QWEN3_API_KEY: ${QWEN3_API_KEY}
       EMBEDDING_API_URL: ${EMBEDDING_API_URL}
       EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
-      WX_APP_ID: ${WX_APP_ID}
-      WX_APP_SECRET: ${WX_APP_SECRET}
-      WX_MCH_ID: ${WX_MCH_ID}
-      WX_API_V3_KEY: ${WX_API_V3_KEY}
-      WX_MCH_SERIAL_NO: ${WX_MCH_SERIAL_NO}
-      WX_MCH_PRIVATE_KEY: ${WX_MCH_PRIVATE_KEY}
-      WX_PAY_NOTIFY_URL: ${WX_PAY_NOTIFY_URL}
+      ALIBABA_ACCESS_KEY_ID: ${ALIBABA_ACCESS_KEY_ID}
+      ALIBABA_ACCESS_KEY_SECRET: ${ALIBABA_ACCESS_KEY_SECRET}
+      SMS_SIGN_NAME: ${SMS_SIGN_NAME}
+      SMS_TEMPLATE_CODE: ${SMS_TEMPLATE_CODE}
+      ALIPAY_APP_ID: ${ALIPAY_APP_ID}
+      ALIPAY_PRIVATE_KEY: ${ALIPAY_PRIVATE_KEY}
+      ALIPAY_PUBLIC_KEY: ${ALIPAY_PUBLIC_KEY}
+      ALIPAY_NOTIFY_URL: ${ALIPAY_NOTIFY_URL}
+      ALIPAY_RETURN_URL: ${ALIPAY_RETURN_URL}
       COS_SECRET_ID: ${COS_SECRET_ID}
       COS_SECRET_KEY: ${COS_SECRET_KEY}
       COS_BUCKET: ${COS_BUCKET}

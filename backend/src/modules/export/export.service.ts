@@ -90,6 +90,50 @@ export class ExportService {
     };
   }
 
+  /**
+   * Admin export: generate DOCX for any paper (bypasses user + payment check).
+   * For admin to download print orders etc.
+   */
+  async exportForAdmin(paperId: string) {
+    const paper = await this.paperRepo.findOne({ where: { id: paperId } });
+    if (!paper) throw new NotFoundException({ code: 30001, message: '试卷不存在' });
+
+    // If already exported, return cached URL
+    if (paper.exportDocxUrl) {
+      return { downloadUrl: paper.exportDocxUrl };
+    }
+
+    const snapshots = await this.snapshotRepo.find({
+      where: { paperId },
+      order: { sortOrder: 'ASC' },
+    });
+
+    if (snapshots.length === 0) {
+      throw new NotFoundException({ code: 40002, message: '试卷内容为空，无法导出' });
+    }
+
+    const payload = this.buildPayload(paper.title, snapshots);
+    let buffer: Buffer;
+
+    try {
+      buffer = await this.callPythonExport('docx', payload);
+    } catch (err: any) {
+      console.warn(`Python export service unavailable, using dev fallback: ${err.message}`);
+      buffer = this.generateTextExport(paper.title, snapshots);
+    }
+
+    const filename = `${paper.title}.docx`;
+    const fileId = await this.localFileService.save(filename, buffer);
+
+    await this.paperRepo.update(paperId, {
+      exportDocxUrl: this.localFileService.getDownloadUrl(fileId),
+      exportedAt: new Date(),
+      status: 'exported',
+    });
+
+    return { downloadUrl: this.localFileService.getDownloadUrl(fileId) };
+  }
+
   // === Private helpers ===
 
   private async verifyAndLoad(paperId: string, userId: string) {
@@ -140,7 +184,9 @@ export class ExportService {
    * Saved as .docx/.pdf but actually contains readable text content.
    */
   private generateTextExport(title: string, snapshots: PaperQuestionSnapshot[]): Buffer {
-    let text = `${title}\n\n`;
+    const watermark = 'AI辅助生成｜仅供备课参考｜使用前请核对';
+    let text = `${watermark}\n`;
+    text += `${title}\n\n`;
     text += `=${'='.repeat(40)}\n\n`;
 
     // Questions section
@@ -156,18 +202,9 @@ export class ExportService {
       text += `    分值: ${q.score ?? 5} | 难度: ${['', '简单', '中等', '困难'][q.difficulty] ?? '?'}\n\n`;
     }
 
-    // Answers section (separated)
-    text += `\n=${'='.repeat(40)}\n\n`;
-    text += `【参考答案】\n\n`;
-    for (const s of snapshots) {
-      const q = s.snapshot;
-      text += `${q.index}. 答案: ${q.answer ?? '(无)'}`;
-      if (q.analysis) {
-        text += `\n    解析: ${q.analysis}`;
-      }
-      text += '\n\n';
-    }
+    // No answer section (production: uploaded questions don't carry answers)
 
+    text += `\n\n${watermark}\n`;
     return Buffer.from(text, 'utf-8');
   }
 }

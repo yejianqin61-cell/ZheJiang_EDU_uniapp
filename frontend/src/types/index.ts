@@ -72,19 +72,83 @@ export interface PaperResult {
 export interface OrderItem {
   orderId: string;
   orderNo: string;
-  paperId?: string;
+  type?: 'download' | 'print';
   paperTitle: string;
   amount: number;
+  unitPrice?: number;
   status: string;
+  copies?: number | null;
+  printStatus?: string | null;
+  shipping?: {
+    receiverName: string;
+    phone: string;
+    fullAddress: string;
+  };
+  hasExport?: boolean;
+  createdAt: string;
+}
+
+export interface OrderDetail {
+  orderId: string;
+  orderNo: string;
+  type: 'download' | 'print';
+  paperId: string;
+  paperTitle: string;
+  questionCount: number;
+  amount: number;
+  unitPrice: number;
+  status: string;
+  pricingSnapshot?: Record<string, any>;
+  copies?: number | null;
+  printStatus?: string | null;
+  shipping?: {
+    receiverName: string;
+    phone: string;
+    fullAddress: string;
+  } | null;
+  printStatusLog?: Array<{ status: string; time: string }>;
+  hasExport?: boolean;
+  paidAt?: string | null;
+  expiredAt?: string;
   createdAt: string;
 }
 
 export interface CreateOrderResult {
   orderId: string;
   orderNo: string;
+  type: 'download' | 'print';
   amount: number;
+  unitPrice: number;
+  copies?: number | null;
   paperId?: string;
+  pricingDetail?: Record<string, any>;
   wxPayParams: Record<string, string> | null;
+}
+
+// === Shipping Address ===
+export interface ShippingAddress {
+  id: string;
+  receiverName: string;
+  phone: string;
+  province: string;
+  city: string;
+  district: string;
+  detail: string;
+  isDefault: boolean;
+}
+
+// === Pricing ===
+export interface PricingConfig {
+  download: {
+    unitPrice: number;
+    description: string;
+  };
+  print: Array<{
+    tier: number;
+    minQuantity: number;
+    maxQuantity: number | null;
+    unitPrice: number;
+  }>;
 }
 
 // === Admin - Question ===

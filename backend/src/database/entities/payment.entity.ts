@@ -16,11 +16,14 @@ export class Payment {
   @JoinColumn({ name: 'order_id' })
   order: Order;
 
-  @Column({ type: 'varchar', length: 64, nullable: true, name: 'wx_transaction_id' })
-  wxTransactionId: string | null;
+  @Column({ type: 'varchar', length: 16, default: 'alipay' })
+  provider: string;
 
-  @Column({ type: 'varchar', length: 32, unique: true, name: 'wx_out_trade_no' })
-  wxOutTradeNo: string;
+  @Column({ type: 'varchar', length: 64, nullable: true, name: 'transaction_id' })
+  transactionId: string | null;
+
+  @Column({ type: 'varchar', length: 32, unique: true, name: 'out_trade_no' })
+  outTradeNo: string;
 
   @Column({ type: 'integer' })
   amount: number;

@@ -67,24 +67,6 @@ async function handleDelete() {
       </view>
     </view>
 
-    <!-- Answer & Analysis -->
-    <view class="card">
-      <view class="toggle-row" @tap="showAnswer = !showAnswer">
-        <text class="toggle-label">答案与解析</text>
-        <text class="toggle-arrow" :class="{ open: showAnswer }">&#9660;</text>
-      </view>
-      <view v-if="showAnswer" class="answer-section">
-        <view class="answer-row">
-          <text class="a-label">答案</text>
-          <text class="a-value">{{ question.answer || '(无)' }}</text>
-        </view>
-        <view v-if="question.analysis" class="answer-row">
-          <text class="a-label">解析</text>
-          <text class="a-value">{{ question.analysis }}</text>
-        </view>
-      </view>
-    </view>
-
     <!-- Knowledge Points -->
     <view class="card" v-if="question.knowledgePoints?.length">
       <text class="section-title">关联知识点</text>

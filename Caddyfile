@@ -1,37 +1,39 @@
 # ============================================
-# Caddy Reverse Proxy — AI智能组卷
+# AI智能组卷 — Caddy HTTPS 反向代理
 # ============================================
-# 生产环境: 将 yourdomain.com 替换为真实域名
-# 本地开发: 使用 localhost (自签证书)
 
 {$DOMAIN:localhost} {
-    # API → NestJS backend
+    # API 代理到 NestJS 后端
     handle /v1/* {
         reverse_proxy backend:3000
     }
 
-    # Downloads → NestJS backend
+    # 下载文件代理
     handle /download/* {
         reverse_proxy backend:3000
     }
 
-    # Health check
+    # 健康检查
     handle /health {
         reverse_proxy backend:3000
     }
 
-    # 前端静态文件 (H5 build)
+    # 前端 SPA（所有其他请求 → frontend Nginx）
     handle {
-        root * /srv/frontend
-        try_files {path} /index.html
-        file_server
+        reverse_proxy frontend:80
+    }
+
+    # 安全头
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
     }
 
     # Gzip
     encode gzip
 
-    # Logging
+    # 日志
     log {
-        output file /var/log/caddy/access.log
+        output stdout
     }
 }

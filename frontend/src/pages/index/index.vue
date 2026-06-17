@@ -16,6 +16,14 @@ function handleStart() {
 function handleAdmin() {
   uni.navigateTo({ url: '/pages/admin/dashboard/index' });
 }
+
+function handleUpload() {
+  if (!auth.isLoggedIn) {
+    uni.navigateTo({ url: '/pages/login/index' });
+    return;
+  }
+  uni.navigateTo({ url: '/pages/contribute/upload/index' });
+}
 </script>
 
 <template>
@@ -26,6 +34,7 @@ function handleAdmin() {
     </view>
     <view class="actions">
       <button class="btn-primary" @tap="handleStart">开始组卷</button>
+      <button v-if="!auth.isAdmin" class="btn-secondary" @tap="handleUpload">上传题目</button>
       <button v-if="auth.isAdmin" class="btn-secondary" @tap="handleAdmin">管理后台</button>
     </view>
     <view class="features">

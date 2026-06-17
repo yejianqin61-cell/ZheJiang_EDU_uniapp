@@ -43,6 +43,9 @@ export class KbFile {
   @Column({ type: 'text', nullable: true, name: 'error_msg' })
   errorMsg: string | null;
 
+  @Column({ type: 'varchar', length: 32, default: 'draft', name: 'submit_status' })
+  submitStatus: 'draft' | 'pending_review' | 'reviewed';
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

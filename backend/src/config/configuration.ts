@@ -16,6 +16,21 @@ export default () => ({
     payNotifyUrl: process.env.WX_PAY_NOTIFY_URL ?? '',
   },
 
+  sms: {
+    accessKeyId: process.env.ALIBABA_ACCESS_KEY_ID ?? '',
+    accessKeySecret: process.env.ALIBABA_ACCESS_KEY_SECRET ?? '',
+    signName: process.env.SMS_SIGN_NAME ?? 'AI智能组卷',
+    templateCode: process.env.SMS_TEMPLATE_CODE ?? '',
+  },
+
+  alipay: {
+    appId: process.env.ALIPAY_APP_ID ?? '',
+    privateKey: (process.env.ALIPAY_PRIVATE_KEY ?? '').replace(/\\n/g, '\n'),
+    alipayPublicKey: (process.env.ALIPAY_PUBLIC_KEY ?? '').replace(/\\n/g, '\n'),
+    notifyUrl: process.env.ALIPAY_NOTIFY_URL ?? '',
+    returnUrl: process.env.ALIPAY_RETURN_URL ?? '',
+  },
+
   llm: {
     primary: {
       model: process.env.QWEN3_MODEL ?? 'qwen-plus-latest',

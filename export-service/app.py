@@ -51,6 +51,89 @@ def export_docx():
         return jsonify({"error": str(e)}), 500
 
 
+def _render_content_with_images(doc, content: str, images: list):
+    """
+    渲染题目内容，将 Markdown ![](url) 替换为插入的图片。
+
+    逻辑：
+    1. 按 ![](url) 分割 content，文本段→段落，图片段→插入图片
+    2. images JSON 中未被 content 引用的图片也插入末尾
+    """
+    import re
+    import requests
+    from docx.shared import Inches
+
+    # 正则匹配 ![caption](url)
+    IMG_RE = re.compile(r'!\[([^\]]*)\]\(([^)]+)\)')
+
+    parts = IMG_RE.split(content)
+    # split 返回: [text0, caption1, url1, text1, caption2, url2, text2, ...]
+
+    for i, part in enumerate(parts):
+        if i % 3 == 0:
+            # 文本段
+            if part.strip():
+                para = doc.add_paragraph()
+                run = para.add_run(part)
+                run.font.name = "宋体"
+                rPr = run._element.get_or_add_rPr()
+                from docx.oxml.ns import qn as _qn
+                rPr.rFonts.set(_qn("w:eastAsia"), "宋体")
+                run.font.size = __import__('docx.shared').Pt(12)
+        elif i % 3 == 2:
+            # 图片 URL
+            url = part
+            try:
+                resp = requests.get(url, timeout=10)
+                if resp.status_code == 200:
+                    from io import BytesIO
+                    img_stream = BytesIO(resp.content)
+                    _insert_image_with_caption(doc, img_stream)
+                else:
+                    para = doc.add_paragraph()
+                    run = para.add_run(f'[图片加载失败: {url}]')
+                    run.font.color.rgb = __import__('docx.shared').RGBColor(0xcc, 0x00, 0x00)
+            except Exception:
+                para = doc.add_paragraph()
+                run = para.add_run(f'[图片加载失败: {url}]')
+                run.font.color.rgb = __import__('docx.shared').RGBColor(0xcc, 0x00, 0x00)
+
+    # 插入 images JSON 中未被 content 引用的额外图片
+    referenced_urls = set(IMG_RE.findall(content))
+    for img in images:
+        url = img.get('url', '')
+        if url and url not in referenced_urls:
+            try:
+                resp = requests.get(url, timeout=10)
+                if resp.status_code == 200:
+                    from io import BytesIO
+                    _insert_image_with_caption(doc, BytesIO(resp.content), caption=img.get('caption', ''))
+            except Exception:
+                pass
+
+
+def _insert_image_with_caption(doc, img_stream, caption: str = ''):
+    """插入图片并居中，可选附注"""
+    from docx.shared import Inches, Pt
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+    try:
+        para = doc.add_paragraph()
+        para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = para.add_run()
+        run.add_picture(img_stream, width=Inches(3.5))
+    except Exception:
+        # 图片格式不支持，跳过
+        return
+
+    if caption:
+        para = doc.add_paragraph()
+        para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = para.add_run(caption)
+        run.font.size = Pt(9)
+        run.font.italic = True
+
+
 def generate_docx(title: str, questions: list) -> bytes:
     """Generate A4 DOCX with paper formatting."""
     from docx import Document
@@ -68,6 +151,29 @@ def generate_docx(title: str, questions: list) -> bytes:
     section.bottom_margin = Cm(2.5)
     section.left_margin = Cm(2.0)
     section.right_margin = Cm(2.0)
+
+    # ── Watermark: header ──
+    WATERMARK = "AI辅助生成｜仅供备课参考｜使用前请核对"
+    header = section.header
+    header.is_linked_to_previous = False
+    hp = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
+    hp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    hr = hp.add_run(WATERMARK)
+    hr.font.size = Pt(8)
+    hr.font.color.rgb = __import__('docx.shared').RGBColor(0x99, 0x99, 0x99)
+    hr.font.name = "宋体"
+    hr.element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
+
+    # ── Watermark: footer ──
+    footer = section.footer
+    footer.is_linked_to_previous = False
+    fp = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
+    fp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    fr = fp.add_run(WATERMARK)
+    fr.font.size = Pt(8)
+    fr.font.color.rgb = __import__('docx.shared').RGBColor(0x99, 0x99, 0x99)
+    fr.font.name = "宋体"
+    fr.element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
 
     # Default font
     style = doc.styles["Normal"]
@@ -106,12 +212,10 @@ def generate_docx(title: str, questions: list) -> bytes:
         run.element.rPr.rFonts.set(qn("w:eastAsia"), "黑体")
         run.font.size = Pt(12)
 
-        # Question content
-        para = doc.add_paragraph()
-        run = para.add_run(q["content"])
-        run.font.name = "宋体"
-        run.element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
-        run.font.size = Pt(12)
+        # Question content (with Markdown image support)
+        content = q.get("content", "")
+        images = q.get("images", [])
+        _render_content_with_images(doc, content, images)
 
         # Options
         if q.get("options"):
@@ -125,28 +229,7 @@ def generate_docx(title: str, questions: list) -> bytes:
 
         doc.add_paragraph()  # spacer
 
-    # ── Answers (separate page) ──
-    doc.add_page_break()
-    ans_title = doc.add_paragraph()
-    ans_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = ans_title.add_run("参考答案")
-    run.font.name = "黑体"
-    run.element.rPr.rFonts.set(qn("w:eastAsia"), "黑体")
-    run.font.size = Pt(16)
-    run.bold = True
-    doc.add_paragraph()
-
-    for q in questions:
-        para = doc.add_paragraph()
-        text = f"{q['index']}. "
-        if q.get("answer"):
-            text += q["answer"]
-        if q.get("analysis"):
-            text += f"\n    解析：{q['analysis']}"
-        run = para.add_run(text)
-        run.font.name = "宋体"
-        run.element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
-        run.font.size = Pt(12)
+    # ── No answer section (production: uploaded questions don't carry answers) ──
 
     buf = io.BytesIO()
     doc.save(buf)

@@ -215,7 +215,7 @@ describe('ExportService', () => {
       const text = savedBuffer.toString('utf-8');
       expect(text).toContain(paper.title);
       expect(text).toContain('试题部分');
-      expect(text).toContain('参考答案');
+      expect(text).toContain('AI辅助生成'); // watermark instead of answers
     });
 
     it('should handle special characters in paper title', async () => {

@@ -122,8 +122,6 @@ export class PaperService {
           type: q.type,
           content: q.content,
           options: q.options,
-          answer: q.answer,
-          analysis: q.analysis,
           difficulty: q.difficulty,
           score: 5,
         },
@@ -181,23 +179,12 @@ export class PaperService {
 
     const isPaid = paper.status === 'paid' || paper.status === 'exported';
     const questions = snapshots.map((s) => {
-      const base = {
+      return {
         index: s.sortOrder,
         type: s.snapshot.type,
         content: s.snapshot.content,
         options: s.snapshot.options,
       };
-      // Only include answer/analysis for paid papers
-      if (isPaid) {
-        return {
-          ...base,
-          answer: s.snapshot.answer,
-          analysis: s.snapshot.analysis,
-          difficulty: s.snapshot.difficulty,
-          score: s.snapshot.score,
-        };
-      }
-      return base;
     });
 
     return {

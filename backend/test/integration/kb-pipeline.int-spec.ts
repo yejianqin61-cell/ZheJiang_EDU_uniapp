@@ -128,14 +128,14 @@ describe('INT-3: Knowledge Base Pipeline', () => {
 
   // ── RBAC: Teacher cannot access admin endpoints ──
 
-  it('should reject teacher uploading files', async () => {
+  it('should allow teacher to upload files', async () => {
     await request(app.getHttpServer())
       .post('/v1/admin/files/upload')
       .set('Authorization', `Bearer ${teacherToken}`)
       .field('subject', '数学')
       .field('grade', '五年级')
       .attach('file', Buffer.from('test'), 'test.md')
-      .expect(403);
+      .expect(201);
   });
 
   it('should reject teacher accessing review queue', async () => {

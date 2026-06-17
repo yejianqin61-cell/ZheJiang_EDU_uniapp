@@ -55,7 +55,7 @@ describe('INT-2: Payment Flow', () => {
     await request(app.getHttpServer())
       .post('/v1/orders')
       .set('Authorization', `Bearer ${teacherToken}`)
-      .send({ paperId: 'non-existent-paper-id' })
+      .send({ paperId: 'non-existent-paper-id', type: 'download' })
       .expect(404);
   });
 
@@ -94,7 +94,7 @@ describe('INT-2: Payment Flow', () => {
   it('should reject unauthenticated access to orders', async () => {
     await request(app.getHttpServer()).get('/v1/orders').expect(401);
     await request(app.getHttpServer())
-      .post('/v1/orders').send({ paperId: 'test' }).expect(401);
+      .post('/v1/orders').send({ paperId: 'test', type: 'download' }).expect(401);
   });
 
   // ── Payment Callback (dev mode) ──

@@ -13,6 +13,9 @@ import { PaymentModule } from './modules/payment/payment.module';
 import { ExportModule } from './modules/export/export.module';
 import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { PrintModule } from './modules/print/print.module';
+import { ContributionModule } from './modules/contribution/contribution.module';
+import { BalanceModule } from './modules/balance/balance.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -75,6 +78,9 @@ import { HealthController } from './health.controller';
     ExportModule,
     KnowledgeBaseModule,
     AdminModule,
+    PrintModule,
+    ContributionModule,
+    BalanceModule,
   ],
   controllers: [HealthController],
   providers: [

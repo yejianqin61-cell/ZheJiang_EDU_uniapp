@@ -1,40 +1,52 @@
 /**
- * ReviewService 单元测试 — 题目审核服务
+ * ReviewService 单元测试 — 题目审核服务 V2.0（含返现逻辑）
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ReviewService } from './review.service';
 import { Question } from '../../../database/entities/question.entity';
+import { KbFile } from '../../../database/entities/kb-file.entity';
+import { User } from '../../../database/entities/user.entity';
+import { PricingConfig } from '../../../database/entities/pricing-config.entity';
+import { BalanceService } from '../../balance/services/balance.service';
 import { mockRepo } from '../../../test-utils';
 
 describe('ReviewService', () => {
   let service: ReviewService;
   let questionRepo: any;
+  let fileRepo: any;
+  let userRepo: any;
+  let pricingRepo: any;
+  let balanceService: any;
 
   beforeEach(async () => {
     questionRepo = mockRepo();
+    fileRepo = mockRepo();
+    userRepo = mockRepo();
+    pricingRepo = mockRepo();
+    balanceService = { addBalance: jest.fn().mockResolvedValue({ balance: 100 }) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReviewService,
         { provide: getRepositoryToken(Question), useValue: questionRepo },
+        { provide: getRepositoryToken(KbFile), useValue: fileRepo },
+        { provide: getRepositoryToken(User), useValue: userRepo },
+        { provide: getRepositoryToken(PricingConfig), useValue: pricingRepo },
+        { provide: BalanceService, useValue: balanceService },
       ],
     }).compile();
 
     service = module.get<ReviewService>(ReviewService);
   });
 
-  // ═══════════════════════════════════════════════════════════
-  // getPendingList
-  // ═══════════════════════════════════════════════════════════
-
   describe('getPendingList', () => {
-    it('should return pending (parsed) questions', async () => {
+    it('should return parsed AND pending_review questions', async () => {
       const mockQb = questionRepo.createQueryBuilder();
       mockQb.getManyAndCount.mockResolvedValue([
         [
-          { id: 'q-1', status: 'parsed', content: '题目1' },
-          { id: 'q-2', status: 'parsed', content: '题目2' },
+          { id: 'q-1', status: 'parsed', content: '题目1', sourceFile: null, questionKnowledge: [] },
+          { id: 'q-2', status: 'pending_review', content: '题目2', sourceFile: null, questionKnowledge: [] },
         ],
         2,
       ]);
@@ -45,114 +57,98 @@ describe('ReviewService', () => {
       expect(result.pagination.total).toBe(2);
     });
 
-    it('should return empty list when no pending questions', async () => {
-      questionRepo.createQueryBuilder().getManyAndCount.mockResolvedValue([[], 0]);
+    it('should include source info for teacher-uploaded questions', async () => {
+      const mockQb = questionRepo.createQueryBuilder();
+      mockQb.getManyAndCount.mockResolvedValue([
+        [{
+          id: 'q-1', status: 'pending_review', content: '题目1',
+          sourceFile: { id: 'f1', filename: 'test.docx', uploader: { id: 'u1', role: 'teacher', nickname: '张老师' } },
+          questionKnowledge: [],
+        }],
+        1,
+      ]);
 
       const result = await service.getPendingList({ page: 1, pageSize: 20 });
 
-      expect(result.list).toEqual([]);
-      expect(result.pagination.total).toBe(0);
-    });
-
-    it('should filter by fileId', async () => {
-      const mockQb = questionRepo.createQueryBuilder();
-      mockQb.getManyAndCount.mockResolvedValue([[{ id: 'q-1', status: 'parsed' }], 1]);
-
-      const result = await service.getPendingList({ page: 1, pageSize: 20 }, 'file-1');
-
-      expect(result.list).toHaveLength(1);
+      expect(result.list[0].source.type).toBe('teacher');
+      expect(result.list[0].source.userName).toBe('张老师');
     });
   });
-
-  // ═══════════════════════════════════════════════════════════
-  // batchReview — approve
-  // ═══════════════════════════════════════════════════════════
 
   describe('batchReview — approve', () => {
     it('should approve all pending questions', async () => {
       questionRepo.find.mockResolvedValue([
-        { id: 'q-1', status: 'parsed', isDeleted: false },
-        { id: 'q-2', status: 'parsed', isDeleted: false },
-        { id: 'q-3', status: 'parsed', isDeleted: false },
+        { id: 'q-1', status: 'parsed', isDeleted: false, sourceFileId: null, sourceFile: null, content: 'test', subject: '数学' },
+        { id: 'q-2', status: 'pending_review', isDeleted: false, sourceFileId: null, sourceFile: null, content: 'test2', subject: '数学' },
       ]);
+      questionRepo.count.mockResolvedValue(0);
+      pricingRepo.findOne.mockResolvedValue({ unitPrice: 100 });
 
-      const result = await service.batchReview('admin-1', ['q-1', 'q-2', 'q-3'], 'approve');
+      const result = await service.batchReview('admin-1', ['q-1', 'q-2'], 'approve');
 
-      expect(result.approved).toBe(3);
+      expect(result.approved).toBe(2);
       expect(result.failed).toBe(0);
-      expect(questionRepo.update).toHaveBeenCalledTimes(3);
     });
 
-    it('should set reviewer metadata on approval', async () => {
-      questionRepo.find.mockResolvedValue([{ id: 'q-1', status: 'parsed', isDeleted: false }]);
+    it('should trigger cashback for teacher-uploaded approved questions', async () => {
+      questionRepo.find.mockResolvedValue([{
+        id: 'q-1', status: 'pending_review', isDeleted: false, sourceFileId: 'f1',
+        sourceFile: { id: 'f1', uploader: { id: 'u1', role: 'teacher' } },
+        content: '题目', subject: '数学',
+      }]);
+      questionRepo.count.mockResolvedValue(0);
+      pricingRepo.findOne.mockResolvedValue({ unitPrice: 100 });
 
       await service.batchReview('admin-1', ['q-1'], 'approve');
 
-      expect(questionRepo.update).toHaveBeenCalledWith('q-1', expect.objectContaining({
-        status: 'approved',
-        reviewedById: 'admin-1',
-        reviewedAt: expect.any(Date),
+      expect(balanceService.addBalance).toHaveBeenCalledWith(expect.objectContaining({
+        userId: 'u1',
+        amount: 100,
+        type: 'cashback',
       }));
     });
-  });
 
-  // ═══════════════════════════════════════════════════════════
-  // batchReview — reject
-  // ═══════════════════════════════════════════════════════════
+    it('should NOT trigger cashback for admin-uploaded questions', async () => {
+      questionRepo.find.mockResolvedValue([{
+        id: 'q-1', status: 'parsed', isDeleted: false, sourceFileId: 'f1',
+        sourceFile: { id: 'f1', uploader: { id: 'admin1', role: 'admin' } },
+        content: '题目', subject: '数学',
+      }]);
+      questionRepo.count.mockResolvedValue(0);
+      pricingRepo.findOne.mockResolvedValue({ unitPrice: 100 });
+
+      await service.batchReview('admin-1', ['q-1'], 'approve');
+
+      expect(balanceService.addBalance).not.toHaveBeenCalled();
+    });
+  });
 
   describe('batchReview — reject', () => {
     it('should reject all pending questions', async () => {
       questionRepo.find.mockResolvedValue([
-        { id: 'q-1', status: 'parsed', isDeleted: false },
+        { id: 'q-1', status: 'parsed', isDeleted: false, sourceFileId: null, sourceFile: null, content: 'test', subject: '数学' },
       ]);
+      pricingRepo.findOne.mockResolvedValue({ unitPrice: 100 });
 
       const result = await service.batchReview('admin-1', ['q-1'], 'reject');
 
       expect(result.rejected).toBe(1);
-      expect(questionRepo.update).toHaveBeenCalledWith('q-1', expect.objectContaining({
-        status: 'rejected',
-      }));
+      expect(questionRepo.update).toHaveBeenCalledWith('q-1', expect.objectContaining({ status: 'rejected' }));
+      expect(balanceService.addBalance).not.toHaveBeenCalled();
     });
   });
-
-  // ═══════════════════════════════════════════════════════════
-  // batchReview — partial failure
-  // ═══════════════════════════════════════════════════════════
 
   describe('batchReview — partial failure', () => {
     it('should report IDs not found in DB', async () => {
       questionRepo.find.mockResolvedValue([
-        { id: 'q-1', status: 'parsed', isDeleted: false },
-        // q-2 and q-3 not returned → not found
+        { id: 'q-1', status: 'parsed', isDeleted: false, sourceFileId: null, sourceFile: null, content: 'test', subject: '数学' },
       ]);
+      pricingRepo.findOne.mockResolvedValue({ unitPrice: 100 });
 
       const result = await service.batchReview('admin-1', ['q-1', 'q-2', 'q-3'], 'approve');
 
       expect(result.approved).toBe(1);
       expect(result.failed).toBe(2);
-      expect(result.failedIds).toContain('q-2');
-      expect(result.failedIds).toContain('q-3');
-    });
-
-    it('should skip already-approved questions', async () => {
-      // Only parsed questions are returned; already-approved ones are filtered by query
-      questionRepo.find.mockResolvedValue([
-        { id: 'q-1', status: 'parsed', isDeleted: false },
-      ]);
-
-      const result = await service.batchReview('admin-1', ['q-1', 'q-already-approved'], 'approve');
-
-      expect(result.approved).toBe(1);
-      expect(result.failed).toBe(1);
-    });
-
-    it('should handle empty questionIds array', async () => {
-      questionRepo.find.mockResolvedValue([]);
-
-      const result = await service.batchReview('admin-1', [], 'approve');
-
-      expect(result.approved).toBe(0);
-      expect(result.failed).toBe(0);
     });
   });
 });

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI智能组卷 — 开发公报 2026.06.11</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1419;
+    --card: #1a1f2e;
+    --border: #2a3040;
+    --text: #c9d1d9;
+    --text2: #8b949e;
+    --blue: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d2991d;
+    --red: #f85149;
+    --purple: #a371f7;
+    --cyan: #39d2c0;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    line-height:1.6;
+  }
+  .container { max-width:1200px; margin:0 auto; padding:40px 24px; }
+  .header {
+    text-align:center; padding:60px 20px; margin-bottom:40px;
+    background:linear-gradient(135deg, #1a1f2e 0%, #0d2137 50%, #1a1f2e 100%);
+    border-radius:20px; border:1px solid var(--border);
+  }
+  .header h1 { font-size:42px; font-weight:800; margin-bottom:8px;
+    background:linear-gradient(135deg, var(--blue), var(--cyan));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .header .subtitle { color:var(--text2); font-size:18px; }
+  .header .badges { margin-top:20px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .badge { padding:6px 16px; border-radius:20px; font-size:13px; font-weight:600; }
+  .badge.deploy { background:rgba(63,185,80,0.15); color:var(--green); }
+  .badge.fix { background:rgba(248,81,73,0.15); color:var(--red); }
+  .badge.v2 { background:rgba(163,113,247,0.15); color:var(--purple); }
+  .badge.prod { background:rgba(57,210,192,0.15); color:var(--cyan); }
+  .stats-row { display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:30px; }
+  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:28px 24px; text-align:center; }
+  .stat-card .num { font-size:42px; font-weight:800; margin-bottom:4px; }
+  .num.blue { color:var(--blue); } .num.green { color:var(--green); }
+  .num.yellow { color:var(--yellow); } .num.purple { color:var(--purple); } .num.cyan { color:var(--cyan); }
+  .stat-card .label { color:var(--text2); font-size:14px; }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
+  .grid-3 { display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-bottom:20px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:28px; }
+  .card h2 { font-size:20px; margin-bottom:20px; color:#e6edf3; display:flex; align-items:center; gap:10px; }
+  .card h2 .dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .dot.blue { background:var(--blue); } .dot.green { background:var(--green); }
+  .dot.yellow { background:var(--yellow); } .dot.red { background:var(--red); }
+  .dot.purple { background:var(--purple); } .dot.cyan { background:var(--cyan); }
+  .chart-box { height:340px; }
+  .progress-row { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+  .progress-row .name { width:100px; font-size:14px; font-weight:500; }
+  .progress-bar { flex:1; height:22px; background:rgba(255,255,255,0.06); border-radius:11px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:11px; transition:width 1s ease;
+    background:linear-gradient(90deg, var(--blue), var(--cyan)); }
+  .progress-fill.warn { background:linear-gradient(90deg, var(--yellow), #e8b339); }
+  .progress-fill.danger { background:linear-gradient(90deg, var(--red), #ff6b6b); }
+  .progress-fill.done { background:linear-gradient(90deg, var(--green), var(--cyan)); }
+  .progress-row .pct { width:48px; text-align:right; font-size:14px; font-weight:600; }
+  .checklist { list-style:none; }
+  .checklist li { padding:12px 16px; margin-bottom:6px; border-radius:8px; font-size:14px; display:flex; align-items:center; gap:10px; }
+  .checklist li.done { background:rgba(63,185,80,0.08); }
+  .checklist li.todo { background:rgba(248,81,73,0.05); }
+  .checklist li .icon-check { color:var(--green); font-size:18px; }
+  .checklist li .icon-pending { color:var(--text2); font-size:18px; }
+  .checklist li .tag { font-size:11px; padding:2px 8px; border-radius:10px; margin-left:auto; }
+  .tag.p0 { background:rgba(248,81,73,0.15); color:var(--red); }
+  .tag.p1 { background:rgba(210,153,29,0.15); color:var(--yellow); }
+  .tag.done-tag { background:rgba(63,185,80,0.15); color:var(--green); }
+  .timeline { border-left:2px solid var(--border); padding-left:24px; }
+  .timeline-item { margin-bottom:24px; position:relative; }
+  .timeline-item::before { content:''; position:absolute; left:-32px; top:4px; width:14px; height:14px; border-radius:50%; background:var(--blue); border:3px solid var(--bg); }
+  .timeline-item.done::before { background:var(--green); }
+  .timeline-item h4 { font-size:15px; margin-bottom:4px; }
+  .timeline-item p { color:var(--text2); font-size:13px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { padding:10px 14px; text-align:left; border-bottom:1px solid var(--border); }
+  th { color:var(--text2); font-weight:500; font-size:12px; text-transform:uppercase; }
+  .status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
+  .status-dot.g { background:var(--green); } .status-dot.y { background:var(--yellow); }
+  .status-dot.r { background:var(--red); }
+  .footer { text-align:center; padding:40px 20px; color:var(--text2); font-size:13px; border-top:1px solid var(--border); margin-top:40px; }
+  .bug-box { background:rgba(248,81,73,0.08); border:1px solid rgba(248,81,73,0.2); border-radius:12px; padding:20px; margin-bottom:16px; }
+  .bug-box h4 { color:var(--red); margin-bottom:8px; }
+  .bug-box p { font-size:13px; color:var(--text2); }
+  @media (max-width:768px) { .stats-row { grid-template-columns:repeat(2,1fr); } .grid-2,.grid-3 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>AI 智能组卷小程序</h1>
+    <div class="subtitle">开发公报 · 2026 年 6 月 11 日 · 浙江</div>
+    <div class="badges">
+      <span class="badge deploy">🚀 阿里云 ECS 首次部署</span>
+      <span class="badge fix">🔧 8 项 Bug 修复</span>
+      <span class="badge v2">📦 V2 模块就绪验证</span>
+      <span class="badge prod">🟢 全链路可演示</span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="num green">1</div>
+      <div class="label">服务器部署完成</div>
+    </div>
+    <div class="stat-card">
+      <div class="num blue">3.6<small style="font-size:22px">s</small></div>
+      <div class="label">AI 组卷平均耗时</div>
+    </div>
+    <div class="stat-card">
+      <div class="num purple">38<small style="font-size:22px">KB</small></div>
+      <div class="label">真 Word 导出文件</div>
+    </div>
+    <div class="stat-card">
+      <div class="num cyan">8</div>
+      <div class="label">故障排查修复</div>
+    </div>
+  </div>
+
+  <!-- Deployment Overview -->
+  <div class="card" style="margin-bottom:20px;">
+    <h2><span class="dot green"></span>服务器部署总览</h2>
+    <table>
+      <thead><tr><th>组件</th><th>方案</th><th>状态</th></tr></thead>
+      <tbody>
+        <tr><td><strong>云服务器</strong></td><td>阿里云 ECS · 华东1(杭州) · 2核4G · Ubuntu 26.04</td><td><span class="status-dot g"></span>47.96.39.9</td></tr>
+        <tr><td><strong>后端运行时</strong></td><td>Node.js 20 · PM2 fork 模式 · SQLite</td><td><span class="status-dot g"></span>运行中</td></tr>
+        <tr><td><strong>AI 大模型</strong></td><td>百炼 qwen-plus-latest · text-embedding-v4</td><td><span class="status-dot g"></span>已充值恢复</td></tr>
+        <tr><td><strong>前端入口</strong></td><td>UniApp H5 · nginx 反向代理</td><td><span class="status-dot g"></span>手机可访问</td></tr>
+        <tr><td><strong>DOCX 导出</strong></td><td>Python Flask · python-docx · gunicorn</td><td><span class="status-dot g"></span>38KB 真 Word</td></tr>
+        <tr><td><strong>数据库</strong></td><td>SQLite (当前) · PostgreSQL 16 + pgvector (已装源)</td><td><span class="status-dot y"></span>明天切换</td></tr>
+        <tr><td><strong>支付</strong></td><td>mock-pay 演示模式 · 微信 V3 待商户号</td><td><span class="status-dot y"></span>等审核</td></tr>
+        <tr><td><strong>域名 + SSL</strong></td><td>已购 · 已实名 · ICP 备案已提交</td><td><span class="status-dot y"></span>等管局(15天)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Module Progress -->
+  <div class="card" style="margin-bottom:20px;">
+    <h2><span class="dot blue"></span>各模块部署状态</h2>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>模块</th><th>后端</th><th>前端</th><th>全链路</th><th>进度</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Auth 认证</strong></td><td>✅ Dev 登录(清理WX环境变量)</td><td>✅ 登录页可用</td><td><span class="status-dot g"></span>通过</td><td><div class="progress-row" style="margin:0;"><div class="progress-bar" style="height:8px;"><div class="progress-fill done" style="width:98%"></div></div><span class="pct" style="font-size:12px;">98%</span></div></td></tr>
+          <tr><td><strong>Paper 组卷</strong></td><td>✅ LLM 百炼 3.6s · 脱敏输出</td><td>✅ 配置 + 预览 + 支付分流</td><td><span class="status-dot g"></span>通过</td><td><div class="progress-row" style="margin:0;"><div class="progress-bar" style="height:8px;"><div class="progress-fill done" style="width:96%"></div></div><span class="pct" style="font-size:12px;">96%</span></div></td></tr>
+          <tr><td><strong>Order 订单</strong></td><td>✅ 双模式(download/print)</td><td>✅ Tab双栏 + 详情</td><td><span class="status-dot g"></span>通过</td><td><div class="progress-row" style="margin:0;"><div class="progress-bar" style="height:8px;"><div class="progress-fill done" style="width:96%"></div></div><span class="pct" style="font-size:12px;">96%</span></div></td></tr>
+          <tr><td><strong>Payment 支付</strong></td><td>✅ mock-pay · 余额支付</td><td>✅ 双支付入口 · mock适配</td><td><span class="status-dot g"></span>通过</td><td><div class="progress-row" style="margin:0;"><div class="progress-bar" style="height:8px;"><div class="progress-fill done" style="width:92%"></div></div><span class="pct" style="font-size:12px;">92%</span></div></td></tr>
+          <tr><td><strong>Export 导出</strong></td><td>✅ Python DOCX 38KB 真 Word</td><td>✅ 下载触发</td><td><span class="status-dot g"></span>通过</td><td><div class="progress-row" style="margin:0;"><div class="progress-bar" style="height:8px;"><div class="progress-fill done" style="width:90%"></div></div><span class="pct" style="font-size:12px;">90%</span></div></td></tr>
+          <tr><td><strong>KB 知识库</strong></td><td>✅ 8服务全链路 · 中文搜索</td><td>✅ 上传+审核+知识点中心</td><td><span class="status-dot y"></span>待灌题验证</td><td><div class="progress-row" style="margin:0;"><div class="progress-bar" style="height:8px;"><div class="progress-fill warn" style="width:88%"></div></div><span class="pct" style="font-size:12px;">88%</span></div></td></tr>
+          <tr><td><strong>Admin 管理</strong></td><td>✅ 仪表盘+题库+定价+审核</td><td>✅ 8页面完整</td><td><span class="status-dot y"></span>待灌题验证</td><td><div class="progress-row" style="margin:0;"><div class="progress-bar" style="height:8px;"><div class="progress-fill done" style="width:93%"></div></div><span class="pct" style="font-size:12px;">93%</span></div></td></tr>
+          <tr><td><strong>Print 打印 🆕</strong></td><td>✅ 分档定价+地址+物流</td><td>✅ 结算+地址管理</td><td><span class="status-dot y"></span>路由通过的</td><td><div class="progress-row" style="margin:0;"><div class="progress-bar" style="height:8px;"><div class="progress-fill warn" style="width:85%"></div></div><span class="pct" style="font-size:12px;">85%</span></div></td></tr>
+          <tr><td><strong>Contribution 贡献 🆕</strong></td><td>✅ 上传+审核+返现+提现</td><td>✅ 贡献页+余额+提现</td><td><span class="status-dot y"></span>路由通过的</td><td><div class="progress-row" style="margin:0;"><div class="progress-bar" style="height:8px;"><div class="progress-fill warn" style="width:80%"></div></div><span class="pct" style="font-size:12px;">80%</span></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Bug fixes today -->
+    <div class="card">
+      <h2><span class="dot red"></span>今晚踩坑 & 修复清单</h2>
+      <div class="bug-box">
+        <h4>🐛 #1 PM2 Cluster × SQLite 致命竞态</h4>
+        <p>2进程各自内存隔离，A进程写 B进程读不到 → "试卷不存在"。修复：instances=1, exec_mode=fork</p>
+      </div>
+      <div class="bug-box">
+        <h4>🐛 #2 百炼 API 欠费 Arrearage</h4>
+        <p>组卷返回 500，日志 "Access denied, account not in good standing"。修复：充值余额恢复</p>
+      </div>
+      <div class="bug-box">
+        <h4>🐛 #3 python-docx RGBColor API 变更</h4>
+        <p>新版 python-docx 移除了 RGBColor，__import__ 调用失效 → 导出 500。修复：import 到顶并 gunicorn 重启</p>
+      </div>
+      <div class="bug-box">
+        <h4>🐛 #4 COS 占位值被当真实配置</h4>
+        <p>.env 中 COS_SECRET_ID=your_secret_id 被判断为已配置 → 真调腾讯云报 bucket 不存在。修复：清空占位值</p>
+      </div>
+      <div class="bug-box">
+        <h4>🐛 #5 EXPORT_SERVICE_URL 指向 Docker 容器名</h4>
+        <p>.env 残留 http://export:5000 → 后端调不通 Python。修复：改 localhost:5000</p>
+      </div>
+      <div class="bug-box">
+        <h4>🐛 #6 全项目 5 处 localhost:3000 硬编码</h4>
+        <p>payment/index.vue · orders/index.vue · orders/detail/index.vue · admin/orders/index.vue(×2)。手机 localhost 指向自身。修复：统一收敛到 config/env.ts</p>
+      </div>
+      <div class="bug-box">
+        <h4>🐛 #7 nginx 缺少 /v1/download/ 路由</h4>
+        <p>导出返回 /v1/download/xxx.docx，nginx 未转发 → 404。修复：补 location 块</p>
+      </div>
+      <div class="bug-box">
+        <h4>🐛 #8 Docker Hub 被墙</h4>
+        <p>docker-compose 拉镜像 SSL connection reset。放弃 Docker，改用 PM2 + Node.js 直装。Ubuntu 26.04 过新加剧兼容问题</p>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="card">
+      <h2><span class="dot cyan"></span>今晚部署时间线</h2>
+      <div class="timeline">
+        <div class="timeline-item done"><h4>Phase 0 · 阿里云购机</h4><p>ecs.e-c1m2.large · 华东1杭州 · 按量付费 · 安全组22/80/443</p></div>
+        <div class="timeline-item done"><h4>Phase 1 · 环境搭建</h4><p>Node.js 20 · nginx · PM2 · SQLite · ssh+scp传输项目文件</p></div>
+        <div class="timeline-item done"><h4>Phase 2 · 后端部署调试</h4><p>npm依赖 · nest build · 百炼欠费恢复 · PM2 fork修复 · 种子灌入</p></div>
+        <div class="timeline-item done"><h4>Phase 3 · 前端部署调试</h4><p>UniApp H5 构建 · nginx 静态文件 · /v1/download 路由补全</p></div>
+        <div class="timeline-item done"><h4>Phase 4 · Python 导出服务</h4><p>pip依赖 · RGBColor Bug · gunicorn 5000端口 · 38KB 真Word</p></div>
+        <div class="timeline-item done"><h4>Phase 5 · 全链路验收</h4><p>登录→组卷(3.6s)→下单→mock支付→Python导出→下载 ✓</p></div>
+        <div class="timeline-item done"><h4>Phase 6 · 硬编码根治</h4><p>创建 config/env.ts 统一入口 · 5处硬编码清零 · 环境自动切换</p></div>
+        <div class="timeline-item"><h4>Phase 7 · PostgreSQL 切换</h4><p>官方源已加 · apt缓存已下载 · 明天继续</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Changes today -->
+    <div class="card">
+      <h2><span class="dot green"></span>代码改动清单</h2>
+      <ul class="checklist">
+        <li class="done"><span class="icon-check">✓</span> ecosystem.config.js → fork 单实例</li>
+        <li class="done"><span class="icon-check">✓</span> payment/index.vue → BASE_URL 动态化</li>
+        <li class="done"><span class="icon-check">✓</span> orders/detail/index.vue → buildDownloadUrl</li>
+        <li class="done"><span class="icon-check">✓</span> orders/index.vue → buildDownloadUrl</li>
+        <li class="done"><span class="icon-check">✓</span> admin/orders/index.vue ×2 → buildDownloadUrl</li>
+        <li class="done"><span class="icon-check">✓</span> config/env.ts 🆕 环境配置单一入口</li>
+        <li class="done"><span class="icon-check">✓</span> api/index.ts → 引用 env.ts</li>
+        <li class="done"><span class="icon-check">✓</span> export-service/app.py → RGBColor import</li>
+        <li class="done"><span class="icon-check">✓</span> address/edit/index.vue → 手填省市区</li>
+        <li class="done"><span class="icon-check">✓</span> nginx 配置 → /v1/download/ 路由</li>
+        <li class="done"><span class="icon-check">✓</span> .env → COS/EXPORT_SERVICE_URL 修复</li>
+      </ul>
+    </div>
+
+    <!-- Infrastructure fixes -->
+    <div class="card">
+      <h2><span class="dot purple"></span>基础设施改动</h2>
+      <ul class="checklist">
+        <li class="done"><span class="icon-check">✓</span> 阿里云 ECS 安全组开放 80/443/22</li>
+        <li class="done"><span class="icon-check">✓</span> Node.js 20 + npm 11 安装</li>
+        <li class="done"><span class="icon-check">✓</span> nginx 反向代理 :80→:3000</li>
+        <li class="done"><span class="icon-check">✓</span> PM2 fork 单进程守护</li>
+        <li class="done"><span class="icon-check">✓</span> Python 3 + flask + gunicorn :5000</li>
+        <li class="done"><span class="icon-check">✓</span> PostgreSQL 官方源 16+44+pgvector</li>
+        <li class="done"><span class="icon-check">✓</span> 阿里云容器镜像加速器 → 备用</li>
+        <li class="todo"><span class="icon-pending">○</span> PostgreSQL 数据库创建 <span class="tag p0">明天</span></li>
+        <li class="todo"><span class="icon-pending">○</span> SSL 证书 (等备案通过) <span class="tag p1">P1</span></li>
+        <li class="todo"><span class="icon-pending">○</span> Redis + BullMQ 异步队列 <span class="tag p1">P1</span></li>
+        <li class="todo"><span class="icon-pending">○</span> COS 对象存储开通 <span class="tag p1">P1</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- V2 Modules Verified -->
+    <div class="card">
+      <h2><span class="dot purple"></span>V2 模块路由验证</h2>
+      <table>
+        <thead><tr><th>路由</th><th>状态</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>GET /v1/pricing/public</td><td><span class="status-dot g"></span>通了</td><td>下载/打印/返现三档定价</td></tr>
+          <tr><td>CRUD /v1/shipping-addresses</td><td><span class="status-dot g"></span>通了</td><td>收货地址管理</td></tr>
+          <tr><td>GET /v1/users/me/balance</td><td><span class="status-dot g"></span>通了</td><td>余额+收支统计</td></tr>
+          <tr><td>POST /v1/orders (type=print)</td><td><span class="status-dot g"></span>通了</td><td>打印服务下单</td></tr>
+          <tr><td>POST /v1/contributions/upload</td><td><span class="status-dot y"></span>待验</td><td>教师上传题库</td></tr>
+          <tr><td>POST /v1/withdrawals</td><td><span class="status-dot y"></span>待验</td><td>余额提现</td></tr>
+          <tr><td>PUT /v1/admin/withdrawals/:id</td><td><span class="status-dot y"></span>待验</td><td>管理员审核提现</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Remaining -->
+    <div class="card">
+      <h2><span class="dot red"></span>距完工待办</h2>
+      <ul class="checklist">
+        <li class="todo"><span class="icon-pending">○</span> ICP 备案通过 → 域名解析 + SSL <span class="tag p0">15天</span></li>
+        <li class="todo"><span class="icon-pending">○</span> 微信小程序注册 → AppID <span class="tag p0">1-7天</span></li>
+        <li class="todo"><span class="icon-pending">○</span> 微信支付商户号申请 <span class="tag p0">1-3天</span></li>
+        <li class="todo"><span class="icon-pending">○</span> 切换 PostgreSQL + pgvector <span class="tag p0">明天</span></li>
+        <li class="todo"><span class="icon-pending">○</span> 切 COS 对象存储 <span class="tag p1">P1</span></li>
+        <li class="todo"><span class="icon-pending">○</span> 小程序编译上传 + 微信审核 <span class="tag p1">P1</span></li>
+        <li class="todo"><span class="icon-pending">○</span> 题库扩充（种子24题→500+）<span class="tag p1">P1</span></li>
+        <li class="todo"><span class="icon-pending">○</span> V2 打印+贡献联调测试 <span class="tag p1">P1</span></li>
+        <li class="done"><span class="icon-check">✓</span> 域名已购+实名 <span class="tag done-tag">完成</span></li>
+        <li class="done"><span class="icon-check">✓</span> ICP 备案已提交 <span class="tag done-tag">完成</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:20px;">
+    <div class="card" style="text-align:center;">
+      <div style="font-size:36px;font-weight:800;color:var(--red);">8</div>
+      <div style="color:var(--text2);font-size:14px;">故障排查修复</div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div style="font-size:36px;font-weight:800;color:var(--cyan);">11</div>
+      <div style="color:var(--text2);font-size:14px;">代码文件改动</div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div style="font-size:36px;font-weight:800;color:var(--green);">6<small style="font-size:20px">h</small></div>
+      <div style="color:var(--text2);font-size:14px;">首次远程部署周期</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>AI 智能组卷小程序 · 开发公报 · 2026-06-11</p>
+    <p style="margin-top:8px;">
+      阿里云 ECS 首次远程部署 · 百炼 AI 调通 3.6s · Python 真 Word 导出 38KB · 硬编码根治 · 环境配置集中化<br>
+      🎉 服务器 47.96.39.9 全链路可演示 · 距上线仅差备案+小程序+商户号
+    </p>
+    <p style="margin-top:12px;color:var(--text2);font-size:11px;">Generated at 2026-06-11T01:30:00+08:00 · 宿舍 · 回寝路上女朋友在小卖部亲了一口 💋 满血复活</p>
+  </div>
+</div>
+
+<script>
+// Gauge - overall completion
+(function(){
+  var c = echarts.init(document.getElementById('chart-gauge'));
+  if (!c) return;
+  c.setOption({ series:[{ type:'gauge', startAngle:210, endAngle:-30, min:0, max:100,
+    pointer:{show:true,length:'75%',width:8},
+    progress:{show:true,width:18,itemStyle:{color:{type:'linear',x:0,y:0,x2:1,y2:0,colorStops:[{offset:0,color:'#58a6ff'},{offset:0.8,color:'#3fb950'},{offset:1,color:'#39d2c0'}]}}},
+    axisLine:{lineStyle:{width:18,color:[[0.90,'#3fb950'],[1,'#2a3040']]}},
+    axisTick:{show:false},splitLine:{show:false},axisLabel:{show:false},
+    detail:{valueAnimation:true,fontSize:48,fontWeight:'bold',color:'#e6edf3',formatter:'{value}%',offsetCenter:[0,'50%']},
+    title:{offsetCenter:[0,'85%'],fontSize:14,color:'#8b949e'},
+    data:[{value:90,name:'整体完工度'}]
+  }]});
+})();
+
+// Modules bar
+(function(){
+  var c = echarts.init(document.getElementById('chart-modules'));
+  if (!c) return;
+  c.setOption({
+    tooltip:{trigger:'axis'}, grid:{left:100,right:30,top:10,bottom:20},
+    xAxis:{type:'value',max:100,axisLabel:{formatter:'{value}%',color:'#8b949e'},splitLine:{lineStyle:{color:'#2a3040'}}},
+    yAxis:{type:'category',data:['Auth','Paper','Order','Payment','Export','KB','Admin','Print🆕','Contribute🆕'],axisLabel:{color:'#c9d1d9',fontSize:13}},
+    series:[{ type:'bar',
+      data:[
+        {value:98,itemStyle:{color:'#3fb950'}},{value:96,itemStyle:{color:'#3fb950'}},
+        {value:96,itemStyle:{color:'#3fb950'}},{value:92,itemStyle:{color:'#3fb950'}},
+        {value:90,itemStyle:{color:'#3fb950'}},{value:88,itemStyle:{color:'#d2991d'}},
+        {value:93,itemStyle:{color:'#3fb950'}},{value:85,itemStyle:{color:'#a371f7'}},
+        {value:80,itemStyle:{color:'#58a6ff'}},
+      ], barMaxWidth:22,
+      label:{show:true,position:'right',formatter:'{c}%',color:'#c9d1d9'}
+    }]
+  });
+})();
+
+// Bug distribution pie
+(function(){
+  var c = echarts.init(document.getElementById('chart-bugs'));
+  if (!c) return;
+  c.setOption({
+    tooltip:{trigger:'item',formatter:'{b}: {c}'},
+    series:[{ type:'pie',radius:['50%','78%'],center:['50%','50%'],label:{color:'#c9d1d9'},
+      data:[
+        {value:2,name:'PM2/SQLite 竞态',itemStyle:{color:'#f85149'}},
+        {value:1,name:'百炼欠费',itemStyle:{color:'#d2991d'}},
+        {value:2,name:'Docker/GFW',itemStyle:{color:'#ff8c42'}},
+        {value:1,name:'python-docx API',itemStyle:{color:'#eb2f96'}},
+        {value:5,name:'硬编码 localhost',itemStyle:{color:'#58a6ff'}},
+        {value:1,name:'nginx 路由缺失',itemStyle:{color:'#a371f7'}},
+        {value:1,name:'COS 占位值',itemStyle:{color:'#39d2c0'}},
+      ]
+    }]
+  });
+})();
+
+// Deploy time breakdown
+(function(){
+  var c = echarts.init(document.getElementById('chart-time'));
+  if (!c) return;
+  c.setOption({
+    tooltip:{trigger:'item'},
+    series:[{ type:'pie',radius:['45%','75%'],center:['50%','50%'],label:{color:'#c9d1d9'},
+      data:[
+        {value:60,name:'环境&依赖安装',itemStyle:{color:'#a371f7'}},
+        {value:45,name:'Bug修复/Debug',itemStyle:{color:'#f85149'}},
+        {value:40,name:'代码改动+构建',itemStyle:{color:'#58a6ff'}},
+        {value:35,name:'验收测试',itemStyle:{color:'#3fb950'}},
+        {value:15,name:'购机+安全组',itemStyle:{color:'#d2991d'}},
+      ]
+    }]
+  });
+})();
+</script>
+</body>
+</html>

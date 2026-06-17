@@ -61,7 +61,7 @@ describe('TaggerService', () => {
       const result = await service.tagQuestion('1+1=?', '数学', '一年级', 'file-1');
 
       expect(result.type).toBe('single_choice');
-      expect(result.answer).toBe('B');
+      expect(result.answer).toBe(''); // production: no answers stored
       expect(result.difficulty).toBe(1);
       expect(result.status).toBe('parsed');
       expect(questionRepo.save).toHaveBeenCalled();

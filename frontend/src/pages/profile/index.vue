@@ -62,6 +62,16 @@ function handleLogout() {
         <text class="menu-text">管理后台</text>
         <text class="menu-arrow">&#8250;</text>
       </view>
+      <view class="menu-item" @tap="uni.navigateTo({ url: '/pages/contribute/index' })">
+        <text class="menu-icon">&#x1F4DD;</text>
+        <text class="menu-text">我的贡献</text>
+        <text class="menu-arrow">&#8250;</text>
+      </view>
+      <view class="menu-item" @tap="uni.navigateTo({ url: '/pages/profile/balance/index' })">
+        <text class="menu-icon">&#x1F4B0;</text>
+        <text class="menu-text">我的余额</text>
+        <text class="menu-arrow">&#8250;</text>
+      </view>
       <view class="menu-item" @tap="handleLogout">
         <text class="menu-icon logout-icon">&#x21AA;</text>
         <text class="menu-text logout-text">退出登录</text>

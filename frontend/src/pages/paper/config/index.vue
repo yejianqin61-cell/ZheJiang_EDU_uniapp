@@ -13,6 +13,9 @@ const gradeMap: Record<string, string[]> = {
 const subjects = ['语文','数学','英语','物理','化学','生物','政治','历史','地理'];
 
 const selectedStage = ref('');
+const generating = ref(false);
+const genProgress = ref(0);
+let progressTimer: ReturnType<typeof setInterval> | null = null;
 
 function selectStage(stage: string) {
   selectedStage.value = stage;
@@ -31,11 +34,8 @@ function selectSubject(subject: string) {
 function toggleKp(kpId: string) {
   const ids = paper.condition.knowledgePointIds ?? [];
   const idx = ids.indexOf(kpId);
-  if (idx >= 0) {
-    ids.splice(idx, 1);
-  } else {
-    ids.push(kpId);
-  }
+  if (idx >= 0) { ids.splice(idx, 1); }
+  else { ids.push(kpId); }
 }
 
 function isKpSelected(kpId: string): boolean {
@@ -43,15 +43,32 @@ function isKpSelected(kpId: string): boolean {
 }
 
 async function handleGenerate() {
-  if (!paper.condition.subject) {
-    uni.showToast({ title: '请选择科目', icon: 'none' });
-    return;
+  if (!paper.condition.subject) { uni.showToast({ title: '请选择科目', icon: 'none' }); return; }
+  if (!paper.condition.grade) { uni.showToast({ title: '请选择年级', icon: 'none' }); return; }
+
+  // Start progress bar (frontend-only, 30s)
+  generating.value = true;
+  genProgress.value = 0;
+  const startTime = Date.now();
+  const duration = 30000; // 30 seconds
+
+  progressTimer = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    genProgress.value = Math.min(95, Math.round((elapsed / duration) * 100));
+  }, 200);
+
+  try {
+    await paper.generate();
+    // Jump to 100% on success
+    genProgress.value = 100;
+    await new Promise(r => setTimeout(r, 300));
+  } catch {
+    // stay on page, close overlay
+  } finally {
+    if (progressTimer) clearInterval(progressTimer);
+    generating.value = false;
   }
-  if (!paper.condition.grade) {
-    uni.showToast({ title: '请选择年级', icon: 'none' });
-    return;
-  }
-  await paper.generate();
+
   if (paper.currentPaper) {
     uni.navigateTo({ url: '/pages/paper/preview/index' });
   }
@@ -100,6 +117,18 @@ async function handleGenerate() {
     </view>
 
     <button class="btn-generate" :loading="paper.loading" @tap="handleGenerate">生成试卷</button>
+
+    <!-- Generating overlay -->
+    <view v-if="generating" class="overlay">
+      <view class="overlay-card">
+        <text class="overlay-title">AI 正在生成试卷...</text>
+        <view class="progress-bar">
+          <view class="progress-fill" :style="{ width: genProgress + '%' }"></view>
+        </view>
+        <text class="progress-text">{{ genProgress }}%</text>
+        <text class="overlay-hint">预计还需 {{ Math.ceil((100 - genProgress) / 100 * 30) }} 秒</text>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -111,4 +140,13 @@ async function handleGenerate() {
 .tag { padding: 12rpx 24rpx; background: #f0f0f0; border-radius: 8rpx; font-size: 26rpx; }
 .tag.active { background: #1677ff; color: #fff; }
 .btn-generate { margin-top: 60rpx; background: #1677ff; color: #fff; border-radius: 12rpx; height: 88rpx; line-height: 88rpx; }
+
+/* Overlay */
+.overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 999; }
+.overlay-card { background: #fff; border-radius: 20rpx; padding: 60rpx 50rpx; width: 560rpx; text-align: center; }
+.overlay-title { font-size: 32rpx; font-weight: 600; display: block; margin-bottom: 40rpx; }
+.progress-bar { height: 16rpx; background: #e8e8e8; border-radius: 8rpx; overflow: hidden; margin-bottom: 16rpx; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #1677ff, #4096ff); border-radius: 8rpx; transition: width 0.3s; }
+.progress-text { font-size: 40rpx; font-weight: 700; color: #1677ff; display: block; margin-bottom: 8rpx; }
+.overlay-hint { font-size: 24rpx; color: #999; display: block; }
 </style>

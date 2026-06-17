@@ -221,6 +221,8 @@ export class SeedService {
       const saved = await this.questionRepo.save(
         this.questionRepo.create({
           ...q,
+          answer: '',    // production: no answers in question bank
+          analysis: '',  // production: no analysis in question bank
           embedding: embedding as any,
           status: 'approved',
           isDeleted: false,

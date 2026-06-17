@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Param, Body, Query, UseGuards } from '@nestjs/common';
-import { IsString } from 'class-validator';
+import { IsString, IsOptional, IsInt, Min, IsIn } from 'class-validator';
 import { OrderService } from './order.service';
 import { PaymentService } from '../payment/payment.service';
 import { JwtAuthGuard } from '../../common/guards/jwt.guard';
@@ -9,6 +9,19 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 class CreateOrderDto {
   @IsString()
   paperId: string;
+
+  @IsString()
+  @IsIn(['download', 'print'])
+  type: 'download' | 'print';
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  copies?: number;
+
+  @IsOptional()
+  @IsString()
+  shippingAddressId?: string;
 }
 
 @Controller('orders')
@@ -22,43 +35,52 @@ export class OrderController {
   @Post()
   async create(
     @CurrentUser('id') userId: string,
-    @CurrentUser('openid') openid: string,
     @Body() dto: CreateOrderDto,
   ) {
-    // Step 1: Create order record
-    const order = await this.orderService.create(userId, dto.paperId);
+    const order = await this.orderService.create({
+      userId,
+      paperId: dto.paperId,
+      type: dto.type ?? 'download',
+      copies: dto.copies,
+      shippingAddressId: dto.shippingAddressId,
+    });
 
-    // Step 2: Create payment → get wxPayParams
-    let wxPayParams: Record<string, string> | null = null;
+    let payment: any = null;
     try {
-      const paymentResult = await this.paymentService.createPayment(order.orderId, openid);
-      wxPayParams = paymentResult.wxPayParams;
+      const result = await this.paymentService.createAlipayPayment(order.orderId);
+      payment = { provider: 'alipay', payForm: result.payForm };
     } catch (err: any) {
-      // Payment creation failed, but order record exists.
-      // User can retry payment from order list.
-      // err code 30003 already thrown; just return order without wxPayParams
+      // Payment creation failed; order exists, user can retry
     }
 
-    return {
-      ...order,
-      wxPayParams,
-    };
+    return { ...order, payment };
   }
 
   @Get()
   list(
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: string,
     @Query() pagination: PaginationDto,
+    @Query('type') type?: string,
+    @Query('scope') scope?: string,
     @Query('subject') subject?: string,
     @Query('status') status?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
     this.orderService.cancelExpiredOrders().catch(() => {});
+
+    // Only admin can use scope=others
+    const effectiveScope: 'mine' | 'others' = (role === 'admin' && scope === 'others')
+      ? 'others'
+      : 'mine';
+
     return this.orderService.list({
       userId,
       page: pagination.page!,
       pageSize: pagination.pageSize!,
+      type,
+      scope: effectiveScope,
       subject,
       status,
       startDate,
@@ -67,8 +89,12 @@ export class OrderController {
   }
 
   @Get(':id')
-  getDetail(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    return this.orderService.getDetail(id, userId);
+  getDetail(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    return this.orderService.getDetail(id, userId, role === 'admin');
   }
 
   @Get(':id/download')
