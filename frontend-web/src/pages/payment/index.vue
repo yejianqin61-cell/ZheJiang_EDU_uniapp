@@ -50,6 +50,9 @@ async function handleBalancePay() {
   } catch (e: any) { if (!e.response) ElMessage.error('支付失败') } finally { paying.value = false }
 }
 
+function tagType(t: string) { return t === 'print' ? 'warning' : t === 'exercise' ? 'success' : 'primary' }
+function tagLabel(t: string) { return t === 'print' ? '🖨️ 打印服务' : t === 'exercise' ? '📚 练习服务' : '📥 下载服务' }
+
 async function handleMockPay() {
   if (!order.currentOrder) return
   paying.value = true
@@ -81,7 +84,7 @@ async function handleAlipay() {
       <!-- 左侧：订单摘要 -->
       <div class="payment-left">
         <div class="order-summary page-card">
-          <el-tag :type="order.currentOrder.type==='print'?'warning':order.currentOrder.type==='exercise'?'success':'primary'" size="large">{{ order.currentOrder.type==='print'?'🖨️ 打印服务':order.currentOrder.type==='exercise'?'📚 练习服务':'📥 下载服务' }}</el-tag>
+          <el-tag :type="tagType(order.currentOrder.type)" size="large">{{ tagLabel(order.currentOrder.type) }}</el-tag>
           <div class="amount">¥{{ (order.currentOrder.amount/100).toFixed(2) }}</div>
           <p class="order-no">订单号：{{ order.currentOrder.orderNo }}</p>
         </div>
