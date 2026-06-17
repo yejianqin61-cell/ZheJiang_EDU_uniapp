@@ -74,7 +74,7 @@ export class BalanceService {
   async addBalance(params: {
     userId: string;
     amount: number;     // positive=earn, negative=spend
-    type: 'cashback' | 'pay_order' | 'withdraw' | 'admin_adjust';
+    type: 'cashback' | 'pay_order' | 'withdraw' | 'admin_adjust' | 'exercise_cashback';
     refId?: string;
     note: string;
   }) {

@@ -22,7 +22,7 @@ async function reject() { try { await api.post(`/admin/reviews/${route.params.id
   </div>
 </template>
 <style scoped lang="scss">
-.detail-page{max-width:800px}
+.detail-page{max-width:1000px}
 .q-content{font-size:$font-size-base;line-height:1.8;white-space:pre-wrap}.q-option{padding:4px 0;color:$text-color-secondary}
 .info-grid{.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:$font-size-sm;span:first-child{color:$text-color-secondary}&:last-child{border-bottom:none}}}
 .actions{display:flex;gap:$spacing-md}

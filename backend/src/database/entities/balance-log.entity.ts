@@ -20,7 +20,7 @@ export class BalanceLog {
   amount: number; // positive=earn, negative=spend
 
   @Column({ type: 'varchar', length: 32 })
-  type: 'cashback' | 'pay_order' | 'withdraw' | 'admin_adjust';
+  type: 'cashback' | 'pay_order' | 'withdraw' | 'admin_adjust' | 'exercise_cashback';
 
   @Column({ type: 'varchar', nullable: true, name: 'ref_id' })
   refId: string | null;

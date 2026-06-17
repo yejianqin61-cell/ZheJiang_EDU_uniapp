@@ -11,7 +11,7 @@ export class PricingConfig {
   id: string;
 
   @Column({ type: 'varchar', length: 16 })
-  type: 'download' | 'print' | 'cashback';
+  type: 'download' | 'print' | 'cashback' | 'exercise' | 'exercise_cashback';
 
   @Column({ type: 'smallint', default: 1 })
   tier: number;

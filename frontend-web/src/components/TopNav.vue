@@ -11,8 +11,12 @@ const navItems = computed(() => {
   const items = [
     { path: '/', label: '首页' },
     { path: '/paper/config', label: 'AI组卷' },
+    { path: '/exercises', label: '同步练习' },
     { path: '/orders', label: '我的订单' },
   ]
+  if (authStore.isLoggedIn) {
+    items.push({ path: '/contribute', label: '我的贡献' })
+  }
   if (authStore.isAdmin) {
     items.push({ path: '/admin/dashboard', label: '管理后台' })
   }
@@ -39,7 +43,7 @@ function handleLogout() {
       <!-- Logo -->
       <router-link to="/" class="top-nav__logo">
         <span class="logo-icon">🤖</span>
-        <span class="logo-text">AI智能组卷</span>
+        <span class="logo-text">瓯越AI组题网</span>
       </router-link>
 
       <!-- 导航菜单 -->
@@ -58,18 +62,21 @@ function handleLogout() {
       <!-- 右侧用户区 -->
       <div class="top-nav__user">
         <template v-if="authStore.isLoggedIn">
+          <!-- 个人中心入口 -->
+          <router-link to="/profile" class="top-nav__profile" title="个人中心" aria-label="个人中心">
+            <el-icon :size="20"><UserFilled /></el-icon>
+          </router-link>
           <el-dropdown trigger="click">
             <span class="user-info">
-              <el-icon><UserFilled /></el-icon>
               <span class="user-phone">{{ authStore.phoneMasked }}</span>
               <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="router.push('/profile')">个人中心</el-dropdown-item>
-                <el-dropdown-item @click="router.push('/profile/balance')">我的余额</el-dropdown-item>
-                <el-dropdown-item @click="router.push('/contribute')">我的贡献</el-dropdown-item>
-                <el-dropdown-item @click="router.push('/address')">收货地址</el-dropdown-item>
+                <el-dropdown-item @click="router.push('/profile')">👤 个人中心</el-dropdown-item>
+                <el-dropdown-item @click="router.push('/exercises')">📚 同步练习</el-dropdown-item>
+                <el-dropdown-item @click="router.push('/contribute')">📤 我的贡献</el-dropdown-item>
+                <el-dropdown-item v-if="authStore.isAdmin" @click="router.push('/admin/dashboard')" divided>⚙️ 管理后台</el-dropdown-item>
                 <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -90,10 +97,12 @@ function handleLogout() {
   left: 0;
   right: 0;
   height: $top-nav-height;
-  background: linear-gradient(135deg, $color-primary, $color-primary-dark);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: $text-color;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .top-nav__inner {
@@ -110,18 +119,19 @@ function handleLogout() {
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-  color: #fff;
+  color: $color-primary;
   font-size: $font-size-lg;
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
+  font-family: $font-display;
 
   .logo-icon {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   &:hover {
-    opacity: 0.9;
+    opacity: 0.85;
   }
 }
 
@@ -133,27 +143,29 @@ function handleLogout() {
 }
 
 .top-nav__link {
-  color: rgba(255, 255, 255, 0.85);
+  color: $text-color-secondary;
   padding: $spacing-sm $spacing-md;
   border-radius: $border-radius;
-  font-size: $font-size-base;
+  font-size: $font-size-sm;
   text-decoration: none;
-  transition: all 0.2s;
+  transition: color 0.2s, background 0.2s;
+  font-weight: 500;
 
   &:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.15);
+    color: $color-primary;
+    background: rgba($color-primary, 0.06);
   }
 
   &--active {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.2);
+    color: $color-primary;
+    background: rgba($color-primary, 0.08);
   }
 }
 
 .top-nav__user {
   display: flex;
   align-items: center;
+  gap: $spacing-sm;
 
   .user-info {
     display: flex;
@@ -162,12 +174,30 @@ function handleLogout() {
     cursor: pointer;
     padding: $spacing-sm $spacing-md;
     border-radius: $border-radius;
-    color: rgba(255, 255, 255, 0.9);
+    color: $text-color-secondary;
     transition: background 0.2s;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba($color-primary, 0.06);
     }
+  }
+}
+
+.top-nav__profile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #409eff;
+  color: #fff;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s;
+
+  &:hover {
+    background: #337ecc;
+    transform: scale(1.05);
   }
 }
 </style>

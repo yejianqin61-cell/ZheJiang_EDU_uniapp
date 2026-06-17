@@ -100,7 +100,7 @@ export class TaggerService {
       },
       {
         headers: { Authorization: `Bearer ${this.primaryKey}`, 'Content-Type': 'application/json' },
-        timeout: 30000,
+        timeout: 60000,
       },
     );
     return res.data.choices?.[0]?.message?.content ?? '';

@@ -82,11 +82,14 @@ function goPrintCheckout() { router.push(`/print/checkout?paperId=${paper.curren
 </template>
 
 <style scoped lang="scss">
-.preview-page { max-width: 800px; margin: 0 auto; }
+.preview-page { max-width: 1500px; }
 .paper-header { h1 { font-size: $font-size-xxl; margin-bottom: $spacing-sm; } .paper-meta { font-size: $font-size-sm; color: $text-color-secondary; } }
 .question-card { margin-bottom: $spacing-md; .q-header { display: flex; align-items: center; gap: $spacing-sm; margin-bottom: $spacing-md; } .q-index { font-weight: 700; font-size: $font-size-lg; } .q-content { font-size: $font-size-base; line-height: 1.8; white-space: pre-wrap; } .q-options { margin-top: $spacing-md; } .q-option { padding: 4px 0; font-size: $font-size-base; color: $text-color-secondary; } }
 .blocker { text-align: center; color: $color-danger; margin-bottom: $spacing-lg; }
-.diversion { display: flex; flex-direction: column; gap: $spacing-md; margin-bottom: $spacing-lg; }
-.service-card { cursor: pointer; border: 2px solid transparent; transition: all 0.2s; &:hover { border-color: $color-primary-light; background: #f0f7ff; } .service-inner { display: flex; align-items: center; gap: $spacing-md; } .service-icon { font-size: 36px; flex-shrink: 0; } .service-body { flex: 1; h3 { font-size: $font-size-lg; margin-bottom: 4px; } p { font-size: $font-size-sm; color: $text-color-secondary; } } .service-price { color: $color-danger; font-weight: 500; } .service-arrow { font-size: 24px; color: $color-primary; flex-shrink: 0; } }
+.diversion { display: flex; flex-direction: row; gap: $spacing-lg; margin-bottom: $spacing-lg; .service-card { flex: 1; } }
+.service-card { cursor: pointer; border: 2px solid transparent; transition: all 0.2s; &:hover { border-color: $color-primary-light; background: #fef9f0; } .service-inner { display: flex; align-items: center; gap: $spacing-md; } .service-icon { font-size: 36px; flex-shrink: 0; } .service-body { flex: 1; h3 { font-size: $font-size-lg; margin-bottom: 4px; } p { font-size: $font-size-sm; color: $text-color-secondary; } } .service-price { color: $color-danger; font-weight: 500; } .service-arrow { font-size: 24px; color: $color-primary; flex-shrink: 0; } }
 .regenerate { text-align: center; padding: $spacing-lg 0; }
+@media (max-width: 768px) {
+  .diversion { flex-direction: column; }
+}
 </style>

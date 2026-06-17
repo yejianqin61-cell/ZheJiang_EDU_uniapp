@@ -41,4 +41,14 @@ export class UpdatePricingDto {
   @ValidateNested()
   @Type(() => DownloadPricingDto)
   cashback?: DownloadPricingDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DownloadPricingDto)
+  exerciseCashback?: DownloadPricingDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DownloadPricingDto)
+  exercise?: DownloadPricingDto;
 }

@@ -34,7 +34,7 @@ export class PaperService {
         { stage: '初中', grades: ['七年级','八年级','九年级'] },
         { stage: '高中', grades: ['高一','高二','高三'] },
       ],
-      subjects: ['语文','数学','英语','物理','化学','生物','政治','历史','地理'],
+      subjects: ['语文','数学','英语','物理','化学','生物','政治','历史','地理','科学'],
       difficulties: [
         { value: 1, label: '简单' },
         { value: 2, label: '中等' },

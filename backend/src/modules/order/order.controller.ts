@@ -11,8 +11,8 @@ class CreateOrderDto {
   paperId: string;
 
   @IsString()
-  @IsIn(['download', 'print'])
-  type: 'download' | 'print';
+  @IsIn(['download', 'print', 'exercise'])
+  type: 'download' | 'print' | 'exercise';
 
   @IsOptional()
   @IsInt()

@@ -11,4 +11,4 @@ async function submit() { if(amount.value<=0){ElMessage.warning('请输入金额
     <div class="page-card"><h3>申请提现</h3><p class="text-secondary mt-sm">可用余额：¥{{ (balance/100).toFixed(2) }}</p><div class="mt-md"><el-input v-model="amount" type="number" placeholder="请输入提现金额（元）" size="large"><template #append>元</template></el-input></div><el-button type="primary" size="large" :loading="submitting" @click="submit" class="mt-md" style="width:100%">提交提现申请</el-button></div>
   </div>
 </template>
-<style scoped lang="scss">.withdraw-page{max-width:500px;margin:0 auto}</style>
+<style scoped lang="scss">.withdraw-page{max-width:1500px}</style>

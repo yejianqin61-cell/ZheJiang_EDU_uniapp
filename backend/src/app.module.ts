@@ -16,6 +16,8 @@ import { AdminModule } from './modules/admin/admin.module';
 import { PrintModule } from './modules/print/print.module';
 import { ContributionModule } from './modules/contribution/contribution.module';
 import { BalanceModule } from './modules/balance/balance.module';
+import { ExerciseModule } from './modules/exercise/exercise.module';
+import { ExerciseContributionModule } from './modules/exercise-contribution/exercise-contribution.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -81,6 +83,8 @@ import { HealthController } from './health.controller';
     PrintModule,
     ContributionModule,
     BalanceModule,
+    ExerciseModule,
+    ExerciseContributionModule,
   ],
   controllers: [HealthController],
   providers: [

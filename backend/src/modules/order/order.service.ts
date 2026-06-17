@@ -11,7 +11,8 @@ import { ShippingAddressService } from '../print/services/shipping-address.servi
 export interface CreateOrderParams {
   userId: string;
   paperId: string;
-  type: 'download' | 'print';
+  type: 'download' | 'print' | 'exercise';
+  exercisePaperId?: string;
   copies?: number;
   shippingAddressId?: string;
 }
@@ -45,14 +46,26 @@ export class OrderService {
   async create(params: CreateOrderParams) {
     const { userId, paperId, type, copies, shippingAddressId } = params;
 
-    const paper = await this.paperRepo.findOne({ where: { id: paperId } });
-    if (!paper) throw new NotFoundException({ code: 30001, message: '试卷不存在' });
+    // Exercise 类型跳过 Paper 表校验，下载/打印需校验
+    let paper: any = null;
+    if (type !== 'exercise') {
+      paper = await this.paperRepo.findOne({ where: { id: paperId } });
+      // Fallback: 练习模块的试卷存在 exercise_paper 表
+      if (!paper) {
+        const exRows = await this.paperRepo.manager.query(
+          `SELECT id, title, file_url, file_type FROM exercise_paper WHERE id = ?`, [paperId]
+        );
+        if (exRows.length > 0) {
+          paper = { id: exRows[0].id, title: exRows[0].title, questionIds: [] };
+        }
+      }
+      if (!paper) throw new NotFoundException({ code: 30001, message: '试卷不存在' });
+    }
 
     // Prevent duplicate pending orders of the same type
     const existing = await this.orderRepo.findOne({
       where: { userId, paperId, type, status: 'pending' },
     });
-    if (existing) throw new ConflictException({ code: 30002, message: '该试卷已有未支付的同类型订单' });
 
     const orderNo = this.generateOrderNo();
     let amount: number;
@@ -84,6 +97,10 @@ export class OrderService {
       shippingSnapshot = await this.shippingAddressService.snapshot(shippingAddressId, userId);
       cp = copies;
       addrId = shippingAddressId;
+    } else if (type === 'exercise') {
+      unitPrice = await this.pricingService.getExercisePrice();
+      amount = unitPrice;
+      pricingSnapshot = { type: 'exercise', unitPrice, total: amount };
     } else {
       throw new ConflictException({ code: 30009, message: '无效的订单类型' });
     }
@@ -92,6 +109,7 @@ export class OrderService {
       this.orderRepo.create({
         userId,
         paperId,
+        exercisePaperId: type === 'exercise' ? paperId : null,
         orderNo,
         type,
         amount,
@@ -135,7 +153,7 @@ export class OrderService {
     }
 
     // Type filter
-    if (type && ['download', 'print'].includes(type)) {
+    if (type && ['download', 'print', 'exercise'].includes(type)) {
       qb.andWhere('o.type = :type', { type });
     }
 
@@ -144,7 +162,7 @@ export class OrderService {
       qb.andWhere('o.status = :status', { status });
     }
 
-    // Subject filter: load matching paperIds
+    // Subject filter: load matching paperIds (paper table + exercise_paper via category)
     if (subject) {
       const matchingPapers = await this.paperRepo
         .createQueryBuilder('p')
@@ -152,6 +170,17 @@ export class OrderService {
         .where("p.conditions LIKE :pattern", { pattern: `%"subject":"${subject}"%` })
         .getMany();
       const paperIds = matchingPapers.map((p) => p.id);
+
+      // Also find exercise papers matching subject via category
+      try {
+        const exRows = await this.paperRepo.manager.query(
+          `SELECT ep.id FROM exercise_paper ep
+           INNER JOIN exercise_category ec ON ec.id = ep.category_id
+           WHERE ec.subject = ?`, [subject]
+        );
+        paperIds.push(...exRows.map((r: any) => r.id));
+      } catch { /* ignore */ }
+
       if (paperIds.length > 0) {
         qb.andWhere('o.paperId IN (:...paperIds)', { paperIds });
       } else {
@@ -179,6 +208,18 @@ export class OrderService {
       ? await this.paperRepo.createQueryBuilder('p').select(['p.id', 'p.title']).where('p.id IN (:...ids)', { ids: paperIds }).getMany()
       : [];
     const titleMap = new Map(papers.map((p) => [p.id, p.title]));
+
+    // Fallback: exercise paper titles for IDs not found in paper table
+    const missingIds = paperIds.filter((id) => !titleMap.has(id));
+    if (missingIds.length > 0) {
+      try {
+        const exRows = await this.paperRepo.manager.query(
+          `SELECT id, title FROM exercise_paper WHERE id IN (${missingIds.map(() => '?').join(',')})`,
+          missingIds,
+        );
+        for (const row of exRows) titleMap.set(row.id, row.title);
+      } catch { /* ignore */ }
+    }
 
     const isOwnOrders = scope !== 'others';
 
@@ -220,12 +261,23 @@ export class OrderService {
       select: ['id', 'title', 'questionIds', 'exportDocxUrl', 'exportPdfUrl'],
     });
 
+    // Fallback: exercise orders have paperId pointing to exercise_paper table
+    let paperTitle = paper?.title ?? '';
+    if (!paperTitle) {
+      try {
+        const exRows = await this.paperRepo.manager.query(
+          `SELECT title FROM exercise_paper WHERE id = ?`, [order.paperId]
+        );
+        if (exRows.length > 0) paperTitle = exRows[0].title;
+      } catch { /* ignore */ }
+    }
+
     const baseInfo = {
       orderId: order.id,
       orderNo: order.orderNo,
       type: order.type,
       paperId: order.paperId,
-      paperTitle: paper?.title ?? '',
+      paperTitle,
       questionCount: Array.isArray(paper?.questionIds) ? paper.questionIds.length : 0,
       amount: order.amount,
       unitPrice: order.unitPrice,
@@ -267,10 +319,22 @@ export class OrderService {
       where: { id: orderId, userId },
     });
     if (!order) throw new NotFoundException({ code: 50001, message: '订单不存在' });
-    if (order.type !== 'download') {
+    if (order.type === 'print') {
       throw new ConflictException({ code: 40002, message: '打印订单不支持下载' });
     }
     if (order.status !== 'paid') throw new ConflictException({ code: 40001, message: '请先完成支付' });
+
+    // Exercise: 直接返回 COS 文件 URL
+    if (order.type === 'exercise') {
+      if (!order.exercisePaperId) throw new NotFoundException({ code: 40003, message: '练习试卷不存在' });
+      const exPaper = await this.paperRepo.manager.query(
+        `SELECT file_url, file_type FROM exercise_paper WHERE id = ?`, [order.exercisePaperId]
+      );
+      if (exPaper.length > 0) {
+        return { docxUrl: exPaper[0].file_url, pdfUrl: null };
+      }
+      throw new NotFoundException({ code: 40003, message: '练习试卷不存在' });
+    }
 
     const paper = await this.paperRepo.findOne({ where: { id: order.paperId }, select: ['id', 'exportDocxUrl', 'exportPdfUrl'] });
 

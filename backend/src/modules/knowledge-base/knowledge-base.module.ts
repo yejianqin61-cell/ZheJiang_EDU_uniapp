@@ -10,7 +10,7 @@ import { EmbeddingService } from './services/embedding.service';
 import { KnowledgeService } from './services/knowledge.service';
 import { ReviewService } from './services/review.service';
 import { PipelineService } from './services/pipeline.service';
-import { ImageExtractorService } from './services/image-extractor.service';
+import { PdfImageService } from './services/pdf-image.service';
 import { ImageMatcherService } from './services/image-matcher.service';
 import { CosService } from '../../common/cos.service';
 import { KbFile } from '../../database/entities/kb-file.entity';
@@ -35,7 +35,7 @@ if (process.env.REDIS_HOST) {
 @Module({
   imports,
   controllers: [KnowledgeBaseController],
-  providers: [UploadService, OCRService, SplitterService, TaggerService, EmbeddingService, KnowledgeService, ReviewService, PipelineService, CosService, ImageExtractorService, ImageMatcherService],
+  providers: [UploadService, OCRService, SplitterService, TaggerService, EmbeddingService, KnowledgeService, ReviewService, PipelineService, CosService, PdfImageService, ImageMatcherService],
   exports: [UploadService, EmbeddingService],
 })
 export class KnowledgeBaseModule {}

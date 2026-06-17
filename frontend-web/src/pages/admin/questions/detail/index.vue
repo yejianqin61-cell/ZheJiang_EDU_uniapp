@@ -21,6 +21,6 @@ async function del() { try { await api.delete(`/admin/questions/${route.params.i
   </div>
 </template>
 <style scoped lang="scss">
-.detail-page{max-width:800px}
+.detail-page{max-width:1000px}
 .q-content{font-size:$font-size-base;line-height:1.8;white-space:pre-wrap}.q-option{padding:4px 0;color:$text-color-secondary}
 </style>

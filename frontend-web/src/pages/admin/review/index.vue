@@ -14,7 +14,7 @@ async function singleAction(id:string,action:string) { try { if(action==='approv
   <div>
     <div class="page-header"><h1 class="page-header__title">入库审核</h1></div>
     <div class="filter-bar"><el-button @click="toggleAll">{{ selected.length===list.length?'取消全选':'全选' }}</el-button><el-button type="success" @click="batchAction('approve')">批量通过</el-button><el-button type="danger" @click="batchAction('reject')">批量拒绝</el-button></div>
-    <el-table :data="list" @selection-change="(v:any)=>selected=v.map((i:any)=>i.id)" ref="table" class="page-card" v-loading="loading">
+    <el-table :data="list" @selection-change="(v:any)=>selected=v.map((i:any)=>i.id)" ref="table" class="page-card" v-loading="loading" stripe>
       <el-table-column type="selection" width="40"/>
       <el-table-column prop="type" label="题型" width="80"><template #default="{row}"><el-tag size="small">{{ row.type }}</el-tag></template></el-table-column>
       <el-table-column prop="content" label="题目内容" show-overflow-tooltip/>
@@ -23,6 +23,6 @@ async function singleAction(id:string,action:string) { try { if(action==='approv
       <el-table-column prop="difficulty" label="难度" width="70"/>
       <el-table-column label="操作" width="160"><template #default="{row}"><el-button size="small" @click="router.push(`/admin/review/${row.id}`)">详情</el-button><el-button size="small" type="success" @click="singleAction(row.id,'approve')">通过</el-button><el-button size="small" type="danger" @click="singleAction(row.id,'reject')">拒绝</el-button></template></el-table-column>
     </el-table>
-    <el-pagination v-if="pagination.totalPages>1" class="mt-md" :current-page="pagination.page" :total="pagination.total" :page-size="pagination.pageSize" @current-change="(p:number)=>{pagination.page=p;fetchList()}" layout="prev,pager,next" background/>
+    <el-pagination v-if="pagination.totalPages>1" class="mt-md" :current-page="pagination.page" :total="pagination.total" :page-size="pagination.pageSize" @current-change="(p:number)=>{pagination.page=p;fetchList()}" layout="total, prev, pager, next" background/>
   </div>
 </template>

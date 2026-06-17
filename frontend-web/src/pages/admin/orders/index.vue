@@ -18,7 +18,7 @@ async function updateStatus(orderId:string,status:string) { try { await api.put(
       <el-radio-group v-model="scope" @change="switchScope"><el-radio-button value="mine">我的订单</el-radio-button><el-radio-button value="others">所有用户订单</el-radio-button></el-radio-group>
       <el-tabs v-model="tab" @tab-change="switchTab" style="flex:1"><el-tab-pane label="下载服务" name="download"/><el-tab-pane label="打印服务" name="print"/></el-tabs>
     </div>
-    <el-table :data="list" class="page-card" v-loading="loading">
+    <el-table :data="list" class="page-card" v-loading="loading" stripe>
       <template v-if="tab==='download'">
         <el-table-column prop="paperTitle" label="试卷名称" show-overflow-tooltip/>
         <el-table-column prop="amount" label="金额" width="100"><template #default="{row}">¥{{ (row.amount/100).toFixed(2) }}</template></el-table-column>
@@ -33,6 +33,6 @@ async function updateStatus(orderId:string,status:string) { try { await api.put(
         <el-table-column label="操作" width="200"><template #default="{row}"><el-button v-if="!row.printStatus" size="small" @click="updateStatus(row.orderId,'printing')">标记打印中</el-button><el-button v-if="row.printStatus==='printing'" size="small" @click="updateStatus(row.orderId,'shipped')">标记已发货</el-button><el-button v-if="row.printStatus==='shipped'" size="small" type="success" @click="updateStatus(row.orderId,'delivered')">标记已签收</el-button></template></el-table-column>
       </template>
     </el-table>
-    <el-pagination v-if="pagination.totalPages>1" class="mt-md" :current-page="pagination.page" :total="pagination.total" :page-size="pagination.pageSize" @current-change="(p:number)=>{pagination.page=p;fetchList()}" layout="prev,pager,next" background/>
+    <el-pagination v-if="pagination.totalPages>1" class="mt-md" :current-page="pagination.page" :total="pagination.total" :page-size="pagination.pageSize" @current-change="(p:number)=>{pagination.page=p;fetchList()}" layout="total, prev, pager, next" background/>
   </div>
 </template>

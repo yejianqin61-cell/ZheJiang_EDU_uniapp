@@ -12,6 +12,6 @@ onMounted(async () => { try { const d = await api.get('/users/me/balance'); bala
   </div>
 </template>
 <style scoped lang="scss">
-.balance-page{max-width:500px;margin:0 auto}
+.balance-page{max-width:1500px}
 .balance-card{text-align:center;padding:$spacing-xl}.balance-label{font-size:$font-size-sm;color:$text-color-secondary}.balance-value{font-size:40px;font-weight:700;color:$color-primary;margin-top:$spacing-sm}
 </style>

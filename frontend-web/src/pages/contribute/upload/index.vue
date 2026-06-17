@@ -2,7 +2,7 @@
 import { ref } from 'vue'; import { useRouter } from 'vue-router'; import api from '@/api/index'; import { ElMessage } from 'element-plus'
 const router = useRouter(); const uploading = ref(false)
 const form = ref({ subject:'', grade:'', file: null as File|null })
-const subjects = ['语文','数学','英语','物理','化学','生物','政治','历史','地理']
+const subjects = ['语文','数学','英语','物理','化学','生物','政治','历史','地理','科学']
 const grades = ['一年级','二年级','三年级','四年级','五年级','六年级','七年级','八年级','九年级','高一','高二','高三']
 function onFileChange(e: Event) { const f = (e.target as HTMLInputElement).files?.[0]; if(f) form.value.file = f }
 async function submit() {
@@ -26,6 +26,6 @@ async function submit() {
   </div>
 </template>
 <style scoped lang="scss">
-.upload-page{max-width:600px;margin:0 auto}
+.upload-page{max-width:1500px}
 .form-label{display:block;font-size:$font-size-sm;color:$text-color-secondary;margin-bottom:$spacing-xs}
 </style>

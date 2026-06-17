@@ -42,7 +42,7 @@ function renderGradeChart() {
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'category', data: data.map((g: any) => g.grade), axisLabel: { rotate: 30 } },
     yAxis: { type: 'value', name: '题量' },
-    series: [{ type: 'bar', data: data.map((g: any) => g.count), itemStyle: { color: '#1a6fb5', borderRadius: [4, 4, 0, 0] } }],
+    series: [{ type: 'bar', data: data.map((g: any) => g.count), itemStyle: { color: '#e67e22', borderRadius: [4, 4, 0, 0] } }],
     grid: { left: 50, right: 20, top: 20, bottom: 40 },
   })
   gradeChartInst = chart
@@ -83,6 +83,8 @@ function handleResize() {
       <div class="stat-card"><div class="stat-card__value" style="color:#e6a23c">{{ stats.pendingReview || '--' }}</div><div class="stat-card__label">待审核</div></div>
       <div class="stat-card"><div class="stat-card__value" style="color:#67c23a">{{ stats.todayOrders || '--' }}</div><div class="stat-card__label">今日订单</div></div>
       <div class="stat-card"><div class="stat-card__value" style="color:#f56c6c">{{ stats.pendingPrint || '--' }}</div><div class="stat-card__label">待处理打印</div></div>
+      <div class="stat-card"><div class="stat-card__value" style="color:#722ed1">{{ stats.exercisePaperCount ?? '--' }}</div><div class="stat-card__label">练习试卷数</div></div>
+      <div class="stat-card"><div class="stat-card__value" style="color:#fa8c16">{{ stats.pendingExerciseReview ?? '--' }}</div><div class="stat-card__label">待审核练习</div></div>
     </div>
 
     <el-row :gutter="16" v-loading="loading">

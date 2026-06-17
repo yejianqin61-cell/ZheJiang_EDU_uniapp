@@ -16,7 +16,7 @@ async function submit() { submitting.value=true; try { await api.post(`/contribu
   </div>
 </template>
 <style scoped lang="scss">
-.preview-page{max-width:800px;margin:0 auto}
+.preview-page{max-width:1500px}
 .question-card{margin-bottom:$spacing-md;.q-header{display:flex;align-items:center;gap:$spacing-sm;margin-bottom:$spacing-md}.q-index{font-weight:700;font-size:$font-size-lg}.q-content{font-size:$font-size-base;line-height:1.8;white-space:pre-wrap}.q-options{margin-top:$spacing-md}.q-option{padding:4px 0;color:$text-color-secondary}}
 .actions{padding:$spacing-lg 0}
 </style>

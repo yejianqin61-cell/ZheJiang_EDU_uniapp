@@ -27,24 +27,68 @@ async function handleDownload(orderId: string, e: Event) {
       <el-tab-pane label="下载服务" name="download" />
       <el-tab-pane label="打印服务" name="print" />
     </el-tabs>
+
+    <!-- 下载订单表格 -->
     <div v-if="activeTab==='download'">
-      <el-empty v-if="store.orders.length===0" description="暂无下载订单" />
-      <div v-for="o in store.orders" :key="o.orderId" class="order-card page-card" @click="goDetail(o.orderId)">
-        <div class="order-left"><el-tag size="small" type="primary">📥 下载</el-tag><span class="order-title">{{ o.paperTitle }}</span><span class="order-meta">¥{{ (o.amount/100).toFixed(2) }} · {{ o.createdAt }}</span></div>
-        <div class="order-right"><el-tag :type="o.status==='paid'?'success':o.status==='pending'?'warning':'info'" size="small">{{ o.status==='paid'?'已支付':o.status==='pending'?'待支付':'已取消' }}</el-tag><el-button v-if="o.status==='paid'&&o.hasExport!==false" type="primary" size="small" text @click="(e:Event)=>handleDownload(o.orderId,e)">下载</el-button></div>
-      </div>
+      <el-empty v-if="store.orders.length===0" description="还没有下载订单，去组一份试卷吧"><el-button type="primary" @click="router.push('/paper/config')">去组卷</el-button></el-empty>
+      <el-table v-else :data="store.orders" class="page-card" stripe @row-click="(row:any)=>goDetail(row.orderId)">
+        <el-table-column label="类型" width="80">
+          <template #default><el-tag size="small" type="primary">📥 下载</el-tag></template>
+        </el-table-column>
+        <el-table-column prop="paperTitle" label="试卷名称" show-overflow-tooltip />
+        <el-table-column label="金额" width="120">
+          <template #default="{row}">¥{{ (row.amount/100).toFixed(2) }}</template>
+        </el-table-column>
+        <el-table-column prop="createdAt" label="时间" width="170" />
+        <el-table-column label="状态" width="100">
+          <template #default="{row}">
+            <el-tag :type="row.status==='paid'?'success':row.status==='pending'?'warning':'info'" size="small">
+              {{ row.status==='paid'?'已支付':row.status==='pending'?'待支付':'已取消' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="100">
+          <template #default="{row}">
+            <el-button v-if="row.status==='paid'&&row.hasExport!==false" type="primary" size="small" text @click.stop="(e:Event)=>handleDownload(row.orderId,e)">下载</el-button>
+            <span v-else class="text-secondary">—</span>
+          </template>
+        </el-table-column>
+      </el-table>
     </div>
+
+    <!-- 打印订单表格 -->
     <div v-if="activeTab==='print'">
       <el-empty v-if="store.orders.length===0" description="暂无打印订单" />
-      <div v-for="o in store.orders" :key="o.orderId" class="order-card page-card" @click="goDetail(o.orderId)">
-        <div class="order-left"><el-tag size="small" type="warning">🖨️ 打印</el-tag><span class="order-title">{{ o.paperTitle }}</span><span class="order-meta">{{ o.copies?o.copies+'份 · ':'' }}¥{{ (o.amount/100).toFixed(2) }}</span><span v-if="o.shipping" class="order-addr">{{ o.shipping.receiverName }} {{ o.shipping.phone }}</span></div>
-        <div class="order-right"><el-tag :type="o.printStatus==='delivered'?'success':o.printStatus==='shipped'?'primary':o.printStatus==='printing'?'':'warning'" size="small">{{ labels[String(o.printStatus)]??'待处理' }}</el-tag><span class="arrow">›</span></div>
-      </div>
+      <el-table v-else :data="store.orders" class="page-card" stripe @row-click="(row:any)=>goDetail(row.orderId)">
+        <el-table-column label="类型" width="80">
+          <template #default><el-tag size="small" type="warning">🖨️ 打印</el-tag></template>
+        </el-table-column>
+        <el-table-column prop="paperTitle" label="试卷名称" show-overflow-tooltip />
+        <el-table-column label="份数" width="70">
+          <template #default="{row}">{{ row.copies || '—' }}</template>
+        </el-table-column>
+        <el-table-column label="金额" width="120">
+          <template #default="{row}">¥{{ (row.amount/100).toFixed(2) }}</template>
+        </el-table-column>
+        <el-table-column label="收件人" width="150">
+          <template #default="{row}">
+            <span v-if="row.shipping">{{ row.shipping.receiverName }} {{ row.shipping.phone }}</span>
+            <span v-else class="text-secondary">—</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="物流状态" width="100">
+          <template #default="{row}">
+            <el-tag :type="row.printStatus==='delivered'?'success':row.printStatus==='shipped'?'primary':row.printStatus==='printing'?'':'warning'" size="small">
+              {{ labels[String(row.printStatus)]??'待处理' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
-.orders-page { max-width: 800px; margin: 0 auto; }
-.order-card { display: flex; align-items: center; justify-content: space-between; margin-bottom: $spacing-sm; cursor: pointer; transition: all 0.2s; &:hover { box-shadow: $box-shadow; } .order-left { display: flex; align-items: center; gap: $spacing-md; flex: 1; min-width: 0; } .order-title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .order-meta { font-size: $font-size-xs; color: $text-color-secondary; white-space: nowrap; } .order-addr { font-size: $font-size-xs; color: $text-color-placeholder; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; } .order-right { display: flex; align-items: center; gap: $spacing-sm; flex-shrink: 0; } .arrow { font-size: 20px; color: $text-color-placeholder; } }
+.orders-page { max-width: 1500px; }
+.el-table { cursor: pointer; }
 </style>

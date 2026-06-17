@@ -23,6 +23,6 @@ onMounted(async () => { try { item.value = await api.get(`/contributions/${route
   </div>
 </template>
 <style scoped lang="scss">
-.detail-page{max-width:600px;margin:0 auto}
+.detail-page{max-width:1500px}
 .info-grid{.info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f5f5f5;font-size:$font-size-sm;span:first-child{color:$text-color-secondary}&:last-child{border-bottom:none}}.amount{color:$color-danger;font-weight:600}}
 </style>

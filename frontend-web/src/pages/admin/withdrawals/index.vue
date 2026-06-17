@@ -11,13 +11,13 @@ async function reject(id:string) { try { const {value:reason}=await ElMessageBox
 <template>
   <div>
     <div class="page-header"><h1 class="page-header__title">提现管理</h1></div>
-    <el-table :data="list" class="page-card" v-loading="loading">
+    <el-table :data="list" class="page-card" v-loading="loading" stripe>
       <el-table-column prop="userPhone" label="用户" width="130"/>
       <el-table-column prop="amount" label="金额" width="100"><template #default="{row}">¥{{ (row.amount/100).toFixed(2) }}</template></el-table-column>
       <el-table-column prop="status" label="状态" width="100"><template #default="{row}"><el-tag :type="row.status==='approved'?'success':row.status==='rejected'?'danger':'warning'" size="small">{{ row.status==='approved'?'已通过':row.status==='rejected'?'已拒绝':'待审核' }}</el-tag></template></el-table-column>
       <el-table-column prop="createdAt" label="申请时间" width="160"/>
       <el-table-column label="操作" width="180"><template #default="{row}"><template v-if="row.status==='pending'"><el-button size="small" type="success" @click="approve(row.id)">通过</el-button><el-button size="small" type="danger" @click="reject(row.id)">拒绝</el-button></template><template v-else><span class="text-secondary">—</span></template></template></el-table-column>
     </el-table>
-    <el-pagination v-if="pagination.totalPages>1" class="mt-md" :current-page="pagination.page" :total="pagination.total" :page-size="pagination.pageSize" @current-change="(p:number)=>{pagination.page=p;fetchList()}" layout="prev,pager,next" background/>
+    <el-pagination v-if="pagination.totalPages>1" class="mt-md" :current-page="pagination.page" :total="pagination.total" :page-size="pagination.pageSize" @current-change="(p:number)=>{pagination.page=p;fetchList()}" layout="total, prev, pager, next" background/>
   </div>
 </template>

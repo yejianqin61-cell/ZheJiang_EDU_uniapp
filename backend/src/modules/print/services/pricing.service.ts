@@ -31,6 +31,8 @@ export class PricingService {
     const download = all.find((c) => c.type === 'download');
     const printTiers = all.filter((c) => c.type === 'print');
     const cashback = all.find((c) => c.type === 'cashback');
+    const exerciseCashback = all.find((c) => c.type === 'exercise_cashback');
+    const exercise = all.find((c) => c.type === 'exercise');
 
     return {
       download: download
@@ -45,6 +47,12 @@ export class PricingService {
       cashback: cashback
         ? { unitPrice: cashback.unitPrice, description: '教师贡献题通过审核，每题返现' }
         : { unitPrice: 100, description: '教师贡献题通过审核，每题返现' },
+      exerciseCashback: exerciseCashback
+        ? { unitPrice: exerciseCashback.unitPrice, description: '练习试卷审核通过，每卷返现' }
+        : { unitPrice: 500, description: '练习试卷审核通过，每卷返现' },
+      exercise: exercise
+        ? { unitPrice: exercise.unitPrice, description: '练习试卷单次抽取价格' }
+        : { unitPrice: 500, description: '练习试卷单次抽取价格' },
     };
   }
 
@@ -53,6 +61,17 @@ export class PricingService {
   async getDownloadPrice(): Promise<number> {
     const config = await this.repo.findOne({ where: { type: 'download', tier: 1 } });
     return config?.unitPrice ?? 200;
+  }
+
+  async getExercisePrice(): Promise<number> {
+    // exercise 统一价：复用 download 单价 × 10（一份练习卷 ≈ 10 题的价格）
+    const config = await this.repo.findOne({ where: { type: 'exercise' } });
+    return config?.unitPrice ?? 500;  // 默认 ¥5.00/份
+  }
+
+  async getExerciseCashbackPrice(): Promise<number> {
+    const config = await this.repo.findOne({ where: { type: 'exercise_cashback' } });
+    return config?.unitPrice ?? 500;  // 默认 ¥5.00/卷
   }
 
   // ── Calculate print price ──────────────────────────────────
@@ -103,6 +122,8 @@ export class PricingService {
     download?: { unitPrice: number };
     print?: PrintTier[];
     cashback?: { unitPrice: number };
+    exerciseCashback?: { unitPrice: number };
+    exercise?: { unitPrice: number };
   }, updatedBy: string) {
     if (dto.download) {
       if (dto.download.unitPrice <= 0) {
@@ -153,6 +174,40 @@ export class PricingService {
           minQuantity: null,
           maxQuantity: null,
           unitPrice: dto.cashback.unitPrice,
+          updatedBy,
+        },
+        ['type', 'tier'],
+      );
+    }
+
+    if (dto.exerciseCashback) {
+      if (dto.exerciseCashback.unitPrice <= 0) {
+        throw new BadRequestException({ code: 90001, message: '练习返现金额必须大于0' });
+      }
+      await this.repo.upsert(
+        {
+          type: 'exercise_cashback',
+          tier: 1,
+          minQuantity: null,
+          maxQuantity: null,
+          unitPrice: dto.exerciseCashback.unitPrice,
+          updatedBy,
+        },
+        ['type', 'tier'],
+      );
+    }
+
+    if (dto.exercise) {
+      if (dto.exercise.unitPrice <= 0) {
+        throw new BadRequestException({ code: 90001, message: '练习价格必须大于0' });
+      }
+      await this.repo.upsert(
+        {
+          type: 'exercise',
+          tier: 1,
+          minQuantity: null,
+          maxQuantity: null,
+          unitPrice: dto.exercise.unitPrice,
           updatedBy,
         },
         ['type', 'tier'],
@@ -217,6 +272,8 @@ export class PricingService {
       this.repo.create({ type: 'print', tier: 2, minQuantity: 11, maxQuantity: 50, unitPrice: 400 }),
       this.repo.create({ type: 'print', tier: 3, minQuantity: 51, maxQuantity: null, unitPrice: 300 }),
       this.repo.create({ type: 'cashback', tier: 1, minQuantity: null, maxQuantity: null, unitPrice: 100 }),
+      this.repo.create({ type: 'exercise_cashback', tier: 1, minQuantity: null, maxQuantity: null, unitPrice: 500 }),
+      this.repo.create({ type: 'exercise', tier: 1, minQuantity: null, maxQuantity: null, unitPrice: 500 }),
     ]);
   }
 }

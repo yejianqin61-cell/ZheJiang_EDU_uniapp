@@ -31,7 +31,7 @@ export interface PaperResult {
 export interface OrderItem {
   orderId: string
   orderNo: string
-  type?: 'download' | 'print'
+  type?: 'download' | 'print' | 'exercise'
   paperTitle: string
   amount: number
   unitPrice?: number
@@ -50,7 +50,7 @@ export interface OrderItem {
 export interface OrderDetail {
   orderId: string
   orderNo: string
-  type: 'download' | 'print'
+  type: 'download' | 'print' | 'exercise'
   paperId: string
   paperTitle: string
   questionCount: number
@@ -114,6 +114,9 @@ export interface PricingConfig {
     maxQuantity: number | null
     unitPrice: number
   }>
+  cashback?: { unitPrice: number; description?: string }
+  exerciseCashback?: { unitPrice: number; description?: string }
+  exercise?: { unitPrice: number; description?: string }
 }
 
 // === Dashboard ===
@@ -148,4 +151,23 @@ export interface KnowledgePoint {
   subject: string
   grade: string
   questionCount: number
+}
+
+// === Exercise Contribution ===
+export interface ExerciseUploadItem {
+  id: string
+  title: string
+  subject: string
+  grade: string
+  exerciseType: 'sync' | 'unit' | 'topic' | 'exam'
+  categoryId?: string | null
+  lessonId?: string | null
+  fileUrl: string
+  fileType: string
+  fileSize?: number | null
+  status: 'pending_review' | 'approved' | 'rejected'
+  reviewNote?: string | null
+  cashbackAmount: number
+  uploaderPhone?: string | null
+  createdAt: string
 }

@@ -28,4 +28,4 @@ async function submit() {
     </div>
   </div>
 </template>
-<style scoped lang="scss">.edit-page{max-width:600px;margin:0 auto}</style>
+<style scoped lang="scss">.edit-page{max-width:1500px}</style>

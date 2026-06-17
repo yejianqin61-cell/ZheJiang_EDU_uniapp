@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'; import api from '@/api/index'
 const list = ref<any[]>([]); const loading = ref(true)
 const filters = ref({ subject:'', grade:'' })
-const subjects = ['','语文','数学','英语','物理','化学','生物','政治','历史','地理']
+const subjects = ['','语文','数学','英语','物理','化学','生物','政治','历史','地理','科学']
 const grades = ['','一年级','二年级','三年级','四年级','五年级','六年级','七年级','八年级','九年级','高一','高二','高三']
 const pagination = ref({page:1,pageSize:20,total:0,totalPages:0})
 onMounted(()=>fetchList())
@@ -18,12 +18,12 @@ async function fetchList() { loading.value=true; const p:any={...filters.value,p
       <el-button type="primary" @click="fetchList">筛选</el-button>
       <span class="text-secondary" style="margin-left:auto">共 {{ pagination.total }} 个知识点</span>
     </div>
-    <el-table :data="list" class="page-card" v-loading="loading">
+    <el-table :data="list" class="page-card" v-loading="loading" stripe>
       <el-table-column prop="name" label="知识点名称"/>
       <el-table-column prop="subject" label="学科" width="80"/>
       <el-table-column prop="grade" label="年级" width="80"/>
       <el-table-column prop="questionCount" label="关联题目数" width="100"/>
     </el-table>
-    <el-pagination v-if="pagination.totalPages>1" class="mt-md" :current-page="pagination.page" :total="pagination.total" :page-size="pagination.pageSize" @current-change="(p:number)=>{pagination.page=p;fetchList()}" layout="prev,pager,next" background/>
+    <el-pagination v-if="pagination.totalPages>1" class="mt-md" :current-page="pagination.page" :total="pagination.total" :page-size="pagination.pageSize" @current-change="(p:number)=>{pagination.page=p;fetchList()}" layout="total, prev, pager, next" background/>
   </div>
 </template>

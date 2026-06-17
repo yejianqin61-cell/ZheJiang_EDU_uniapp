@@ -62,20 +62,16 @@ async function handleLogin() {
   }
 }
 
-// Dev 快捷登录：直接调微信兼容接口，跳过短信
-async function devQuickLogin() {
+// Dev 快捷登录
+async function devLoginAs(role: 'admin' | 'teacher') {
   submitting.value = true
   try {
-    // 用旧微信登录接口，Dev模式下 code 即 openid，admin_test 自动成为管理员
-    await authStore.devLogin('admin_test')
-    ElMessage.success('Dev 登录成功')
+    const code = role === 'admin' ? 'admin_test' : 'teacher_test'
+    await authStore.devLogin(code)
+    ElMessage.success(`Dev ${role} 登录成功`)
     const redirect = (route.query.redirect as string) || '/'
     router.replace(redirect)
-  } catch {
-    // ignore
-  } finally {
-    submitting.value = false
-  }
+  } catch { /* ignore */ } finally { submitting.value = false }
 }
 </script>
 
@@ -83,8 +79,8 @@ async function devQuickLogin() {
   <div class="login-page">
     <div class="login-card">
       <div class="login-header">
-        <h1>🤖 AI智能组卷</h1>
-        <p>中小学教师专属组卷平台</p>
+        <h1>🤖 瓯越AI组题网</h1>
+        <p>中小学教师专属组题平台</p>
       </div>
 
       <div class="login-form">
@@ -135,8 +131,9 @@ async function devQuickLogin() {
         <p class="login-tip">首次登录将自动注册账号</p>
 
         <!-- Dev 快捷入口 -->
-        <div class="dev-login" @click="devQuickLogin">
-          🔧 Dev 快捷登录
+        <div class="dev-section">
+          <div class="dev-login" @click="devLoginAs('admin')">🔧 管理员登录</div>
+          <div class="dev-login" @click="devLoginAs('teacher')">🔧 教师登录</div>
         </div>
       </div>
     </div>
@@ -149,7 +146,7 @@ async function devQuickLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #e8f4fd 0%, #f0f7ff 50%, #e8f4fd 100%);
+  background: linear-gradient(135deg, #fef5e7 0%, #fdf2e9 50%, #fef5e7 100%);
 }
 
 .login-card {

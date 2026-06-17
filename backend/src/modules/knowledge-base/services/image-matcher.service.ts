@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import type { ExtractedImage } from './image-extractor.service'
+import type { ExtractedImage } from './pdf-image.service'
 
 export interface ImageMatchResult {
   /** 题目中包含的图片 */
@@ -31,17 +31,11 @@ export class ImageMatcherService {
     const unmatched: ImageMatchResult['unmatched'] = []
 
     for (const img of pageImages) {
-      // 规则1：题目有坐标信息 → y坐标在范围内
-      const inRange =
-        question.yStart != null &&
-        question.yEnd != null &&
-        img.yRatio >= question.yStart - 0.05 &&
-        img.yRatio <= question.yEnd + 0.05
-
-      // 规则2：题目提到"如图"且同页只有一张图
+      // 同页题目+图片，默认匹配
+      // 精确坐标匹配需要 AI 切题返回 y 坐标（splitter 暂未返回）
       const figureHint = hasFigureRef && pageImages.length === 1
 
-      if (inRange || figureHint) {
+      if (figureHint || pageImages.length === 1) {
         matched.push({
           url: img.cosUrl,
           caption: '',
@@ -51,7 +45,7 @@ export class ImageMatcherService {
       } else {
         unmatched.push({
           url: img.cosUrl,
-          name: img.name,
+          name: img.cosUrl,
           pageNum: img.pageNum,
         })
       }

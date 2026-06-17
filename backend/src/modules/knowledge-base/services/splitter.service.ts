@@ -40,7 +40,7 @@ export class SplitterService {
       },
       {
         headers: { Authorization: `Bearer ${this.primaryKey}`, 'Content-Type': 'application/json' },
-        timeout: 30000,
+        timeout: 60000,
       },
     );
 

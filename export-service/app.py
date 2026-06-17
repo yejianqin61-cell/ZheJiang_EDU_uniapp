@@ -281,6 +281,127 @@ def export_pdf():
         return jsonify({"error": str(e)}), 500
 
 
+# ── PDF Image Extraction (PyMuPDF) ───────────────────────────
+
+@app.route("/extract-images", methods=["POST"])
+def extract_images():
+    """
+    从 PDF 中提取嵌入图片
+
+    POST multipart/form-data { file: pdf }
+    返回: { images: [{ pageNum, x, y, width, height, ext, cosUrl }] }
+    """
+    import fitz
+    import uuid as _uuid
+
+    if "file" not in request.files:
+        return jsonify({"error": "请上传 PDF 文件"}), 400
+
+    file = request.files["file"]
+    if not file.filename or not file.filename.lower().endswith(".pdf"):
+        return jsonify({"error": "仅支持 PDF 格式"}), 400
+
+    try:
+        doc = fitz.open(stream=file.read(), filetype="pdf")
+        images = []
+
+        # 确保上传目录存在
+        upload_dir = os.path.join(os.getcwd(), "uploads", "images")
+        os.makedirs(upload_dir, exist_ok=True)
+
+        for page_num in range(len(doc)):
+            page = doc[page_num]
+            for img in page.get_images(full=True):
+                xref = img[0]
+                try:
+                    base_image = doc.extract_image(xref)
+                    image_bytes = base_image["image"]
+                    ext = base_image["ext"]
+
+                    # Dev: 本地存储
+                    filename = f"{_uuid.uuid4()}.{ext}"
+                    save_path = os.path.join(upload_dir, filename)
+                    with open(save_path, "wb") as f:
+                        f.write(image_bytes)
+                    cos_url = f"/uploads/images/{filename}"
+
+                    # 图片在页面中的位置
+                    rects = page.get_image_rects(xref)
+                    for rect in rects:
+                        images.append({
+                            "pageNum": page_num + 1,
+                            "x": rect.x0,
+                            "y": rect.y0,
+                            "width": rect.width,
+                            "height": rect.height,
+                            "ext": ext,
+                            "cosUrl": cos_url,
+                        })
+                except Exception:
+                    pass  # 跳过无法提取的图片
+
+        doc.close()
+        return jsonify({"images": images})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── Thumbnail Generation ─────────────────────────────────
+
+@app.route("/generate-thumbnail", methods=["POST"])
+def generate_thumbnail():
+    """
+    POST multipart/form-data { file: pdf/docx }
+    返回第一页的 PNG 缩略图 (200px 宽)
+    """
+    import fitz
+    import uuid as _uuid
+
+    if "file" not in request.files:
+        return jsonify({"error": "请上传文件"}), 400
+
+    file = request.files["file"]
+    try:
+        doc_bytes = file.read()
+        ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename else "pdf"
+
+        # DOCX → 通过 LibreOffice 转 PDF 再截第一页
+        if ext == "docx":
+            with tempfile.TemporaryDirectory() as tmpdir:
+                docx_path = os.path.join(tmpdir, f"input.docx")
+                with open(docx_path, "wb") as f:
+                    f.write(doc_bytes)
+                subprocess.run(
+                    ["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", tmpdir, docx_path],
+                    check=True, timeout=30,
+                )
+                pdf_path = os.path.join(tmpdir, "input.pdf")
+                with open(pdf_path, "rb") as f:
+                    doc_bytes = f.read()
+
+        # PDF → PyMuPDF 截第一页
+        pdf_doc = fitz.open(stream=doc_bytes, filetype="pdf")
+        page = pdf_doc[0]
+        pix = page.get_pixmap(dpi=72)
+        # 缩放至 200px 宽
+        scale = 200 / pix.width
+        pix = page.get_pixmap(dpi=int(72 * scale))
+        img_bytes = pix.tobytes("png")
+        pdf_doc.close()
+
+        # 保存
+        filename = f"{_uuid.uuid4()}.png"
+        upload_dir = os.path.join(os.getcwd(), "uploads", "thumbnails")
+        os.makedirs(upload_dir, exist_ok=True)
+        save_path = os.path.join(upload_dir, filename)
+        with open(save_path, "wb") as f:
+            f.write(img_bytes)
+
+        return jsonify({"thumbnailUrl": f"/uploads/thumbnails/{filename}"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # ── Health ──
 
 @app.route("/health")

@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'; import { useRoute, useRouter } from 'vue-router'; import api from '@/api/index'; import { ElMessage } from 'element-plus'
+import { ref, onMounted } from 'vue'; import { useRoute, useRouter } from 'vue-router'; import api from '@/api/index'; import { useOrderStore } from '@/stores/order'; import { ElMessage } from 'element-plus'
 import type { PricingConfig, ShippingAddress } from '@/types'
-const route = useRoute(); const router = useRouter()
+const route = useRoute(); const router = useRouter(); const orderStore = useOrderStore()
 const paperId = ref((route.query.paperId as string)||'')
 const copies = ref(10); const pricing = ref<PricingConfig|null>(null)
 const addresses = ref<ShippingAddress[]>([]); const selectedAddr = ref(''); const submitting = ref(false)
 
 onMounted(async () => {
+  if (!paperId.value) { ElMessage.warning('请从试卷预览页进入'); router.replace('/paper/config'); return }
   try { pricing.value = await api.get('/pricing/public') } catch {}
   try { const d = await api.get('/shipping-addresses'); addresses.value = d?.list??d??[] } catch {}
 })
@@ -15,9 +16,18 @@ function getTier() { if(!pricing.value) return null; const ps = pricing.value.pr
 function totalPrice() { const t = getTier(); return t?t.unitPrice*copies.value:0 }
 
 async function handleSubmit() {
+  if(!paperId.value){ElMessage.warning('试卷信息丢失，请从预览页重新进入');return}
   if(!selectedAddr.value){ElMessage.warning('请选择收货地址');return}
   submitting.value=true
-  try { await api.post('/orders',{paperId:paperId.value,type:'print',copies:copies.value,shippingAddressId:selectedAddr.value}); ElMessage.success('订单已创建'); router.push('/payment?type=print') } catch(e:any) { ElMessage.error(e?.message??'创建订单失败') } finally { submitting.value=false }
+  try {
+    const result = await api.post('/orders',{paperId:paperId.value,type:'print',copies:copies.value,shippingAddressId:selectedAddr.value})
+    // 存入 order store，供支付页复用
+    orderStore.currentOrder = result
+    ElMessage.success('订单已创建')
+    router.push(`/payment?paperId=${paperId.value}&type=print`)
+  } catch(e:any) {
+    if (!e.response) ElMessage.error('创建订单失败')
+  } finally { submitting.value=false }
 }
 </script>
 
@@ -29,10 +39,10 @@ async function handleSubmit() {
       <div class="total-row mt-md"><span>当前档位单价 ¥{{ ((getTier()?.unitPrice??0)/100).toFixed(2) }} × {{ copies }} 份</span><span class="total-price">= ¥{{ (totalPrice()/100).toFixed(2) }}</span></div></div>
     <div class="page-card mt-md"><h3>收货地址</h3><el-select v-model="selectedAddr" placeholder="选择收货地址" size="large" style="width:100%" class="mt-md"><el-option v-for="a in addresses" :key="a.id" :label="`${a.receiverName} ${a.phone} ${a.province}${a.city}${a.district}${a.detail}`" :value="a.id"/></el-select>
       <el-button class="mt-sm" @click="router.push('/address/edit')">+ 新增地址</el-button></div>
-    <el-button type="primary" size="large" :loading="submitting" @click="handleSubmit" class="mt-md" style="width:100%">确认下单 ¥{{ (totalPrice()/100).toFixed(2) }}</el-button>
+    <el-button type="primary" size="large" :loading="submitting" @click="handleSubmit" class="mt-md" style="min-width:240px">确认下单 ¥{{ (totalPrice()/100).toFixed(2) }}</el-button>
   </div>
 </template>
 <style scoped lang="scss">
-.checkout-page{max-width:600px;margin:0 auto}
+.checkout-page{max-width:1500px}
 .total-row{display:flex;justify-content:space-between;align-items:center;font-size:$font-size-base}.total-price{font-size:$font-size-xl;font-weight:700;color:$color-danger}
 </style>

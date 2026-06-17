@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'; import api from '@/api/index'; import { ElMessage } from 'element-plus'
 const form = ref({ subject:'', grade:'' }); const file = ref<File|null>(null); const uploading = ref(false)
-const subjects = ['语文','数学','英语','物理','化学','生物','政治','历史','地理']
+const subjects = ['语文','数学','英语','物理','化学','生物','政治','历史','地理','科学']
 const grades = ['一年级','二年级','三年级','四年级','五年级','六年级','七年级','八年级','九年级','高一','高二','高三']
 function onFileChange(e:Event) { file.value = (e.target as HTMLInputElement).files?.[0]??null }
 async function submit() {
@@ -19,7 +19,7 @@ async function submit() {
       <el-row :gutter="16"><el-col :span="12"><label class="form-label">学科</label><el-select v-model="form.subject" placeholder="选择学科" size="large" style="width:100%"><el-option v-for="s in subjects" :key="s" :label="s" :value="s"/></el-select></el-col><el-col :span="12"><label class="form-label">年级</label><el-select v-model="form.grade" placeholder="选择年级" size="large" style="width:100%"><el-option v-for="g in grades" :key="g" :label="g" :value="g"/></el-select></el-col></el-row>
       <div class="mt-md"><label class="form-label">选择文件</label><input type="file" accept=".doc,.docx,.md,.pdf,.png,.jpg,.jpeg" @change="onFileChange"/></div>
       <p class="text-secondary mt-sm">支持格式: DOC / DOCX / MD / PDF / PNG / JPG</p>
-      <el-button type="primary" size="large" :loading="uploading" @click="submit" class="mt-md" style="width:100%">上传并开始AI解析</el-button>
+      <el-button type="primary" size="large" :loading="uploading" @click="submit" class="mt-md" style="min-width:220px">上传并开始AI解析</el-button>
     </div>
   </div>
 </template>

@@ -16,23 +16,18 @@ function startPaper() {
 
 <template>
   <div class="home-page">
-    <!-- Hero 区 -->
-    <section class="hero">
-      <h1 class="hero__title">AI智能组卷</h1>
-      <p class="hero__subtitle">
-        面向浙江中小学教师 · 输入需求 → AI自动组卷 → 在线支付 → 导出试卷
-      </p>
-      <el-button type="primary" size="large" @click="startPaper">
-        开始组卷
-      </el-button>
-    </section>
+    <!-- 标题 -->
+    <div class="home-title">
+      <h1>瓯越AI组题网</h1>
+    </div>
 
     <!-- 功能卡片 -->
     <section class="features">
-      <div class="feature-card" @click="router.push('/paper/config')">
-        <div class="feature-card__icon">📝</div>
-        <h3>AI智能组卷</h3>
-        <p>选择年级科目知识点，AI 秒级生成试卷</p>
+      <div class="feature-card" @click="router.push('/exercises')">
+        <div class="feature-card__icon">📚</div>
+        <h3>AI题库</h3>
+        <p>同步练 · 单元练 · 专题练 · 期中期末 — 海量试卷AI抽取</p>
+        <span class="feature-card__action">开始练习 →</span>
       </div>
       <div class="feature-card" @click="router.push('/orders')">
         <div class="feature-card__icon">📦</div>
@@ -44,10 +39,11 @@ function startPaper() {
         <h3>教师贡献</h3>
         <p>上传题目资源，审核通过即返现</p>
       </div>
-      <div class="feature-card" @click="router.push('/print/checkout')">
-        <div class="feature-card__icon">🖨️</div>
-        <h3>打印服务</h3>
-        <p>在线下单，打印好快递到校</p>
+      <div class="feature-card" @click="router.push('/paper/config')">
+        <div class="feature-card__icon">📝</div>
+        <h3>AI智能组卷</h3>
+        <p>选择年级科目知识点，AI 秒级生成试卷，支持下载打印</p>
+        <span class="feature-card__action">开始组卷 →</span>
       </div>
     </section>
   </div>
@@ -55,34 +51,27 @@ function startPaper() {
 
 <style scoped lang="scss">
 .home-page {
-  max-width: 900px;
-  margin: 0 auto;
+  max-width: 1500px;
 }
 
-.hero {
+.home-title {
   text-align: center;
-  padding: 60px 0 48px;
+  padding-top: 80px;
 
-  &__title {
-    font-size: 42px;
-    font-weight: 800;
+  h1 {
+    font-family: $font-display;
+    font-size: 64px;
+    font-weight: 900;
     color: $color-primary;
-    margin-bottom: $spacing-md;
-  }
-
-  &__subtitle {
-    font-size: $font-size-lg;
-    color: $text-color-secondary;
-    margin-bottom: $spacing-xl;
-    line-height: 1.8;
+    letter-spacing: 0.06em;
   }
 }
 
 .features {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: $spacing-lg;
-  margin-top: $spacing-xl;
+  gap: $spacing-xl;
+  padding-top: 50px;
 }
 
 .feature-card {
@@ -91,13 +80,17 @@ function startPaper() {
   padding: $spacing-xl $spacing-lg;
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   border: 1px solid $border-color;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: $box-shadow-hover;
     border-color: $color-primary-light;
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 
   &__icon {
@@ -116,11 +109,20 @@ function startPaper() {
     color: $text-color-secondary;
     line-height: 1.6;
   }
+
+  &__action {
+    display: inline-block;
+    margin-top: $spacing-sm;
+    color: $color-primary;
+    font-size: $font-size-base;
+    font-weight: 600;
+  }
 }
 
-@media (max-width: 768px) {
-  .features {
-    grid-template-columns: repeat(2, 1fr);
-  }
+@media (max-width: 1200px) {
+  .features { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .features { grid-template-columns: 1fr; }
 }
 </style>

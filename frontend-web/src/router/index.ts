@@ -26,9 +26,14 @@ const routes: RouteRecordRaw[] = [
       { path: 'contribute/upload', component: () => import('@/pages/contribute/upload/index.vue'),    meta: { title: '上传题目' } },
       { path: 'contribute/preview',component: () => import('@/pages/contribute/preview/index.vue'),   meta: { title: '题目预览' } },
       { path: 'contribute/:id',    component: () => import('@/pages/contribute/detail/index.vue'),    meta: { title: '贡献详情' } },
+      { path: 'contribute/exercise-upload', component: () => import('@/pages/contribute/exercise-upload/index.vue'), meta: { title: '上传练习试卷' } },
+      { path: 'contribute/exercise/:id', component: () => import('@/pages/contribute/exercise-detail/index.vue'), meta: { title: '练习详情' } },
       { path: 'print/checkout',    component: () => import('@/pages/print/checkout/index.vue'),       meta: { title: '打印服务' } },
       { path: 'address',           component: () => import('@/pages/address/list/index.vue'),         meta: { title: '收货地址' } },
       { path: 'address/edit/:id?', component: () => import('@/pages/address/edit/index.vue'),         meta: { title: '编辑地址' } },
+      { path: 'exercises',         component: () => import('@/pages/exercises/index.vue'),              meta: { title: '练习' } },
+      { path: 'exercises/category',component: () => import('@/pages/exercises/category.vue'),           meta: { title: '选择类目' } },
+      { path: 'exercises/draw',    component: () => import('@/pages/exercises/draw.vue'),               meta: { title: '抽取试卷' } },
     ],
   },
 
@@ -49,6 +54,8 @@ const routes: RouteRecordRaw[] = [
       { path: 'pricing',           component: () => import('@/pages/admin/pricing/index.vue'),        meta: { title: '定价配置' } },
       { path: 'orders',            component: () => import('@/pages/admin/orders/index.vue'),         meta: { title: '订单管理' } },
       { path: 'withdrawals',       component: () => import('@/pages/admin/withdrawals/index.vue'),    meta: { title: '提现管理' } },
+      { path: 'exercises',         component: () => import('@/pages/admin/exercises/index.vue'),      meta: { title: '练习管理' } },
+      { path: 'exercise-contributions', component: () => import('@/pages/admin/exercise-contributions/index.vue'), meta: { title: '练习审核' } },
     ],
   },
 

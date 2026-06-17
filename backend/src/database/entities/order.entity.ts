@@ -21,7 +21,7 @@ export class Order {
   @Column({ type: 'varchar', name: 'paper_id' })
   paperId: string;
 
-  @ManyToOne(() => Paper)
+  @ManyToOne(() => Paper, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'paper_id' })
   paper: Paper;
 
@@ -31,7 +31,7 @@ export class Order {
   // ── New fields for dual-mode ──────────────────────────────
 
   @Column({ type: 'varchar', length: 16, default: 'download' })
-  type: 'download' | 'print';
+  type: 'download' | 'print' | 'exercise';
 
   @Column({ type: 'integer', nullable: true })
   copies: number | null;
@@ -42,6 +42,9 @@ export class Order {
   @ManyToOne(() => ShippingAddress, { nullable: true })
   @JoinColumn({ name: 'shipping_address_id' })
   shippingAddress: ShippingAddress | null;
+
+  @Column({ type: 'varchar', nullable: true, name: 'exercise_paper_id' })
+  exercisePaperId: string | null;
 
   @Column({ type: 'simple-json', nullable: true, name: 'shipping_snapshot' })
   shippingSnapshot: Record<string, any> | null;

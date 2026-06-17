@@ -9,7 +9,6 @@ const baseConfig: Config = {
   testEnvironment: 'node',
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
-    '^pdfjs-dist$': '<rootDir>/src/__mocks__/pdfjs-dist.ts',
     '^pdf-parse$': '<rootDir>/src/__mocks__/pdf-parse.ts',
   },
   modulePathIgnorePatterns: ['<rootDir>/dist/'],

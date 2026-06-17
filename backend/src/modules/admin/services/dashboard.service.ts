@@ -47,6 +47,40 @@ export class DashboardService {
 
     const totalKnowledgePoints = await this.kpRepo.count();
 
+    // Exercise paper stats (raw queries since repos aren't injected in this module)
+    let exercisePaperCount = 0;
+    let pendingExerciseReview = 0;
+    let todayOrders = 0;
+    let pendingPrint = 0;
+    let pendingReview = 0;
+
+    try {
+      const exResult = await this.questionRepo.manager.query(`SELECT COUNT(*) as cnt FROM exercise_paper`);
+      exercisePaperCount = Number(exResult[0]?.cnt ?? 0);
+
+      const exPending = await this.questionRepo.manager.query(
+        `SELECT COUNT(*) as cnt FROM teacher_exercise_upload WHERE status = 'pending_review'`
+      );
+      pendingExerciseReview = Number(exPending[0]?.cnt ?? 0);
+
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const orderResult = await this.questionRepo.manager.query(
+        `SELECT COUNT(*) as cnt FROM "order" WHERE created_at >= ?`, [todayStart.toISOString()]
+      );
+      todayOrders = Number(orderResult[0]?.cnt ?? 0);
+
+      const printResult = await this.questionRepo.manager.query(
+        `SELECT COUNT(*) as cnt FROM "order" WHERE type = 'print' AND print_status IS NULL`
+      );
+      pendingPrint = Number(printResult[0]?.cnt ?? 0);
+
+      const reviewResult = await this.questionRepo.manager.query(
+        `SELECT COUNT(*) as cnt FROM question WHERE status = 'pending_review' AND is_deleted = 0`
+      );
+      pendingReview = Number(reviewResult[0]?.cnt ?? 0);
+    } catch { /* ignore — table might not exist yet */ }
+
     const diffLabels: Record<number, string> = { 1: '简单', 2: '中等', 3: '困难' };
 
     return {
@@ -59,6 +93,11 @@ export class DashboardService {
         count: Number(d.count),
       })),
       totalKnowledgePoints,
+      exercisePaperCount,
+      pendingExerciseReview,
+      pendingReview,
+      todayOrders,
+      pendingPrint,
     };
   }
 }
