@@ -7,6 +7,16 @@ export function getExerciseCategories(params: { type?: string; grade?: string; s
 export function getExerciseLessons(unitId: string) {
   return api.get('/exercise/lessons', { params: { unitId } })
 }
+export function getPapersByCategory(categoryId: string) {
+  return api.get('/exercise/papers', { params: { categoryId } })
+}
+export function getPapersByLesson(lessonId: string) {
+  return api.get('/exercise/papers', { params: { lessonId } })
+}
+export function getPaperDetail(id: string) {
+  return api.get(`/exercise/papers/${id}`)
+}
+
 export function drawCategory(id: string) {
   return api.post(`/exercise/categories/${id}/draw`)
 }

@@ -19,8 +19,8 @@ onMounted(async () => {
   loading.value=false
 })
 
-function drawCategory(id:string) { router.push(`/exercises/draw?nodeType=category&nodeId=${id}`) }
-function drawLesson(id:string) { router.push(`/exercises/draw?nodeType=lesson&nodeId=${id}`) }
+function goPapersByCategory(id: string, name: string) { router.push(`/exercises/papers?categoryId=${id}&nodeName=${encodeURIComponent(name)}`) }
+function goPapersByLesson(id: string, name: string) { router.push(`/exercises/papers?lessonId=${id}&nodeName=${encodeURIComponent(name)}`) }
 const typeLabels: Record<string,string> = { sync:'同步练', unit:'单元练', topic:'专题练', exam:'期中期末练' }
 </script>
 
@@ -35,8 +35,8 @@ const typeLabels: Record<string,string> = { sync:'同步练', unit:'单元练', 
     <template v-if="qType!=='sync'">
       <el-empty v-if="!loading&&cats.length===0" description="暂无类目" />
       <div v-else class="cat-row">
-      <div v-for="c in cats" :key="c.id" class="page-card cat-card" @click="drawCategory(c.id)">
-        <span class="cat-name">{{ c.name }}</span><el-button type="primary" size="small">🤖 AI智能抽取题目</el-button>
+      <div v-for="c in cats" :key="c.id" class="page-card cat-card" @click="goPapersByCategory(c.id, c.name)">
+        <span class="cat-name">{{ c.name }}</span><el-button type="primary" size="small">📋 查看试卷</el-button>
       </div>
       </div>
     </template>
@@ -47,8 +47,8 @@ const typeLabels: Record<string,string> = { sync:'同步练', unit:'单元练', 
       <div v-for="c in cats" :key="c.id" class="page-card unit-block">
         <h3>{{ c.name }}</h3>
         <div v-if="!lessonsMap[c.id]?.length" class="text-secondary mt-sm">暂无课时</div>
-        <div v-for="l in lessonsMap[c.id]" :key="l.id" class="lesson-row" @click="drawLesson(l.id)">
-          <span>{{ l.name }}</span><el-button type="primary" size="small">🤖 AI智能抽取题目</el-button>
+        <div v-for="l in lessonsMap[c.id]" :key="l.id" class="lesson-row" @click="goPapersByLesson(l.id, l.name)">
+          <span>{{ l.name }}</span><el-button type="primary" size="small">📋 查看试卷</el-button>
         </div>
       </div>
     </template>

@@ -34,6 +34,14 @@ export class ExercisePublicController {
     return this.service.draw(userId, 'lesson', id)
   }
 
+  @Get('papers')
+  async listPapers(
+    @Query('categoryId') categoryId?: string,
+    @Query('lessonId') lessonId?: string,
+  ) {
+    return this.service.listPapers(categoryId, lessonId)
+  }
+
   @Get('papers/:id')
   async getPaper(@Param('id') id: string) {
     return this.service.getPaper(id)

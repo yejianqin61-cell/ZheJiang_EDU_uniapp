@@ -34,6 +34,8 @@ const routes: RouteRecordRaw[] = [
       { path: 'exercises',         component: () => import('@/pages/exercises/index.vue'),              meta: { title: '练习' } },
       { path: 'exercises/category',component: () => import('@/pages/exercises/category.vue'),           meta: { title: '选择类目' } },
       { path: 'exercises/draw',    component: () => import('@/pages/exercises/draw.vue'),               meta: { title: '抽取试卷' } },
+      { path: 'exercises/papers',  component: () => import('@/pages/exercises/papers/index.vue'),      meta: { title: '试卷列表' } },
+      { path: 'exercises/papers/:id', component: () => import('@/pages/exercises/paper-detail/index.vue'), meta: { title: '试卷详情' } },
     ],
   },
 
