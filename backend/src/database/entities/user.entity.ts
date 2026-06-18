@@ -14,6 +14,15 @@ export class User {
   @Column({ type: 'boolean', default: false, name: 'phone_verified' })
   phoneVerified: boolean;
 
+  @Column({ type: 'varchar', length: 128, nullable: true, unique: true })
+  email: string | null;
+
+  @Column({ type: 'varchar', length: 256, nullable: true, name: 'password_hash' })
+  passwordHash: string | null;
+
+  @Column({ type: 'boolean', default: false, name: 'email_verified' })
+  emailVerified: boolean;
+
   @Column({ type: 'varchar', length: 16, default: 'teacher' })
   role: 'teacher' | 'admin';
 

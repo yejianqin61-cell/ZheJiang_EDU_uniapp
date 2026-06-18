@@ -1,11 +1,13 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import axios from 'axios';
+import * as bcrypt from 'bcrypt';
 import { User } from '../../database/entities/user.entity';
 import { SmsService } from './services/sms.service';
+import { EmailService } from './services/email.service';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +17,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly smsService: SmsService,
+    private readonly emailService: EmailService,
   ) {}
 
   // ========== 短信验证码登录 ==========
@@ -39,6 +42,60 @@ export class AuthService {
       role: user.role,
       phone: user.phone,
     };
+  }
+
+  // ========== 邮箱验证码注册 ==========
+
+  async registerByEmail(email: string, code: string, password: string) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new BadRequestException({ code: 10020, message: '邮箱格式不正确' });
+    }
+    if (password.length < 6) {
+      throw new BadRequestException({ code: 10021, message: '密码至少6位' });
+    }
+    if (!this.emailService.verifyCode(email, code)) {
+      throw new BadRequestException({ code: 10022, message: '验证码错误或已过期' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    let user = await this.userRepo.findOne({ where: { email } });
+    if (user) {
+      // 已有账号 → 更新密码
+      await this.userRepo.update(user.id, { passwordHash, emailVerified: true });
+    } else {
+      user = await this.userRepo.save(
+        this.userRepo.create({ email, passwordHash, emailVerified: true, role: 'teacher' }),
+      );
+    }
+
+    const token = this.jwtService.sign({ sub: user.id, email: user.email, role: user.role });
+    return { accessToken: token, role: user.role, email: user.email };
+  }
+
+  // ========== 邮箱密码登录 ==========
+
+  async loginByPassword(email: string, password: string) {
+    const user = await this.userRepo.findOne({ where: { email } });
+    if (!user || !user.passwordHash) {
+      throw new BadRequestException({ code: 10023, message: '账号不存在，请先注册' });
+    }
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) {
+      throw new BadRequestException({ code: 10024, message: '密码错误' });
+    }
+
+    const token = this.jwtService.sign({ sub: user.id, email: user.email, role: user.role });
+    return { accessToken: token, role: user.role, email: user.email };
+  }
+
+  // ========== 发送邮箱验证码 ==========
+
+  async sendEmailCode(email: string) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new BadRequestException({ code: 10020, message: '邮箱格式不正确' });
+    }
+    await this.emailService.sendCode(email);
+    return { message: '验证码已发送' };
   }
 
   // ========== 微信 code 登录（保留兼容） ==========

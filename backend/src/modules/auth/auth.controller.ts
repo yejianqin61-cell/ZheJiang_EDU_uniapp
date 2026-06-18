@@ -23,6 +23,36 @@ class LoginDto {
 
   @IsOptional() @IsString()
   nickname?: string;
+
+  @IsOptional() @IsString()
+  email?: string;
+
+  @IsOptional() @IsString()
+  password?: string;
+}
+
+class SendEmailCodeDto {
+  @IsString() @IsNotEmpty()
+  email: string;
+}
+
+class RegisterDto {
+  @IsString() @IsNotEmpty()
+  email: string;
+
+  @IsString() @IsNotEmpty()
+  code: string;
+
+  @IsString() @IsNotEmpty()
+  password: string;
+}
+
+class LoginByPasswordDto {
+  @IsString() @IsNotEmpty()
+  email: string;
+
+  @IsString() @IsNotEmpty()
+  password: string;
 }
 
 @Controller('auth')
@@ -40,8 +70,30 @@ export class AuthController {
   }
 
   @Public()
+  @Post('send-email-code')
+  async sendEmailCode(@Body() dto: SendEmailCodeDto) {
+    return this.authService.sendEmailCode(dto.email);
+  }
+
+  @Public()
+  @Post('register')
+  async register(@Body() dto: RegisterDto) {
+    return this.authService.registerByEmail(dto.email, dto.code, dto.password);
+  }
+
+  @Public()
+  @Post('login-by-password')
+  async loginByPassword(@Body() dto: LoginByPasswordDto) {
+    return this.authService.loginByPassword(dto.email, dto.password);
+  }
+
+  @Public()
   @Post('login')
   async login(@Body() dto: LoginDto) {
+    if (dto.email) {
+      if (!dto.password) throw new BadRequestException({ code: 10016, message: '请输入密码' });
+      return this.authService.loginByPassword(dto.email, dto.password);
+    }
     if (dto.phone) {
       if (!dto.smsCode) throw new BadRequestException({ code: 10016, message: '请输入验证码' });
       return this.authService.loginByPhone(dto.phone, dto.smsCode);
@@ -49,7 +101,7 @@ export class AuthController {
     if (dto.code) {
       return this.authService.loginByWxCode(dto.code, dto.nickname);
     }
-    throw new BadRequestException({ code: 10017, message: '请使用手机号登录' });
+    throw new BadRequestException({ code: 10017, message: '请使用手机号或邮箱登录' });
   }
 
   @UseGuards(JwtAuthGuard)
