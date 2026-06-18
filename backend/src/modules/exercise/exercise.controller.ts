@@ -118,19 +118,22 @@ export class ExerciseAdminController {
     const fileUrl = `/uploads/exercises/${filename}`
     const fileType = extname(file.originalname).replace('.', '')
 
-    // 生成缩略图（失败不阻塞上传）
-    const thumbnailUrl = await this.thumbnailService.generate(file.buffer, file.originalname)
-
-    return this.service.createPaper({
+    const paper = await this.service.createPaper({
       title,
       categoryId: categoryId || undefined,
       lessonId: lessonId || undefined,
       fileUrl,
       fileType,
       fileSize: file.size,
-      thumbnailUrl: thumbnailUrl || undefined,
       createdBy: userId,
     })
+
+    // 异步生成缩略图（不阻塞上传响应）
+    this.thumbnailService.generate(file.buffer, file.originalname).then((url) => {
+      if (url) this.service.updatePaperThumbnail(paper.id, url).catch(() => {});
+    }).catch(() => {});
+
+    return paper;
   }
 
   @Delete('papers/:id')

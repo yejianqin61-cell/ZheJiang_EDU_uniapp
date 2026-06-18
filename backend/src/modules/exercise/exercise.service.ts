@@ -75,6 +75,10 @@ export class ExerciseService {
     return this.paperRepo.save(this.paperRepo.create(dto))
   }
 
+  async updatePaperThumbnail(id: string, thumbnailUrl: string) {
+    await this.paperRepo.update(id, { thumbnailUrl });
+  }
+
   async deletePaper(id: string) {
     const paper = await this.paperRepo.findOne({ where: { id } })
     if (!paper) throw new NotFoundException('试卷不存在')

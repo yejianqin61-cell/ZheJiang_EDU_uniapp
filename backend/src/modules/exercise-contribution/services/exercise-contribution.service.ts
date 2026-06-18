@@ -65,9 +65,7 @@ export class ExerciseContributionService {
     const fileUrl = `/uploads/exercises/${filename}`;
     const fileType = ext.replace('.', '');
 
-    // 生成缩略图（失败不阻塞上传）
-    const thumbnailUrl = await this.thumbnailService.generate(file.buffer, file.filename);
-
+    // 先存 DB，立即返回不阻塞
     const upload = await this.uploadRepo.save(
       this.uploadRepo.create({
         userId,
@@ -80,10 +78,14 @@ export class ExerciseContributionService {
         fileUrl,
         fileType,
         fileSize: file.size,
-        thumbnailUrl,
         status: 'pending_review',
       }),
     );
+
+    // 异步生成缩略图（不阻塞上传响应）
+    this.thumbnailService.generate(file.buffer, file.filename).then((url) => {
+      if (url) this.uploadRepo.update(upload.id, { thumbnailUrl: url });
+    }).catch(() => {});
 
     return { id: upload.id, status: upload.status };
   }
