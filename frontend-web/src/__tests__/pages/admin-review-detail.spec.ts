@@ -8,9 +8,10 @@ const routerBack = vi.fn()
 const routeState = vi.hoisted(() => ({
   params: { id: 'review-1' },
 }))
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  post: vi.fn(),
+const adminApiMocks = vi.hoisted(() => ({
+  getReviewDetail: vi.fn(),
+  approveQuestion: vi.fn(),
+  rejectQuestion: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -20,8 +21,10 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/admin', () => ({
+  getReviewDetail: adminApiMocks.getReviewDetail,
+  approveQuestion: adminApiMocks.approveQuestion,
+  rejectQuestion: adminApiMocks.rejectQuestion,
 }))
 
 vi.mock('@/composables/useMarkdown', () => ({
@@ -39,58 +42,69 @@ const mountPage = () =>
     },
   })
 
+function mockReviewDetail() {
+  adminApiMocks.getReviewDetail.mockResolvedValue({
+    id: 'review-1',
+    type: '选择题',
+    difficulty: 2,
+    content: '题目内容',
+    subject: '数学',
+    grade: '五年级',
+    answer: 'A',
+    status: 'pending_review',
+    source: { type: 'teacher', userName: '张老师', userId: 'u-1', fileName: 'a.docx', fileId: 'f-1' },
+    knowledgePoints: ['加减法', '应用题'],
+    options: ['A', 'B'],
+    analysis: '解析内容',
+  })
+}
+
 describe('Admin review detail page', () => {
   beforeEach(() => {
     routerBack.mockReset()
-    apiMocks.get.mockReset()
-    apiMocks.post.mockReset()
+    adminApiMocks.getReviewDetail.mockReset()
+    adminApiMocks.approveQuestion.mockReset()
+    adminApiMocks.rejectQuestion.mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.error).mockReset()
   })
 
-  it('loads review detail on mount', async () => {
-    apiMocks.get.mockResolvedValue({
-      type: '选择题',
-      difficulty: '2',
-      content: '题目内容',
-      subject: '数学',
-      grade: '五年级',
-      answer: 'B',
-      knowledgePoint: { name: '加减法' },
-    })
+  it('loads review detail on mount and renders knowledge points list', async () => {
+    mockReviewDetail()
 
     const wrapper = mountPage()
     await nextTick()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/admin/reviews/review-1')
+    expect(adminApiMocks.getReviewDetail).toHaveBeenCalledWith('review-1')
     expect(wrapper.text()).toContain('题目内容')
+    expect(wrapper.text()).toContain('加减法 / 应用题')
   })
 
   it('approves review item and returns to previous page', async () => {
-    apiMocks.get.mockResolvedValue({ content: '题目内容' })
-    apiMocks.post.mockResolvedValue({ ok: true })
+    mockReviewDetail()
+    adminApiMocks.approveQuestion.mockResolvedValue({ ok: true })
 
     const wrapper = mountPage()
     await nextTick()
 
     await (wrapper.vm as any).approve()
 
-    expect(apiMocks.post).toHaveBeenCalledWith('/admin/reviews/review-1/approve')
+    expect(adminApiMocks.approveQuestion).toHaveBeenCalledWith('review-1')
     expect(ElMessage.success).toHaveBeenCalledWith('已通过')
     expect(routerBack).toHaveBeenCalled()
   })
 
   it('rejects review item and returns to previous page', async () => {
-    apiMocks.get.mockResolvedValue({ content: '题目内容' })
-    apiMocks.post.mockResolvedValue({ ok: true })
+    mockReviewDetail()
+    adminApiMocks.rejectQuestion.mockResolvedValue({ ok: true })
 
     const wrapper = mountPage()
     await nextTick()
 
     await (wrapper.vm as any).reject()
 
-    expect(apiMocks.post).toHaveBeenCalledWith('/admin/reviews/review-1/reject')
+    expect(adminApiMocks.rejectQuestion).toHaveBeenCalledWith('review-1')
     expect(ElMessage.success).toHaveBeenCalledWith('已拒绝')
     expect(routerBack).toHaveBeenCalled()
   })

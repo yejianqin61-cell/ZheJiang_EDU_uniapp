@@ -1,5 +1,13 @@
 import api from '../index'
-import type { DashboardStats, OrderItem, Pagination, QuestionDetail, QuestionListItem } from '@/types'
+import type {
+  DashboardStats,
+  OrderItem,
+  Pagination,
+  QuestionDetail,
+  QuestionListItem,
+  ReviewDetail,
+  ReviewListItem,
+} from '@/types'
 
 type AdminOrderScope = 'mine' | 'others'
 type AdminOrderType = 'download' | 'print' | 'exercise'
@@ -35,6 +43,16 @@ interface AdminQuestionListResponse {
   pagination: Pagination
 }
 
+interface AdminReviewListParams {
+  page?: number
+  pageSize?: number
+}
+
+interface AdminReviewListResponse {
+  list: ReviewListItem[]
+  pagination: Pagination
+}
+
 // ===== 仪表盘 =====
 export function getDashboardStats() { return api.get<DashboardStats>('/admin/questions/stats') }
 
@@ -42,7 +60,12 @@ export function getDashboardStats() { return api.get<DashboardStats>('/admin/que
 export function uploadFile(formData: FormData) { return api.post('/admin/files/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }) }
 
 // ===== 审核 =====
-export function getReviewList(params: { page?: number; pageSize?: number }) { return api.get('/admin/reviews', { params }) }
+export function getReviewList(params: AdminReviewListParams) {
+  return api.get<AdminReviewListResponse>('/admin/reviews', { params })
+}
+export function getReviewDetail(id: string) {
+  return api.get<ReviewDetail>(`/admin/reviews/${id}`)
+}
 export function approveQuestion(id: string) { return api.post(`/admin/reviews/${id}/approve`) }
 export function rejectQuestion(id: string) { return api.post(`/admin/reviews/${id}/reject`) }
 export function batchReview(ids: string[], action: 'approve' | 'reject') { return api.post('/admin/reviews/batch', { questionIds: ids, action }) }

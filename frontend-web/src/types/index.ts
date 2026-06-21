@@ -133,6 +133,45 @@ export interface DashboardStats {
   pendingExerciseReview: number
 }
 
+// === Admin Review ===
+export interface ReviewSource {
+  type: 'teacher' | 'admin'
+  userName: string
+  userId: string
+  fileName: string
+  fileId: string
+}
+
+export interface ReviewListItem {
+  id: string
+  type: string
+  content: string
+  options: string[] | null
+  answer: string
+  analysis: string | null
+  difficulty: number | string
+  subject: string
+  grade: string
+  status: string
+  source: ReviewSource
+  knowledgePoints: string[]
+}
+
+export interface ReviewDetail {
+  id: string
+  type: string
+  content: string
+  options: string[] | null
+  answer: string
+  analysis: string | null
+  difficulty: number | string
+  subject: string
+  grade: string
+  status: string
+  source: ReviewSource
+  knowledgePoints: string[]
+}
+
 // === Admin Question ===
 export interface QuestionDetail {
   id: string

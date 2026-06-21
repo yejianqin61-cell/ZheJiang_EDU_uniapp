@@ -5,9 +5,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminReviewPage from '@/pages/admin/review/index.vue'
 
 const routerPush = vi.fn()
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  post: vi.fn(),
+const adminApiMocks = vi.hoisted(() => ({
+  getReviewList: vi.fn(),
+  batchReview: vi.fn(),
+  approveQuestion: vi.fn(),
+  rejectQuestion: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -16,8 +18,11 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/admin', () => ({
+  getReviewList: adminApiMocks.getReviewList,
+  batchReview: adminApiMocks.batchReview,
+  approveQuestion: adminApiMocks.approveQuestion,
+  rejectQuestion: adminApiMocks.rejectQuestion,
 }))
 
 const mountPage = () =>
@@ -39,8 +44,10 @@ const mountPage = () =>
 describe('Admin review page', () => {
   beforeEach(() => {
     routerPush.mockReset()
-    apiMocks.get.mockReset()
-    apiMocks.post.mockReset()
+    adminApiMocks.getReviewList.mockReset()
+    adminApiMocks.batchReview.mockReset()
+    adminApiMocks.approveQuestion.mockReset()
+    adminApiMocks.rejectQuestion.mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.warning).mockReset()
     vi.mocked(ElMessage.error).mockReset()
@@ -48,7 +55,7 @@ describe('Admin review page', () => {
   })
 
   it('loads review list on mount', async () => {
-    apiMocks.get.mockResolvedValue({
+    adminApiMocks.getReviewList.mockResolvedValue({
       list: [],
       pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
     })
@@ -56,13 +63,14 @@ describe('Admin review page', () => {
     mountPage()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/admin/reviews', {
-      params: { page: 1, pageSize: 20 },
+    expect(adminApiMocks.getReviewList).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 20,
     })
   })
 
   it('warns when batch action is triggered without selection', async () => {
-    apiMocks.get.mockResolvedValue({
+    adminApiMocks.getReviewList.mockResolvedValue({
       list: [],
       pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
     })
@@ -73,22 +81,22 @@ describe('Admin review page', () => {
     await (wrapper.vm as any).batchAction('approve')
 
     expect(ElMessage.warning).toHaveBeenCalledWith('请先选择题目')
-    expect(apiMocks.post).not.toHaveBeenCalled()
+    expect(adminApiMocks.batchReview).not.toHaveBeenCalled()
   })
 
   it('submits single approve action and refreshes list', async () => {
-    apiMocks.get
+    adminApiMocks.getReviewList
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
-    apiMocks.post.mockResolvedValue({ ok: true })
+    adminApiMocks.approveQuestion.mockResolvedValue({ ok: true })
 
     const wrapper = mountPage()
     await nextTick()
 
     await (wrapper.vm as any).singleAction('review-1', 'approve')
 
-    expect(apiMocks.post).toHaveBeenCalledWith('/admin/reviews/review-1/approve')
+    expect(adminApiMocks.approveQuestion).toHaveBeenCalledWith('review-1')
     expect(ElMessage.success).toHaveBeenCalledWith('操作成功')
-    expect(apiMocks.get).toHaveBeenCalledTimes(2)
+    expect(adminApiMocks.getReviewList).toHaveBeenCalledTimes(2)
   })
 })

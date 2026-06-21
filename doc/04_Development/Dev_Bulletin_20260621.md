@@ -1,4 +1,4 @@
-# 开发公报 — 2026-06-21
+# 开发公报 - 2026-06-21
 
 ## 本轮收口
 
@@ -51,10 +51,17 @@
 - 基于 `onUploadProgress` 同步百分比状态，上传成功后将进度稳定收敛到 `100%`
 - 页测补充进度回调断言，覆盖上传成功后的表单重置与跳转链路
 
+### 8. 管理端审核页 API 收口
+
+- 管理端审核列表页与审核详情页改为复用共享 `admin` API 封装，移除对底层 `api` 的直接依赖
+- 在 `frontend-web/src/api/modules/admin.ts` 新增 `getReviewDetail()`，并补齐审核列表/详情相关类型约束
+- 审核详情页统一复用 `approveQuestion()` / `rejectQuestion()`，同时将知识点展示对齐为类型定义中的 `knowledgePoints`
+- 补充 API 层与页面层回归测试，覆盖审核列表加载、详情加载、单条通过、单条拒绝与批量操作前置校验
+
 ## 验证结果
 
-- 定向测试：3 个测试文件、11 个用例通过
-- `cd frontend-web && npm test`：43 个测试文件、136 个用例通过
+- 定向测试：3 个测试文件、13 个用例通过
+- `cd frontend-web && npm test`：43 个测试文件、139 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -65,4 +72,5 @@
 - `8bda911` `test: switch vitest pool to threads`
 - `fbc06bf` `docs: update 20260621 web test bulletin`
 - `fc5c403` `refactor: align admin question pages with api module`
-- 当前这批待提交：上传页进度反馈补齐
+- `516c0a9` `feat: add upload progress feedback`
+- 当前这批待提交：管理端审核页 API 收口

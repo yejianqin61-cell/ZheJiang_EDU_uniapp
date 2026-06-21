@@ -40,6 +40,26 @@ describe('Admin API', () => {
     expect(mockGet).toHaveBeenCalledWith('/admin/questions/q-1')
   })
 
+  it('getReviewList -> GET /admin/reviews', async () => {
+    const { getReviewList } = await import('@/api/modules/admin')
+    mockGet.mockResolvedValue({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
+
+    await getReviewList({ page: 2, pageSize: 10 })
+
+    expect(mockGet).toHaveBeenCalledWith('/admin/reviews', {
+      params: { page: 2, pageSize: 10 },
+    })
+  })
+
+  it('getReviewDetail -> GET /admin/reviews/:id', async () => {
+    const { getReviewDetail } = await import('@/api/modules/admin')
+    mockGet.mockResolvedValue({ id: 'review-1' })
+
+    await getReviewDetail('review-1')
+
+    expect(mockGet).toHaveBeenCalledWith('/admin/reviews/review-1')
+  })
+
   it('batchDeleteQuestions -> POST /admin/questions/batch-delete with questionIds', async () => {
     const { batchDeleteQuestions } = await import('@/api/modules/admin')
     mockPost.mockResolvedValue({ deleted: 2 })
@@ -48,6 +68,18 @@ describe('Admin API', () => {
 
     expect(mockPost).toHaveBeenCalledWith('/admin/questions/batch-delete', {
       questionIds: ['q-1', 'q-2'],
+    })
+  })
+
+  it('batchReview -> POST /admin/reviews/batch with questionIds', async () => {
+    const { batchReview } = await import('@/api/modules/admin')
+    mockPost.mockResolvedValue({ approved: 2 })
+
+    await batchReview(['q-1', 'q-2'], 'approve')
+
+    expect(mockPost).toHaveBeenCalledWith('/admin/reviews/batch', {
+      questionIds: ['q-1', 'q-2'],
+      action: 'approve',
     })
   })
 
