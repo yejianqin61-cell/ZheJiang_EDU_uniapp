@@ -237,3 +237,6 @@
 - 将 `frontend-web` 的 Vitest 默认 worker 池从隐式 `forks` 切换为显式 `threads`，并在配置文件中固定 `test.pool = 'threads'`，消除当前 Windows 环境下前端全量回归的偶发 worker 崩溃。
 - 对比验证 `threads` 与 `vmThreads`：当前仓库下 `threads` 可稳定跑通全量回归，`vmThreads` 会放大现有 mock 隔离差异，因此未采用为默认池。
 - 复核 `frontend-web` 全量回归与构建结果：`npm test` 共 42 个测试文件、127 个用例全部通过，`npm run build` 通过；本批管理端 API 契约与仪表盘清理已完成收口，可继续下一批 Web 端测试与优化。
+- 为 `frontend-web` 管理端上传页与教师上传页补充上传进度展示，新增文件名、进度百分比与完成态反馈，补齐评估文档中 F-102 的 Web 前端缺口。
+- 同步扩展 `admin-upload` 与 `contribute-upload` 页级测试，模拟 `onUploadProgress` 回调并断言进度更新至 100%。
+- 复核当前 Web 前端回归门禁：`npm test` 共 43 个测试文件、136 个用例全部通过，`npm run build` 通过；本批上传进度功能已完成收口。

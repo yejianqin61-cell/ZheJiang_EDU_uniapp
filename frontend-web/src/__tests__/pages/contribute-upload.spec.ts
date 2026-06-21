@@ -25,6 +25,7 @@ const mountPage = () =>
         'router-link': { template: '<a><slot /></a>' },
         'el-select': { template: '<div><slot /></div>' },
         'el-option': true,
+        'el-progress': { props: ['percentage', 'status'], template: '<div>{{ percentage }} {{ status }}</div>' },
         'el-button': { template: '<button><slot /></button>' },
       },
     },
@@ -58,8 +59,13 @@ describe('Contribute upload page', () => {
     expect(ElMessage.warning).toHaveBeenCalledWith('请选择文件')
   })
 
-  it('uploads contribution file and redirects on success', async () => {
-    apiMocks.post.mockResolvedValue({ ok: true })
+  it('uploads contribution file, reports progress and redirects on success', async () => {
+    apiMocks.post.mockImplementation(async (_url, _data, config) => {
+      config?.onUploadProgress?.({ loaded: 4, total: 10 })
+      config?.onUploadProgress?.({ loaded: 10, total: 10 })
+      return { ok: true }
+    })
+
     const wrapper = mountPage()
     ;(wrapper.vm as any).form.subject = '数学'
     ;(wrapper.vm as any).form.grade = '五年级'
@@ -70,6 +76,7 @@ describe('Contribute upload page', () => {
     await (wrapper.vm as any).submit()
 
     expect(apiMocks.post).toHaveBeenCalledTimes(1)
+    expect((wrapper.vm as any).uploadPercent).toBe(100)
     expect(ElMessage.success).toHaveBeenCalledWith('上传成功，AI解析中...')
     expect(routerPush).toHaveBeenCalledWith('/contribute')
   })
