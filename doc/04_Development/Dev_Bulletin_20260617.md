@@ -234,4 +234,6 @@
 - 修复 `frontend-web` 练习抽题页 `draw.vue` 的错误分流逻辑：将“暂无试卷”与“抽题服务异常 / 网络异常 / 参数缺失”拆开处理，避免所有失败都落成同一条空态文案。
 - 新增 `frontend-web` 练习抽题页页级测试，覆盖分类抽题、课时抽题、空结果提示、服务异常提示以及支付/打印跳转链路。
 - 新增 Issue：[Issue_20260621_Vitest_Forks_Worker_OOM.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260621_Vitest_Forks_Worker_OOM.md)，记录当前 Windows 环境下 `frontend-web` 全量回归偶发的 Vitest `forks` worker 崩溃问题。
+- 将 `frontend-web` 的 Vitest 默认 worker 池从隐式 `forks` 切换为显式 `threads`，并在配置文件中固定 `test.pool = 'threads'`，消除当前 Windows 环境下前端全量回归的偶发 worker 崩溃。
+- 对比验证 `threads` 与 `vmThreads`：当前仓库下 `threads` 可稳定跑通全量回归，`vmThreads` 会放大现有 mock 隔离差异，因此未采用为默认池。
 - 复核 `frontend-web` 全量回归与构建结果：`npm test` 共 42 个测试文件、127 个用例全部通过，`npm run build` 通过；本批管理端 API 契约与仪表盘清理已完成收口，可继续下一批 Web 端测试与优化。
