@@ -58,10 +58,17 @@
 - 审核详情页统一复用 `approveQuestion()` / `rejectQuestion()`，同时将知识点展示对齐为类型定义中的 `knowledgePoints`
 - 补充 API 层与页面层回归测试，覆盖审核列表加载、详情加载、单条通过、单条拒绝与批量操作前置校验
 
+### 9. 管理端定价页 API 收口
+
+- 管理端定价页改为复用共享 `getPricing()` / `updatePricing()` API 封装，移除对底层 `api` 的直接依赖
+- 为 `admin` API 模块补齐定价配置读写的类型约束，避免页面层继续吞掉 `any`
+- 页面加载阶段补充默认值合并逻辑，确保后端返回字段不完整时仍能稳定渲染
+- 补充 API 层与页面层回归测试，覆盖定价读取、默认值兜底与保存提交流程
+
 ## 验证结果
 
-- 定向测试：3 个测试文件、13 个用例通过
-- `cd frontend-web && npm test`：43 个测试文件、139 个用例通过
+- 定向测试：2 个测试文件、12 个用例通过
+- `cd frontend-web && npm test`：43 个测试文件、141 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -73,4 +80,5 @@
 - `fbc06bf` `docs: update 20260621 web test bulletin`
 - `fc5c403` `refactor: align admin question pages with api module`
 - `516c0a9` `feat: add upload progress feedback`
-- 当前这批待提交：管理端审核页 API 收口
+- `6df9695` `refactor: align admin review pages with api module`
+- 当前这批待提交：管理端定价页 API 收口

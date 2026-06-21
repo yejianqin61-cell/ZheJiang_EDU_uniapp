@@ -1,6 +1,7 @@
 import api from '../index'
 import type {
   DashboardStats,
+  PricingConfig,
   OrderItem,
   Pagination,
   QuestionDetail,
@@ -80,8 +81,8 @@ export function batchDeleteQuestions(ids: string[]) { return api.post('/admin/qu
 export function getKnowledgePoints(params: Record<string, any>) { return api.get('/admin/knowledge-points', { params }) }
 
 // ===== 定价配置 =====
-export function getPricing() { return api.get('/admin/pricing') }
-export function updatePricing(data: any) { return api.put('/admin/pricing', data) }
+export function getPricing() { return api.get<PricingConfig>('/admin/pricing') }
+export function updatePricing(data: PricingConfig) { return api.put('/admin/pricing', data) }
 
 // ===== 公开定价 =====
 export function getPublicPricing() { return api.get('/pricing/public') }

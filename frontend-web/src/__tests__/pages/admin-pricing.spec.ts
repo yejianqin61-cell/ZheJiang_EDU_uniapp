@@ -4,13 +4,14 @@ import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminPricingPage from '@/pages/admin/pricing/index.vue'
 
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  put: vi.fn(),
+const adminApiMocks = vi.hoisted(() => ({
+  getPricing: vi.fn(),
+  updatePricing: vi.fn(),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/admin', () => ({
+  getPricing: adminApiMocks.getPricing,
+  updatePricing: adminApiMocks.updatePricing,
 }))
 
 const mountPage = () =>
@@ -28,14 +29,14 @@ const mountPage = () =>
 
 describe('Admin pricing page', () => {
   beforeEach(() => {
-    apiMocks.get.mockReset()
-    apiMocks.put.mockReset()
+    adminApiMocks.getPricing.mockReset()
+    adminApiMocks.updatePricing.mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessageBox.confirm).mockReset()
   })
 
   it('loads pricing config on mount and merges defaults', async () => {
-    apiMocks.get.mockResolvedValue({
+    adminApiMocks.getPricing.mockResolvedValue({
       download: { unitPrice: 300, description: '按题计费' },
       print: [{ tier: 1, minQuantity: 1, maxQuantity: 20, unitPrice: 450 }],
     })
@@ -44,14 +45,14 @@ describe('Admin pricing page', () => {
     await nextTick()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/admin/pricing')
+    expect(adminApiMocks.getPricing).toHaveBeenCalled()
     expect((wrapper.vm as any).pricing.download.unitPrice).toBe(300)
     expect((wrapper.vm as any).pricing.exercise.unitPrice).toBe(500)
   })
 
   it('saves pricing config after confirmation', async () => {
-    apiMocks.get.mockResolvedValue({})
-    apiMocks.put.mockResolvedValue({ ok: true })
+    adminApiMocks.getPricing.mockResolvedValue({})
+    adminApiMocks.updatePricing.mockResolvedValue({ ok: true })
     vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm' as any)
 
     const wrapper = mountPage()
@@ -60,7 +61,7 @@ describe('Admin pricing page', () => {
     ;(wrapper.vm as any).pricing.download.unitPrice = 260
     await (wrapper.vm as any).save()
 
-    expect(apiMocks.put).toHaveBeenCalledWith('/admin/pricing', (wrapper.vm as any).pricing)
+    expect(adminApiMocks.updatePricing).toHaveBeenCalledWith((wrapper.vm as any).pricing)
     expect(ElMessage.success).toHaveBeenCalledWith('定价已更新')
   })
 })

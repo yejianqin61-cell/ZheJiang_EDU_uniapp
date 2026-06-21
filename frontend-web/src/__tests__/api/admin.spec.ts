@@ -60,6 +60,31 @@ describe('Admin API', () => {
     expect(mockGet).toHaveBeenCalledWith('/admin/reviews/review-1')
   })
 
+  it('getPricing -> GET /admin/pricing', async () => {
+    const { getPricing } = await import('@/api/modules/admin')
+    mockGet.mockResolvedValue({ download: { unitPrice: 200, description: '按题计费' } })
+
+    await getPricing()
+
+    expect(mockGet).toHaveBeenCalledWith('/admin/pricing')
+  })
+
+  it('updatePricing -> PUT /admin/pricing', async () => {
+    const { updatePricing } = await import('@/api/modules/admin')
+    const payload = {
+      download: { unitPrice: 200, description: '按题计费' },
+      print: [{ tier: 1, minQuantity: 1, maxQuantity: 10, unitPrice: 500 }],
+      cashback: { unitPrice: 100 },
+      exerciseCashback: { unitPrice: 500 },
+      exercise: { unitPrice: 500 },
+    }
+    mockPut.mockResolvedValue({ ok: true })
+
+    await updatePricing(payload as any)
+
+    expect(mockPut).toHaveBeenCalledWith('/admin/pricing', payload)
+  })
+
   it('batchDeleteQuestions -> POST /admin/questions/batch-delete with questionIds', async () => {
     const { batchDeleteQuestions } = await import('@/api/modules/admin')
     mockPost.mockResolvedValue({ deleted: 2 })
