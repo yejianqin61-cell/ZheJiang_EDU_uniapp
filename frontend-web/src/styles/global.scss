@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 // ===================== 容器 =====================
 .container {
   max-width: $page-max-width;
@@ -180,10 +182,10 @@ h1, h2, h3 { scroll-margin-top: calc(#{$top-nav-height} + 16px); }
 // ===================== Element Plus 主题覆盖 =====================
 :root {
   --el-color-primary: #{$color-primary};
-  --el-color-primary-light-3: #{lighten($color-primary, 10%)};
-  --el-color-primary-light-5: #{lighten($color-primary, 20%)};
-  --el-color-primary-light-7: #{lighten($color-primary, 30%)};
-  --el-color-primary-light-9: #{lighten($color-primary, 40%)};
+  --el-color-primary-light-3: #{color.adjust($color-primary, $lightness: 10%)};
+  --el-color-primary-light-5: #{color.adjust($color-primary, $lightness: 20%)};
+  --el-color-primary-light-7: #{color.adjust($color-primary, $lightness: 30%)};
+  --el-color-primary-light-9: #{color.adjust($color-primary, $lightness: 40%)};
   --el-color-primary-dark-2: #{$color-primary-dark};
 }
 .el-button--primary { --el-button-bg-color: #{$color-primary}; --el-button-border-color: #{$color-primary}; }

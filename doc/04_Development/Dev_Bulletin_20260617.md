@@ -215,3 +215,6 @@
 - 新增 `frontend-web` 登录、余额与提现页级测试，覆盖邮箱注册、短信登录、余额展示与提现申请校验链路。
 - 新增 `frontend-web` 地址管理页级测试，覆盖地址列表加载、删除刷新以及地址新增/编辑保存链路。
 - 新增 `frontend-web` 练习浏览列表与详情页级测试，覆盖试卷列表加载、空态分流以及练习详情支付/打印跳转链路。
+- 新增 `frontend-web` 首页、个人中心与题库贡献详情/上传页级测试，补齐游客跳转、个人统计加载、贡献上传校验与贡献详情展示链路。
+- 调整 `frontend-web` 的 `npm test` / `npm run build` 脚本，显式提升 Node 内存上限，并将构建入口固定为 `vite build .`，规避当前 Windows 中文路径下的构建失败问题。
+- 清理 `frontend-web/src/styles/global.scss` 中 Sass `lighten()` 过时写法，改为 `color.adjust()`，消除主题样式构建告警。
