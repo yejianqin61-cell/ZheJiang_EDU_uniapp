@@ -1,5 +1,24 @@
 import api from '../index'
-import type { DashboardStats } from '@/types'
+import type { DashboardStats, OrderItem, Pagination } from '@/types'
+
+type AdminOrderScope = 'mine' | 'others'
+type AdminOrderType = 'download' | 'print' | 'exercise'
+
+interface AdminOrderListParams {
+  page?: number
+  pageSize?: number
+  scope?: AdminOrderScope
+  type?: AdminOrderType
+  subject?: string
+  status?: string
+  startDate?: string
+  endDate?: string
+}
+
+interface AdminOrderListResponse {
+  list: OrderItem[]
+  pagination: Pagination
+}
 
 // ===== 仪表盘 =====
 export function getDashboardStats() { return api.get<DashboardStats>('/admin/questions/stats') }
@@ -30,7 +49,7 @@ export function updatePricing(data: any) { return api.put('/admin/pricing', data
 export function getPublicPricing() { return api.get('/pricing/public') }
 
 // ===== 订单管理 =====
-export function getAdminOrders(params: Record<string, any>) { return api.get('/orders', { params: { ...params, scope: 'others' } }) }
+export function getAdminOrders(params: AdminOrderListParams) { return api.get<AdminOrderListResponse>('/orders', { params }) }
 export function updatePrintStatus(orderId: string, printStatus: string) { return api.put(`/admin/orders/${orderId}/print-status`, { printStatus }) }
 
 // ===== 提现管理 =====

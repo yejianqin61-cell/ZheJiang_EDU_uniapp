@@ -4,20 +4,14 @@ import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminOrdersPage from '@/pages/admin/orders/index.vue'
 
-const routerPush = vi.fn()
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  put: vi.fn(),
+const adminApiMocks = vi.hoisted(() => ({
+  getAdminOrders: vi.fn(),
+  updatePrintStatus: vi.fn(),
 }))
 
-vi.mock('vue-router', () => ({
-  useRouter: () => ({
-    push: routerPush,
-  }),
-}))
-
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/admin', () => ({
+  getAdminOrders: adminApiMocks.getAdminOrders,
+  updatePrintStatus: adminApiMocks.updatePrintStatus,
 }))
 
 const mountPage = () =>
@@ -42,15 +36,14 @@ const mountPage = () =>
 
 describe('Admin orders page', () => {
   beforeEach(() => {
-    routerPush.mockReset()
-    apiMocks.get.mockReset()
-    apiMocks.put.mockReset()
+    adminApiMocks.getAdminOrders.mockReset()
+    adminApiMocks.updatePrintStatus.mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.error).mockReset()
   })
 
   it('loads mine download orders on mount', async () => {
-    apiMocks.get.mockResolvedValue({
+    adminApiMocks.getAdminOrders.mockResolvedValue({
       list: [],
       pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
     })
@@ -58,13 +51,16 @@ describe('Admin orders page', () => {
     mountPage()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/orders', {
-      params: { page: 1, pageSize: 20, scope: 'mine', type: 'download' },
+    expect(adminApiMocks.getAdminOrders).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 20,
+      scope: 'mine',
+      type: 'download',
     })
   })
 
   it('switches scope and refetches order list', async () => {
-    apiMocks.get
+    adminApiMocks.getAdminOrders
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
 
@@ -73,26 +69,27 @@ describe('Admin orders page', () => {
 
     await (wrapper.vm as any).switchScope('others')
 
-    expect(apiMocks.get).toHaveBeenNthCalledWith(2, '/orders', {
-      params: { page: 1, pageSize: 20, scope: 'others', type: 'download' },
+    expect(adminApiMocks.getAdminOrders).toHaveBeenNthCalledWith(2, {
+      page: 1,
+      pageSize: 20,
+      scope: 'others',
+      type: 'download',
     })
   })
 
   it('updates print order status and refreshes list', async () => {
-    apiMocks.get
+    adminApiMocks.getAdminOrders
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
-    apiMocks.put.mockResolvedValue({ ok: true })
+    adminApiMocks.updatePrintStatus.mockResolvedValue({ ok: true })
 
     const wrapper = mountPage()
     await nextTick()
 
     await (wrapper.vm as any).updateStatus('order-1', 'printing')
 
-    expect(apiMocks.put).toHaveBeenCalledWith('/admin/orders/order-1/print-status', {
-      printStatus: 'printing',
-    })
+    expect(adminApiMocks.updatePrintStatus).toHaveBeenCalledWith('order-1', 'printing')
     expect(ElMessage.success).toHaveBeenCalledWith('状态已更新')
-    expect(apiMocks.get).toHaveBeenCalledTimes(2)
+    expect(adminApiMocks.getAdminOrders).toHaveBeenCalledTimes(2)
   })
 })

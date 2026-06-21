@@ -25,13 +25,20 @@
 - 新增 `exercise-draw` 页测，覆盖分类抽题、课时抽题、空参数和异常分支
 - 修复 `exercise-draw.spec.ts` fake timers 未恢复导致的测试进程稳定性问题
 
+### 4. 管理端订单查询契约收口
+
+- 修正 `getAdminOrders()` 不再强制覆盖 `scope: 'others'`，保留页面实际传入的 `mine / others` 查询范围
+- 管理端订单页改为复用 `getAdminOrders()` 与 `updatePrintStatus()` API 封装，移除对底层 `api` 的直接依赖
+- 补充 API 层和页面层回归测试，覆盖订单范围切换与打印状态更新链路
+
 ## 验证结果
 
 - 定向测试：4 个测试文件、14 个用例通过
-- `cd frontend-web && npm test`：43 个测试文件、133 个用例通过
+- `cd frontend-web && npm test`：43 个测试文件、134 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
 
 - `62606b8` `test: share element plus input stubs`
-- 当前这批待提交：管理端提现契约与练习试卷类型收口
+- `aa2f29f` `fix: align withdrawal contract and exercise paper types`
+- 当前这批待提交：管理端订单查询契约收口

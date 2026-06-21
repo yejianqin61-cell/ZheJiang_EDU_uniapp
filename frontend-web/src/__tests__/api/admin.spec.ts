@@ -53,4 +53,15 @@ describe('Admin API', () => {
       rejectReason: '资料不完整',
     })
   })
+
+  it('getAdminOrders -> GET /orders keeps requested scope', async () => {
+    const { getAdminOrders } = await import('@/api/modules/admin')
+    mockGet.mockResolvedValue({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
+
+    await getAdminOrders({ page: 1, pageSize: 20, scope: 'mine', type: 'download' })
+
+    expect(mockGet).toHaveBeenCalledWith('/orders', {
+      params: { page: 1, pageSize: 20, scope: 'mine', type: 'download' },
+    })
+  })
 })
