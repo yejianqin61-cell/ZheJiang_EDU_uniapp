@@ -31,6 +31,14 @@
 - 管理端订单页改为复用 `getAdminOrders()` 与 `updatePrintStatus()` API 封装，移除对底层 `api` 的直接依赖
 - 补充 API 层和页面层回归测试，覆盖订单范围切换与打印状态更新链路
 
+### 5. Vitest worker 池稳定性修复
+
+- 将 `frontend-web` 的 `npm test` 默认入口切换为 `--pool=threads`
+- 在 `frontend-web/vitest.config.ts` 中显式固定 `test.pool = 'threads'`
+- 基于当前 Windows 环境复测确认 `threads` 比默认 `forks` 更稳定，可作为日常回归默认配置
+- 对应 Issue：
+  - [Issue_20260621_Vitest_Forks_Worker_OOM.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260621_Vitest_Forks_Worker_OOM.md)
+
 ## 验证结果
 
 - 定向测试：4 个测试文件、14 个用例通过
@@ -41,4 +49,5 @@
 
 - `62606b8` `test: share element plus input stubs`
 - `aa2f29f` `fix: align withdrawal contract and exercise paper types`
-- 当前这批待提交：管理端订单查询契约收口
+- `343d922` `fix: align admin orders scope and api usage`
+- 当前这批待提交：Vitest worker 池稳定性修复
