@@ -244,3 +244,10 @@
 - 修复管理端审核详情页知识点字段契约偏差：后端返回 `knowledgePoints: string[]`，前端改为按数组展示，不再误读为单个 `knowledgePoint` 对象。
 - 新增 Issue：[Issue_20260621_Admin_Review_Detail_KnowledgePoints_Contract.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260621_Admin_Review_Detail_KnowledgePoints_Contract.md)，记录审核详情页知识点契约问题与本轮修复结果。
 - 复核当前 Web 前端回归门禁：`npm test` 共 43 个测试文件、139 个用例全部通过，`npm run build` 通过；本批入库审核链路已完成收口。
+- 对齐 `frontend-web` 管理端定价配置页的共享 API 封装，改为复用 `getPricing()` / `updatePricing()`，并为 API 层补齐 `PricingConfig` 读写类型约束。
+- 为定价配置页增加 `mergePricingConfig()` 默认值合并逻辑，避免后端只返回部分配置时丢失练习、返现等嵌套字段。
+- 新增 Issue：[Issue_20260621_Admin_Pricing_Config_Merge.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260621_Admin_Pricing_Config_Merge.md)，记录定价页契约与默认值合并问题及修复结果。
+- 复核当前 Web 前端回归门禁：`npm test` 共 43 个测试文件、141 个用例通过，`npm run build` 通过；本批定价配置链路已完成收口。
+- 对齐 `frontend-web` 管理端知识点中心页的共享 API 封装，改为复用 `getKnowledgePoints()`，并为知识点列表参数、分页返回和页面筛选状态补齐类型约束。
+- 更新知识点中心页测与 `admin` API 测试，覆盖初始加载和筛选参数构造，不再直接断言底层 `api/index` 调用细节。
+- 新增 Issue：[Issue_20260621_Admin_Knowledge_Api_Contract.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260621_Admin_Knowledge_Api_Contract.md)，记录知识点中心页契约收口结果。

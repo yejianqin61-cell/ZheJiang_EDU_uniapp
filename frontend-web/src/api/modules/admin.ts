@@ -4,6 +4,7 @@ import type {
   PricingConfig,
   OrderItem,
   Pagination,
+  KnowledgePoint,
   QuestionDetail,
   QuestionListItem,
   ReviewDetail,
@@ -54,6 +55,18 @@ interface AdminReviewListResponse {
   pagination: Pagination
 }
 
+interface AdminKnowledgePointListParams {
+  page?: number
+  pageSize?: number
+  subject?: string
+  grade?: string
+}
+
+interface AdminKnowledgePointListResponse {
+  list: KnowledgePoint[]
+  pagination: Pagination
+}
+
 // ===== 仪表盘 =====
 export function getDashboardStats() { return api.get<DashboardStats>('/admin/questions/stats') }
 
@@ -78,7 +91,9 @@ export function deleteQuestion(id: string) { return api.delete(`/admin/questions
 export function batchDeleteQuestions(ids: string[]) { return api.post('/admin/questions/batch-delete', { questionIds: ids }) }
 
 // ===== 知识点中心 =====
-export function getKnowledgePoints(params: Record<string, any>) { return api.get('/admin/knowledge-points', { params }) }
+export function getKnowledgePoints(params: AdminKnowledgePointListParams) {
+  return api.get<AdminKnowledgePointListResponse>('/admin/knowledge-points', { params })
+}
 
 // ===== 定价配置 =====
 export function getPricing() { return api.get<PricingConfig>('/admin/pricing') }

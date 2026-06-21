@@ -3,12 +3,12 @@ import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminKnowledgePage from '@/pages/admin/knowledge/index.vue'
 
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
+const adminApiMocks = vi.hoisted(() => ({
+  getKnowledgePoints: vi.fn(),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/admin', () => ({
+  getKnowledgePoints: adminApiMocks.getKnowledgePoints,
 }))
 
 const mountPage = () =>
@@ -30,11 +30,11 @@ const mountPage = () =>
 
 describe('Admin knowledge page', () => {
   beforeEach(() => {
-    apiMocks.get.mockReset()
+    adminApiMocks.getKnowledgePoints.mockReset()
   })
 
   it('loads knowledge point list on mount', async () => {
-    apiMocks.get.mockResolvedValue({
+    adminApiMocks.getKnowledgePoints.mockResolvedValue({
       list: [],
       pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
     })
@@ -42,14 +42,15 @@ describe('Admin knowledge page', () => {
     const wrapper = mountPage()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/admin/knowledge-points', {
-      params: { page: 1, pageSize: 20 },
+    expect(adminApiMocks.getKnowledgePoints).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 20,
     })
     expect(wrapper.text()).toContain('共 0 个知识点')
   })
 
   it('fetches filtered knowledge points', async () => {
-    apiMocks.get
+    adminApiMocks.getKnowledgePoints
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 2, totalPages: 1 } })
 
@@ -60,8 +61,11 @@ describe('Admin knowledge page', () => {
     ;(wrapper.vm as any).filters.grade = '五年级'
     await (wrapper.vm as any).fetchList()
 
-    expect(apiMocks.get).toHaveBeenNthCalledWith(2, '/admin/knowledge-points', {
-      params: { subject: '数学', grade: '五年级', page: 1, pageSize: 20 },
+    expect(adminApiMocks.getKnowledgePoints).toHaveBeenNthCalledWith(2, {
+      subject: '数学',
+      grade: '五年级',
+      page: 1,
+      pageSize: 20,
     })
   })
 })

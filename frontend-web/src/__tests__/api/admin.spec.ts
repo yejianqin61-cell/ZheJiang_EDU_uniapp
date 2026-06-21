@@ -85,6 +85,17 @@ describe('Admin API', () => {
     expect(mockPut).toHaveBeenCalledWith('/admin/pricing', payload)
   })
 
+  it('getKnowledgePoints -> GET /admin/knowledge-points with params', async () => {
+    const { getKnowledgePoints } = await import('@/api/modules/admin')
+    mockGet.mockResolvedValue({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
+
+    await getKnowledgePoints({ page: 1, pageSize: 20, subject: '数学', grade: '五年级' })
+
+    expect(mockGet).toHaveBeenCalledWith('/admin/knowledge-points', {
+      params: { page: 1, pageSize: 20, subject: '数学', grade: '五年级' },
+    })
+  })
+
   it('batchDeleteQuestions -> POST /admin/questions/batch-delete with questionIds', async () => {
     const { batchDeleteQuestions } = await import('@/api/modules/admin')
     mockPost.mockResolvedValue({ deleted: 2 })
