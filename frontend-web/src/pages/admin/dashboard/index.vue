@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
-import * as echarts from 'echarts'
+import { use } from 'echarts/core'
+import { PieChart, BarChart } from 'echarts/charts'
+import { TooltipComponent, LegendComponent, GridComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+import { init } from 'echarts/core'
 import api from '@/api/index'
+
+use([PieChart, BarChart, TooltipComponent, LegendComponent, GridComponent, CanvasRenderer])
 
 const stats = ref<any>({ totalQuestions: 0, bySubject: [], byGrade: [], byDifficulty: [], totalKnowledgePoints: 0 })
 const loading = ref(true)
@@ -21,7 +27,7 @@ onMounted(async () => {
 
 function renderSubjectChart() {
   if (!subjectChart.value) return
-  const chart = echarts.init(subjectChart.value)
+  const chart = init(subjectChart.value)
   chart.setOption({
     tooltip: { trigger: 'item' },
     legend: { bottom: 0 },
@@ -36,7 +42,7 @@ function renderSubjectChart() {
 
 function renderGradeChart() {
   if (!gradeChart.value) return
-  const chart = echarts.init(gradeChart.value)
+  const chart = init(gradeChart.value)
   const data = (stats.value.byGrade || []).sort((a: any, b: any) => b.count - a.count)
   chart.setOption({
     tooltip: { trigger: 'axis' },
@@ -50,7 +56,7 @@ function renderGradeChart() {
 
 function renderDifficultyChart() {
   if (!difficultyChart.value) return
-  const chart = echarts.init(difficultyChart.value)
+  const chart = init(difficultyChart.value)
   const labels = ['简单', '中等', '困难']
   const colors = ['#67c23a', '#e6a23c', '#f56c6c']
   chart.setOption({

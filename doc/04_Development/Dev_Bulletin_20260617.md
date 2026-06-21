@@ -218,3 +218,6 @@
 - 新增 `frontend-web` 首页、个人中心与题库贡献详情/上传页级测试，补齐游客跳转、个人统计加载、贡献上传校验与贡献详情展示链路。
 - 调整 `frontend-web` 的 `npm test` / `npm run build` 脚本，显式提升 Node 内存上限，并将构建入口固定为 `vite build .`，规避当前 Windows 中文路径下的构建失败问题。
 - 清理 `frontend-web/src/styles/global.scss` 中 Sass `lighten()` 过时写法，改为 `color.adjust()`，消除主题样式构建告警。
+- 优化 `frontend-web` 管理端仪表盘图表依赖，`echarts` 由整包引入改为按需模块注册，降低管理端路由的单页产物体积。
+- 为 `frontend-web` 增加 Vite vendor 分包规则，并将 Vitest 回归入口调整为单 worker 串行执行，修复当前 Windows 环境下的多进程内存崩溃问题。
+- 新增 Issue：[Issue_20260621_Frontend_Build_Warnings.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260621_Frontend_Build_Warnings.md)，跟踪 `@vueuse/core` 的 Rolldown 三方告警与剩余大包问题。

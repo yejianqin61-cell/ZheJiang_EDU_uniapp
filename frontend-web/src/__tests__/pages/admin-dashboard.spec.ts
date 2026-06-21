@@ -12,7 +12,8 @@ const apiMocks = vi.hoisted(() => ({
   get: vi.fn(),
 }))
 
-vi.mock('echarts', () => ({
+vi.mock('echarts/core', () => ({
+  use: vi.fn(),
   init: chartMocks.chartInit,
 }))
 
