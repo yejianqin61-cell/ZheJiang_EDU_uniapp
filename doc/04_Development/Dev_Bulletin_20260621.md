@@ -45,6 +45,12 @@
 - 为 `getQuestions()` / `getQuestion()` 补齐题库列表与详情的返回类型约束
 - 补充 API 层与页面层回归测试，覆盖题库列表加载、筛选重置、详情加载与删除返回链路
 
+### 7. 上传页进度反馈补齐
+
+- 为管理端文件上传页和教师贡献上传页补充上传进度展示
+- 基于 `onUploadProgress` 同步百分比状态，上传成功后将进度稳定收敛到 `100%`
+- 页测补充进度回调断言，覆盖上传成功后的表单重置与跳转链路
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、11 个用例通过
@@ -58,4 +64,5 @@
 - `343d922` `fix: align admin orders scope and api usage`
 - `8bda911` `test: switch vitest pool to threads`
 - `fbc06bf` `docs: update 20260621 web test bulletin`
-- 当前这批待提交：管理端题库页 API 收口
+- `fc5c403` `refactor: align admin question pages with api module`
+- 当前这批待提交：上传页进度反馈补齐
