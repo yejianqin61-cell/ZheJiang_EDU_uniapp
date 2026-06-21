@@ -31,6 +31,15 @@ describe('Admin API', () => {
     expect(mockGet).toHaveBeenCalledWith('/admin/questions/stats')
   })
 
+  it('getQuestion -> GET /admin/questions/:id', async () => {
+    const { getQuestion } = await import('@/api/modules/admin')
+    mockGet.mockResolvedValue({ id: 'q-1' })
+
+    await getQuestion('q-1')
+
+    expect(mockGet).toHaveBeenCalledWith('/admin/questions/q-1')
+  })
+
   it('batchDeleteQuestions -> POST /admin/questions/batch-delete with questionIds', async () => {
     const { batchDeleteQuestions } = await import('@/api/modules/admin')
     mockPost.mockResolvedValue({ deleted: 2 })
@@ -52,6 +61,15 @@ describe('Admin API', () => {
       action: 'reject',
       rejectReason: '资料不完整',
     })
+  })
+
+  it('deleteQuestion -> DELETE /admin/questions/:id', async () => {
+    const { deleteQuestion } = await import('@/api/modules/admin')
+    mockDelete.mockResolvedValue({ ok: true })
+
+    await deleteQuestion('q-7')
+
+    expect(mockDelete).toHaveBeenCalledWith('/admin/questions/q-7')
   })
 
   it('getAdminOrders -> GET /orders keeps requested scope', async () => {

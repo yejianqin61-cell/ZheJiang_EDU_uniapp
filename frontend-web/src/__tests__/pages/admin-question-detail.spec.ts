@@ -8,9 +8,9 @@ const routerBack = vi.fn()
 const routeState = vi.hoisted(() => ({
   params: { id: 'question-1' },
 }))
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  delete: vi.fn(),
+const adminApiMocks = vi.hoisted(() => ({
+  getQuestion: vi.fn(),
+  deleteQuestion: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -20,8 +20,9 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/admin', () => ({
+  getQuestion: adminApiMocks.getQuestion,
+  deleteQuestion: adminApiMocks.deleteQuestion,
 }))
 
 vi.mock('@/composables/useMarkdown', () => ({
@@ -42,42 +43,60 @@ const mountPage = () =>
 describe('Admin question detail page', () => {
   beforeEach(() => {
     routerBack.mockReset()
-    apiMocks.get.mockReset()
-    apiMocks.delete.mockReset()
+    adminApiMocks.getQuestion.mockReset()
+    adminApiMocks.deleteQuestion.mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.error).mockReset()
   })
 
   it('loads question detail on mount', async () => {
-    apiMocks.get.mockResolvedValue({
+    adminApiMocks.getQuestion.mockResolvedValue({
+      id: 'question-1',
       type: '选择题',
-      difficulty: '2',
+      difficulty: 2,
       subject: '数学',
       grade: '五年级',
       content: '题目内容',
       answer: 'B',
-      sourceFile: { filename: 'sample.docx' },
+      analysis: null,
+      options: null,
+      sourceFile: { id: 'file-1', filename: 'sample.docx' },
+      status: 'approved',
+      isDeleted: false,
     })
 
     const wrapper = mountPage()
     await nextTick()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/admin/questions/question-1')
+    expect(adminApiMocks.getQuestion).toHaveBeenCalledWith('question-1')
     expect(wrapper.text()).toContain('题目内容')
     expect(wrapper.text()).toContain('sample.docx')
   })
 
   it('deletes question and returns to previous page', async () => {
-    apiMocks.get.mockResolvedValue({ content: '题目内容' })
-    apiMocks.delete.mockResolvedValue({ ok: true })
+    adminApiMocks.getQuestion.mockResolvedValue({
+      id: 'question-1',
+      type: '选择题',
+      difficulty: 2,
+      subject: '数学',
+      grade: '五年级',
+      content: '题目内容',
+      answer: 'B',
+      analysis: null,
+      options: null,
+      sourceFile: null,
+      status: 'approved',
+      isDeleted: false,
+    })
+    adminApiMocks.deleteQuestion.mockResolvedValue({ ok: true })
 
     const wrapper = mountPage()
     await nextTick()
 
     await (wrapper.vm as any).del()
 
-    expect(apiMocks.delete).toHaveBeenCalledWith('/admin/questions/question-1')
+    expect(adminApiMocks.deleteQuestion).toHaveBeenCalledWith('question-1')
     expect(ElMessage.success).toHaveBeenCalledWith('已删除')
     expect(routerBack).toHaveBeenCalled()
   })

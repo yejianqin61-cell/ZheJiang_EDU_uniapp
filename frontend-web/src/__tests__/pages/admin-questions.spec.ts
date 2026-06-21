@@ -6,9 +6,9 @@ import AdminQuestionsPage from '@/pages/admin/questions/index.vue'
 import { elInputStub } from '@/__tests__/utils/element-plus-stubs'
 
 const routerPush = vi.fn()
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  delete: vi.fn(),
+const adminApiMocks = vi.hoisted(() => ({
+  getQuestions: vi.fn(),
+  deleteQuestion: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -17,8 +17,9 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/admin', () => ({
+  getQuestions: adminApiMocks.getQuestions,
+  deleteQuestion: adminApiMocks.deleteQuestion,
 }))
 
 const mountPage = () =>
@@ -43,14 +44,14 @@ const mountPage = () =>
 describe('Admin questions page', () => {
   beforeEach(() => {
     routerPush.mockReset()
-    apiMocks.get.mockReset()
-    apiMocks.delete.mockReset()
+    adminApiMocks.getQuestions.mockReset()
+    adminApiMocks.deleteQuestion.mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessageBox.confirm).mockReset()
   })
 
   it('loads question list on mount', async () => {
-    apiMocks.get.mockResolvedValue({
+    adminApiMocks.getQuestions.mockResolvedValue({
       list: [],
       pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
     })
@@ -58,14 +59,12 @@ describe('Admin questions page', () => {
     const wrapper = mountPage()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/admin/questions', {
-      params: { page: 1, pageSize: 20 },
-    })
+    expect(adminApiMocks.getQuestions).toHaveBeenCalledWith({ page: 1, pageSize: 20 })
     expect(wrapper.text()).toContain('共 0 题')
   })
 
   it('resets filters and refetches list', async () => {
-    apiMocks.get
+    adminApiMocks.getQuestions
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 } })
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
 
@@ -83,14 +82,14 @@ describe('Admin questions page', () => {
       difficulty: '',
       keyword: '',
     })
-    expect(apiMocks.get).toHaveBeenCalledTimes(2)
+    expect(adminApiMocks.getQuestions).toHaveBeenCalledTimes(2)
   })
 
   it('deletes question and refreshes list after confirmation', async () => {
-    apiMocks.get
+    adminApiMocks.getQuestions
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 } })
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
-    apiMocks.delete.mockResolvedValue({ ok: true })
+    adminApiMocks.deleteQuestion.mockResolvedValue({ ok: true })
     vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm' as any)
 
     const wrapper = mountPage()
@@ -98,8 +97,8 @@ describe('Admin questions page', () => {
 
     await (wrapper.vm as any).del('q-1')
 
-    expect(apiMocks.delete).toHaveBeenCalledWith('/admin/questions/q-1')
+    expect(adminApiMocks.deleteQuestion).toHaveBeenCalledWith('q-1')
     expect(ElMessage.success).toHaveBeenCalledWith('已删除')
-    expect(apiMocks.get).toHaveBeenCalledTimes(2)
+    expect(adminApiMocks.getQuestions).toHaveBeenCalledTimes(2)
   })
 })

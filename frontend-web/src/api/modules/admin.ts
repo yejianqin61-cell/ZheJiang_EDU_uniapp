@@ -1,5 +1,5 @@
 import api from '../index'
-import type { DashboardStats, OrderItem, Pagination } from '@/types'
+import type { DashboardStats, OrderItem, Pagination, QuestionDetail, QuestionListItem } from '@/types'
 
 type AdminOrderScope = 'mine' | 'others'
 type AdminOrderType = 'download' | 'print' | 'exercise'
@@ -20,6 +20,21 @@ interface AdminOrderListResponse {
   pagination: Pagination
 }
 
+interface AdminQuestionListParams {
+  page?: number
+  pageSize?: number
+  subject?: string
+  grade?: string
+  knowledgePoint?: string
+  difficulty?: string
+  keyword?: string
+}
+
+interface AdminQuestionListResponse {
+  list: QuestionListItem[]
+  pagination: Pagination
+}
+
 // ===== 仪表盘 =====
 export function getDashboardStats() { return api.get<DashboardStats>('/admin/questions/stats') }
 
@@ -33,8 +48,8 @@ export function rejectQuestion(id: string) { return api.post(`/admin/reviews/${i
 export function batchReview(ids: string[], action: 'approve' | 'reject') { return api.post('/admin/reviews/batch', { questionIds: ids, action }) }
 
 // ===== 题库管理 =====
-export function getQuestions(params: Record<string, any>) { return api.get('/admin/questions', { params }) }
-export function getQuestion(id: string) { return api.get(`/admin/questions/${id}`) }
+export function getQuestions(params: AdminQuestionListParams) { return api.get<AdminQuestionListResponse>('/admin/questions', { params }) }
+export function getQuestion(id: string) { return api.get<QuestionDetail>(`/admin/questions/${id}`) }
 export function deleteQuestion(id: string) { return api.delete(`/admin/questions/${id}`) }
 export function batchDeleteQuestions(ids: string[]) { return api.post('/admin/questions/batch-delete', { questionIds: ids }) }
 

@@ -149,6 +149,16 @@ export interface QuestionDetail {
   isDeleted: boolean
 }
 
+export interface QuestionListItem {
+  id: string
+  type: string
+  content: string
+  subject: string
+  grade: string
+  difficulty: number | string
+  status?: string
+}
+
 // === Knowledge Point ===
 export interface KnowledgePoint {
   id: string

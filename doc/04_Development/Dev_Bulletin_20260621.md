@@ -39,10 +39,16 @@
 - 对应 Issue：
   - [Issue_20260621_Vitest_Forks_Worker_OOM.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260621_Vitest_Forks_Worker_OOM.md)
 
+### 6. 管理端题库页 API 收口
+
+- 管理端题库列表页与题目详情页改为复用共享 `admin` API 封装，移除对底层 `api` 的直接依赖
+- 为 `getQuestions()` / `getQuestion()` 补齐题库列表与详情的返回类型约束
+- 补充 API 层与页面层回归测试，覆盖题库列表加载、筛选重置、详情加载与删除返回链路
+
 ## 验证结果
 
-- 定向测试：4 个测试文件、14 个用例通过
-- `cd frontend-web && npm test`：43 个测试文件、134 个用例通过
+- 定向测试：3 个测试文件、11 个用例通过
+- `cd frontend-web && npm test`：43 个测试文件、136 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -50,4 +56,6 @@
 - `62606b8` `test: share element plus input stubs`
 - `aa2f29f` `fix: align withdrawal contract and exercise paper types`
 - `343d922` `fix: align admin orders scope and api usage`
-- 当前这批待提交：Vitest worker 池稳定性修复
+- `8bda911` `test: switch vitest pool to threads`
+- `fbc06bf` `docs: update 20260621 web test bulletin`
+- 当前这批待提交：管理端题库页 API 收口
