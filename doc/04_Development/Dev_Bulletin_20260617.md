@@ -231,4 +231,7 @@
 - 本轮执行 `cd frontend-web && npm test` 与 `cd frontend-web && npm run build` 均通过；另外登记 Issue：[Issue_20260621_Vitest_ElementPlus_Size_Warnings.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260621_Vitest_ElementPlus_Size_Warnings.md)，跟踪页面测试中的 Element Plus `size="large"` 告警清理。
 - 新增 `frontend-web/src/__tests__/utils/element-plus-stubs.ts`，为页面测试提供共享 `el-input` stub，避免将 `size="large"` 等组件属性透传到原生 DOM。
 - 将 `login`、`address-edit`、`exercise-upload`、`admin-exercises`、`admin-questions`、`profile-withdraw` 等页面测试切换到共享 stub，清理前端全量回归中的重复 Vue 告警输出。
+- 修复 `frontend-web` 练习抽题页 `draw.vue` 的错误分流逻辑：将“暂无试卷”与“抽题服务异常 / 网络异常 / 参数缺失”拆开处理，避免所有失败都落成同一条空态文案。
+- 新增 `frontend-web` 练习抽题页页级测试，覆盖分类抽题、课时抽题、空结果提示、服务异常提示以及支付/打印跳转链路。
+- 新增 Issue：[Issue_20260621_Vitest_Forks_Worker_OOM.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260621_Vitest_Forks_Worker_OOM.md)，记录当前 Windows 环境下 `frontend-web` 全量回归偶发的 Vitest `forks` worker 崩溃问题。
 - 复核 `frontend-web` 全量回归与构建结果：`npm test` 共 42 个测试文件、127 个用例全部通过，`npm run build` 通过；本批管理端 API 契约与仪表盘清理已完成收口，可继续下一批 Web 端测试与优化。

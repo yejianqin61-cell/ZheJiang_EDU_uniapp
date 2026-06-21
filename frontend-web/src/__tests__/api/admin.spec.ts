@@ -41,4 +41,16 @@ describe('Admin API', () => {
       questionIds: ['q-1', 'q-2'],
     })
   })
+
+  it('rejectWithdrawal -> PUT /admin/withdrawals/:id with rejectReason', async () => {
+    const { rejectWithdrawal } = await import('@/api/modules/admin')
+    mockPut.mockResolvedValue({ ok: true })
+
+    await rejectWithdrawal('wd-1', '资料不完整')
+
+    expect(mockPut).toHaveBeenCalledWith('/admin/withdrawals/wd-1', {
+      action: 'reject',
+      rejectReason: '资料不完整',
+    })
+  })
 })

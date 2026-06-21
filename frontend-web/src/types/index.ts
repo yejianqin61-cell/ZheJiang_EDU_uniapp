@@ -176,3 +176,19 @@ export interface ExerciseUploadItem {
   uploaderPhone?: string | null
   createdAt: string
 }
+
+export interface ExercisePaper {
+  id: string
+  title: string
+  subject?: string
+  grade?: string
+  fileUrl?: string
+  fileType: string
+  fileSize?: number | null
+  pageCount?: number | null
+  thumbnailUrl?: string | null
+  categoryId?: string | null
+  lessonId?: string | null
+  downloadCount?: number
+  createdAt?: string
+}

@@ -4,13 +4,16 @@ import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminWithdrawalsPage from '@/pages/admin/withdrawals/index.vue'
 
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  put: vi.fn(),
+const adminApiMocks = vi.hoisted(() => ({
+  getWithdrawals: vi.fn(),
+  approveWithdrawal: vi.fn(),
+  rejectWithdrawal: vi.fn(),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/admin', () => ({
+  getWithdrawals: adminApiMocks.getWithdrawals,
+  approveWithdrawal: adminApiMocks.approveWithdrawal,
+  rejectWithdrawal: adminApiMocks.rejectWithdrawal,
 }))
 
 const mountPage = () =>
@@ -31,15 +34,16 @@ const mountPage = () =>
 
 describe('Admin withdrawals page', () => {
   beforeEach(() => {
-    apiMocks.get.mockReset()
-    apiMocks.put.mockReset()
+    adminApiMocks.getWithdrawals.mockReset()
+    adminApiMocks.approveWithdrawal.mockReset()
+    adminApiMocks.rejectWithdrawal.mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.error).mockReset()
     vi.mocked(ElMessageBox.prompt).mockReset()
   })
 
   it('loads withdrawal list on mount', async () => {
-    apiMocks.get.mockResolvedValue({
+    adminApiMocks.getWithdrawals.mockResolvedValue({
       list: [],
       pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
     })
@@ -47,32 +51,35 @@ describe('Admin withdrawals page', () => {
     mountPage()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/admin/withdrawals', {
-      params: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
+    expect(adminApiMocks.getWithdrawals).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 20,
+      total: 0,
+      totalPages: 0,
     })
   })
 
   it('approves withdrawal and refreshes list', async () => {
-    apiMocks.get
+    adminApiMocks.getWithdrawals
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 } })
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
-    apiMocks.put.mockResolvedValue({ ok: true })
+    adminApiMocks.approveWithdrawal.mockResolvedValue({ ok: true })
 
     const wrapper = mountPage()
     await nextTick()
 
     await (wrapper.vm as any).approve('wd-1')
 
-    expect(apiMocks.put).toHaveBeenCalledWith('/admin/withdrawals/wd-1', { action: 'approve' })
+    expect(adminApiMocks.approveWithdrawal).toHaveBeenCalledWith('wd-1')
     expect(ElMessage.success).toHaveBeenCalledWith('已通过')
-    expect(apiMocks.get).toHaveBeenCalledTimes(2)
+    expect(adminApiMocks.getWithdrawals).toHaveBeenCalledTimes(2)
   })
 
   it('rejects withdrawal with reason and refreshes list', async () => {
-    apiMocks.get
+    adminApiMocks.getWithdrawals
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 } })
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
-    apiMocks.put.mockResolvedValue({ ok: true })
+    adminApiMocks.rejectWithdrawal.mockResolvedValue({ ok: true })
     vi.mocked(ElMessageBox.prompt).mockResolvedValue({ value: '资料不完整' } as any)
 
     const wrapper = mountPage()
@@ -80,11 +87,8 @@ describe('Admin withdrawals page', () => {
 
     await (wrapper.vm as any).reject('wd-1')
 
-    expect(apiMocks.put).toHaveBeenCalledWith('/admin/withdrawals/wd-1', {
-      action: 'reject',
-      rejectReason: '资料不完整',
-    })
+    expect(adminApiMocks.rejectWithdrawal).toHaveBeenCalledWith('wd-1', '资料不完整')
     expect(ElMessage.success).toHaveBeenCalledWith('已拒绝')
-    expect(apiMocks.get).toHaveBeenCalledTimes(2)
+    expect(adminApiMocks.getWithdrawals).toHaveBeenCalledTimes(2)
   })
 })

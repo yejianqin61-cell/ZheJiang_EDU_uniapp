@@ -36,7 +36,7 @@ export function updatePrintStatus(orderId: string, printStatus: string) { return
 // ===== 提现管理 =====
 export function getWithdrawals(params: Record<string, any>) { return api.get('/admin/withdrawals', { params }) }
 export function approveWithdrawal(id: string) { return api.put(`/admin/withdrawals/${id}`, { action: 'approve' }) }
-export function rejectWithdrawal(id: string, reason: string) { return api.put(`/admin/withdrawals/${id}`, { action: 'reject', reason }) }
+export function rejectWithdrawal(id: string, reason: string) { return api.put(`/admin/withdrawals/${id}`, { action: 'reject', rejectReason: reason }) }
 
 // ===== 贡献题 =====
 export function getContributions() { return api.get('/contributions') }

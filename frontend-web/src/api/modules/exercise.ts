@@ -1,4 +1,5 @@
 import api from '../index'
+import type { ExercisePaper } from '@/types'
 
 // ===== 用户端 =====
 export function getExerciseCategories(params: { type?: string; grade?: string; subject?: string }) {
@@ -14,17 +15,17 @@ export function getPapersByLesson(lessonId: string) {
   return api.get('/exercise/papers', { params: { lessonId } })
 }
 export function getPaperDetail(id: string) {
-  return api.get(`/exercise/papers/${id}`)
+  return api.get<ExercisePaper>(`/exercise/papers/${id}`)
 }
 
 export function drawCategory(id: string) {
-  return api.post(`/exercise/categories/${id}/draw`)
+  return api.post<ExercisePaper>(`/exercise/categories/${id}/draw`)
 }
 export function drawLesson(id: string) {
-  return api.post(`/exercise/lessons/${id}/draw`)
+  return api.post<ExercisePaper>(`/exercise/lessons/${id}/draw`)
 }
 export function getExercisePaper(id: string) {
-  return api.get(`/exercise/papers/${id}`)
+  return api.get<ExercisePaper>(`/exercise/papers/${id}`)
 }
 
 // ===== 管理端 =====
