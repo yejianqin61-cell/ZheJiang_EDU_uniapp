@@ -27,11 +27,15 @@ const genProgress = ref(0)
 let progressTimer: ReturnType<typeof setInterval> | null = null
 
 function selectStage(stage: string) { selectedStage.value = stage }
-function selectGrade(grade: string) { paper.condition.grade = grade }
+function selectGrade(grade: string) {
+  paper.condition.grade = grade
+  paper.condition.knowledgePointIds = []
+  if (paper.condition.subject) paper.fetchKnowledgePoints()
+}
 function selectSubject(subject: string) {
   paper.condition.subject = subject
   paper.condition.knowledgePointIds = []
-  paper.fetchKnowledgePoints()
+  if (paper.condition.grade) paper.fetchKnowledgePoints()
 }
 function toggleKp(kpId: string) {
   const ids = paper.condition.knowledgePointIds ?? []
