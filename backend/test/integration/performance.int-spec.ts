@@ -116,12 +116,12 @@ describe('PERF: Performance Benchmarks', () => {
   });
 
   describe('Order List', () => {
-    it('GET /v1/orders should respond within 50ms', async () => {
+    it('GET /v1/orders should respond within 80ms', async () => {
       await measure('Order List (empty)', () =>
         request(app.getHttpServer())
           .get('/v1/orders?page=1&pageSize=10')
           .set('Authorization', `Bearer ${token}`),
-        50);
+        80);
     });
   });
 

@@ -114,9 +114,9 @@ export interface PricingConfig {
     maxQuantity: number | null
     unitPrice: number
   }>
-  cashback?: { unitPrice: number; description?: string }
-  exerciseCashback?: { unitPrice: number; description?: string }
-  exercise?: { unitPrice: number; description?: string }
+  cashback: { unitPrice: number; description?: string }
+  exerciseCashback: { unitPrice: number; description?: string }
+  exercise: { unitPrice: number; description?: string }
 }
 
 // === Dashboard ===

@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { User } from '../../database/entities/user.entity';
 import { UnauthorizedException } from '@nestjs/common';
 import { SmsService } from './services/sms.service';
+import { EmailService } from './services/email.service';
 import axios from 'axios';
 
 jest.mock('axios');
@@ -48,6 +49,7 @@ describe('AuthService', () => {
           },
         },
         { provide: SmsService, useValue: { sendCode: jest.fn(), verifyCode: jest.fn() } },
+        { provide: EmailService, useValue: { sendCode: jest.fn(), verifyCode: jest.fn() } },
       ],
     }).compile();
 
@@ -117,6 +119,7 @@ describe('AuthService', () => {
           { provide: JwtService, useValue: jwtService },
           { provide: ConfigService, useValue: { get: jest.fn((k: string) => k === 'wx.appId' ? 'wx123' : k === 'wx.appSecret' ? 'sec123' : null) } },
           { provide: SmsService, useValue: { sendCode: jest.fn(), verifyCode: jest.fn() } },
+          { provide: EmailService, useValue: { sendCode: jest.fn(), verifyCode: jest.fn() } },
         ],
       }).compile();
 

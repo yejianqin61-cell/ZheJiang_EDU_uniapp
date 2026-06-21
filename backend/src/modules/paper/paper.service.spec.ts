@@ -162,7 +162,7 @@ describe('PaperService', () => {
       const opts = service.getConfigOptions();
       expect(opts.grades).toHaveLength(3);
       expect(opts.subjects).toContain('数学');
-      expect(opts.subjects).toHaveLength(9);
+      expect(opts.subjects).toHaveLength(10);
       expect(opts.difficulties).toHaveLength(4);
     });
   });

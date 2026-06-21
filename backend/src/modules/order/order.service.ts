@@ -66,6 +66,9 @@ export class OrderService {
     const existing = await this.orderRepo.findOne({
       where: { userId, paperId, type, status: 'pending' },
     });
+    if (existing) {
+      throw new ConflictException({ code: 30006, message: '已存在待支付订单，请勿重复创建' });
+    }
 
     const orderNo = this.generateOrderNo();
     let amount: number;

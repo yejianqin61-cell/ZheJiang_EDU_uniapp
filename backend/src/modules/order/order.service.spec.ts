@@ -36,6 +36,9 @@ describe('OrderService', () => {
     };
     paperRepo = {
       findOne: jest.fn(),
+      manager: {
+        query: jest.fn().mockResolvedValue([]),
+      },
       createQueryBuilder: jest.fn().mockReturnValue({
         select: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
@@ -94,6 +97,7 @@ describe('OrderService', () => {
 
     it('should throw if paper not found', async () => {
       paperRepo.findOne.mockResolvedValue(null);
+      paperRepo.manager.query.mockResolvedValue([]);
       await expect(service.create({ userId: 'u1', paperId: 'bad-paper', type: 'download' })).rejects.toThrow(NotFoundException);
     });
 

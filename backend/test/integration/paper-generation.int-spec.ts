@@ -88,7 +88,7 @@ describe('INT-1: Paper Generation Pipeline', () => {
 
     expect(res.body.data.grades).toHaveLength(3);
     expect(res.body.data.subjects).toContain('数学');
-    expect(res.body.data.subjects).toHaveLength(9);
+    expect(res.body.data.subjects).toHaveLength(10);
     expect(res.body.data.difficulties).toHaveLength(4);
   });
 
