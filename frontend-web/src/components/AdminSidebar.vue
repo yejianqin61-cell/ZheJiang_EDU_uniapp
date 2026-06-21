@@ -1,19 +1,30 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
+import {
+  Checked,
+  Collection,
+  DataAnalysis,
+  Document,
+  Money,
+  Notebook,
+  PriceTag,
+  Upload,
+  Wallet,
+} from '@element-plus/icons-vue'
 
 const route = useRoute()
 
 const menuItems = [
-  { path: '/admin/dashboard',    icon: 'DataAnalysis',  label: '仪表盘' },
-  { path: '/admin/upload',       icon: 'Upload',         label: '文件上传' },
-  { path: '/admin/review',       icon: 'Checked',        label: '入库审核' },
-  { path: '/admin/exercise-contributions', icon: 'Checked', label: '练习审核' },
-  { path: '/admin/questions',    icon: 'Collection',     label: '题库管理' },
-  { path: '/admin/knowledge',    icon: 'PriceTag',       label: '知识点中心' },
-  { path: '/admin/pricing',      icon: 'Money',          label: '定价配置' },
-  { path: '/admin/orders',       icon: 'Document',       label: '订单管理' },
-  { path: '/admin/withdrawals',  icon: 'Wallet',         label: '提现管理' },
-  { path: '/admin/exercises',    icon: 'Notebook',       label: '练习管理' },
+  { path: '/admin/dashboard',    icon: DataAnalysis, label: '仪表盘' },
+  { path: '/admin/upload',       icon: Upload,       label: '文件上传' },
+  { path: '/admin/review',       icon: Checked,      label: '入库审核' },
+  { path: '/admin/exercise-contributions', icon: Checked, label: '练习审核' },
+  { path: '/admin/questions',    icon: Collection,   label: '题库管理' },
+  { path: '/admin/knowledge',    icon: PriceTag,     label: '知识点中心' },
+  { path: '/admin/pricing',      icon: Money,        label: '定价配置' },
+  { path: '/admin/orders',       icon: Document,     label: '订单管理' },
+  { path: '/admin/withdrawals',  icon: Wallet,       label: '提现管理' },
+  { path: '/admin/exercises',    icon: Notebook,     label: '练习管理' },
 ]
 
 function isActive(path: string): string | undefined {
