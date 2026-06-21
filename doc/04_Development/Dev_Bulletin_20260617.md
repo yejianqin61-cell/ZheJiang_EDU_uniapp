@@ -224,3 +224,9 @@
 - 将 `frontend-web` 的 `element-plus` 接入改为按需注册，并补齐 TopNav / AdminSidebar 图标的显式依赖，移除对整包安装与隐式全局注册的依赖。
 - 继续细化 `frontend-web` 的 vendor 分包规则，消除 `element-plus` 与 `echarts` 的超大 chunk 告警；当前构建仅剩 `@vueuse/core` 在 Rolldown 下的三方兼容告警。
 - 在 `frontend-web/vite.config.ts` 中补充 Rolldown `invalidAnnotation` 检查开关，清理 `@vueuse/core` 触发的 `INVALID_ANNOTATION` 构建噪音；当前 Web 前端构建日志已恢复干净。
+- 对齐 `frontend-web` 管理端仪表盘统计接口类型契约，补全 `DashboardStats` 中待审核、今日订单、待打印、练习试卷数、待审核练习等字段定义。
+- 修复 `frontend-web` 管理端批量删题接口请求体字段，将 `{ ids }` 更正为后端实际接收的 `{ questionIds }`，消除前后端契约偏差。
+- 调整 `frontend-web` 管理端仪表盘页面的数据获取与图表生命周期管理：统一复用 `getDashboardStats()` API、移除 `any`、避免原地排序，并在卸载时释放 ECharts 实例与 `resize` 监听。
+- 新增 `frontend-web` 管理端 API 与仪表盘页级测试，覆盖统计接口封装、批量删题请求体以及图表初始化/销毁链路。
+- 本轮执行 `cd frontend-web && npm test` 与 `cd frontend-web && npm run build` 均通过；另外登记 Issue：[Issue_20260621_Vitest_ElementPlus_Size_Warnings.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260621_Vitest_ElementPlus_Size_Warnings.md)，跟踪页面测试中的 Element Plus `size="large"` 告警清理。
+- 复核 `frontend-web` 全量回归与构建结果：`npm test` 共 42 个测试文件、127 个用例全部通过，`npm run build` 通过；本批管理端 API 契约与仪表盘清理已完成收口，可继续下一批 Web 端测试与优化。

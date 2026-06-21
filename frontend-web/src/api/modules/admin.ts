@@ -1,7 +1,8 @@
 import api from '../index'
+import type { DashboardStats } from '@/types'
 
 // ===== 仪表盘 =====
-export function getDashboardStats() { return api.get('/admin/questions/stats') }
+export function getDashboardStats() { return api.get<DashboardStats>('/admin/questions/stats') }
 
 // ===== 文件上传 =====
 export function uploadFile(formData: FormData) { return api.post('/admin/files/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }) }
@@ -16,7 +17,7 @@ export function batchReview(ids: string[], action: 'approve' | 'reject') { retur
 export function getQuestions(params: Record<string, any>) { return api.get('/admin/questions', { params }) }
 export function getQuestion(id: string) { return api.get(`/admin/questions/${id}`) }
 export function deleteQuestion(id: string) { return api.delete(`/admin/questions/${id}`) }
-export function batchDeleteQuestions(ids: string[]) { return api.post('/admin/questions/batch-delete', { ids }) }
+export function batchDeleteQuestions(ids: string[]) { return api.post('/admin/questions/batch-delete', { questionIds: ids }) }
 
 // ===== 知识点中心 =====
 export function getKnowledgePoints(params: Record<string, any>) { return api.get('/admin/knowledge-points', { params }) }

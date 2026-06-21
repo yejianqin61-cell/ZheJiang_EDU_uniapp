@@ -1,22 +1,34 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { use } from 'echarts/core'
 import { PieChart, BarChart } from 'echarts/charts'
 import { TooltipComponent, LegendComponent, GridComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
-import { init } from 'echarts/core'
-import api from '@/api/index'
+import { init, type EChartsType } from 'echarts/core'
+import { getDashboardStats } from '@/api/modules/admin'
+import type { DashboardStats } from '@/types'
 
 use([PieChart, BarChart, TooltipComponent, LegendComponent, GridComponent, CanvasRenderer])
 
-const stats = ref<any>({ totalQuestions: 0, bySubject: [], byGrade: [], byDifficulty: [], totalKnowledgePoints: 0 })
+const stats = ref<DashboardStats>({
+  totalQuestions: 0,
+  bySubject: [],
+  byGrade: [],
+  byDifficulty: [],
+  totalKnowledgePoints: 0,
+  pendingReview: 0,
+  todayOrders: 0,
+  pendingPrint: 0,
+  exercisePaperCount: 0,
+  pendingExerciseReview: 0,
+})
 const loading = ref(true)
 const subjectChart = ref<HTMLDivElement>()
 const gradeChart = ref<HTMLDivElement>()
 const difficultyChart = ref<HTMLDivElement>()
 
 onMounted(async () => {
-  try { stats.value = await api.get('/admin/questions/stats') } catch { /* */ }
+  try { stats.value = await getDashboardStats() } catch { /* ignore dashboard fallback */ }
   loading.value = false
   await nextTick()
   renderSubjectChart()
@@ -25,8 +37,16 @@ onMounted(async () => {
   window.addEventListener('resize', handleResize)
 })
 
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize)
+  subjectChartInst?.dispose()
+  gradeChartInst?.dispose()
+  difficultyChartInst?.dispose()
+})
+
 function renderSubjectChart() {
   if (!subjectChart.value) return
+  subjectChartInst?.dispose()
   const chart = init(subjectChart.value)
   chart.setOption({
     tooltip: { trigger: 'item' },
@@ -42,13 +62,14 @@ function renderSubjectChart() {
 
 function renderGradeChart() {
   if (!gradeChart.value) return
+  gradeChartInst?.dispose()
   const chart = init(gradeChart.value)
-  const data = (stats.value.byGrade || []).sort((a: any, b: any) => b.count - a.count)
+  const data = [...stats.value.byGrade].sort((a, b) => b.count - a.count)
   chart.setOption({
     tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: data.map((g: any) => g.grade), axisLabel: { rotate: 30 } },
+    xAxis: { type: 'category', data: data.map((g) => g.grade), axisLabel: { rotate: 30 } },
     yAxis: { type: 'value', name: '题量' },
-    series: [{ type: 'bar', data: data.map((g: any) => g.count), itemStyle: { color: '#e67e22', borderRadius: [4, 4, 0, 0] } }],
+    series: [{ type: 'bar', data: data.map((g) => g.count), itemStyle: { color: '#e67e22', borderRadius: [4, 4, 0, 0] } }],
     grid: { left: 50, right: 20, top: 20, bottom: 40 },
   })
   gradeChartInst = chart
@@ -56,21 +77,23 @@ function renderGradeChart() {
 
 function renderDifficultyChart() {
   if (!difficultyChart.value) return
+  difficultyChartInst?.dispose()
   const chart = init(difficultyChart.value)
-  const labels = ['简单', '中等', '困难']
   const colors = ['#67c23a', '#e6a23c', '#f56c6c']
   chart.setOption({
     tooltip: { trigger: 'item' },
     series: [{
       type: 'pie', radius: '65%', center: ['50%', '50%'],
       label: { formatter: '{b}: {c}题' },
-      data: (stats.value.byDifficulty || []).map((d: any, i: number) => ({ name: d.label || labels[i], value: d.count, itemStyle: { color: colors[i] } })),
+      data: stats.value.byDifficulty.map((d, i) => ({ name: d.label, value: d.count, itemStyle: { color: colors[i] } })),
     }],
   })
   difficultyChartInst = chart
 }
 
-let subjectChartInst: any, gradeChartInst: any, difficultyChartInst: any
+let subjectChartInst: EChartsType | undefined
+let gradeChartInst: EChartsType | undefined
+let difficultyChartInst: EChartsType | undefined
 function handleResize() {
   subjectChartInst?.resize()
   gradeChartInst?.resize()

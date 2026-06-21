@@ -5,6 +5,7 @@ import AdminDashboardPage from '@/pages/admin/dashboard/index.vue'
 
 const chartMocks = vi.hoisted(() => ({
   resizeSpy: vi.fn(),
+  disposeSpy: vi.fn(),
   chartSetOption: vi.fn(),
   chartInit: vi.fn(),
 }))
@@ -21,7 +22,12 @@ vi.mock('@/api/index', () => ({
   default: apiMocks,
 }))
 
+vi.mock('@/api/modules/admin', () => ({
+  getDashboardStats: apiMocks.get,
+}))
+
 const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
+const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener')
 
 const mountPage = () =>
   mount(AdminDashboardPage, {
@@ -43,10 +49,13 @@ describe('Admin dashboard page', () => {
     chartMocks.chartSetOption.mockReset()
     chartMocks.chartInit.mockReset()
     chartMocks.resizeSpy.mockReset()
+    chartMocks.disposeSpy.mockReset()
     addEventListenerSpy.mockClear()
+    removeEventListenerSpy.mockClear()
     chartMocks.chartInit.mockImplementation(() => ({
       setOption: chartMocks.chartSetOption,
       resize: chartMocks.resizeSpy,
+      dispose: chartMocks.disposeSpy,
     }))
   })
 
@@ -68,10 +77,34 @@ describe('Admin dashboard page', () => {
     await nextTick()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/admin/questions/stats')
+    expect(apiMocks.get).toHaveBeenCalledTimes(1)
     expect(chartMocks.chartInit).toHaveBeenCalledTimes(3)
     expect(chartMocks.chartSetOption).toHaveBeenCalled()
     expect(addEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function))
     expect(wrapper.text()).toContain('120')
+  })
+
+  it('removes resize listener and disposes charts on unmount', async () => {
+    apiMocks.get.mockResolvedValue({
+      totalQuestions: 1,
+      bySubject: [],
+      byGrade: [],
+      byDifficulty: [],
+      totalKnowledgePoints: 0,
+      pendingReview: 0,
+      todayOrders: 0,
+      pendingPrint: 0,
+      exercisePaperCount: 0,
+      pendingExerciseReview: 0,
+    })
+
+    const wrapper = mountPage()
+    await nextTick()
+    await nextTick()
+
+    wrapper.unmount()
+
+    expect(removeEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function))
+    expect(chartMocks.disposeSpy).toHaveBeenCalledTimes(3)
   })
 })

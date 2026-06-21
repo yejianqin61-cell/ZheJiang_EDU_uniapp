@@ -126,6 +126,11 @@ export interface DashboardStats {
   byGrade: { grade: string; count: number }[]
   byDifficulty: { level: number; label: string; count: number }[]
   totalKnowledgePoints: number
+  pendingReview: number
+  todayOrders: number
+  pendingPrint: number
+  exercisePaperCount: number
+  pendingExerciseReview: number
 }
 
 // === Admin Question ===
