@@ -240,3 +240,7 @@
 - 为 `frontend-web` 管理端上传页与教师上传页补充上传进度展示，新增文件名、进度百分比与完成态反馈，补齐评估文档中 F-102 的 Web 前端缺口。
 - 同步扩展 `admin-upload` 与 `contribute-upload` 页级测试，模拟 `onUploadProgress` 回调并断言进度更新至 100%。
 - 复核当前 Web 前端回归门禁：`npm test` 共 43 个测试文件、136 个用例全部通过，`npm run build` 通过；本批上传进度功能已完成收口。
+- 对齐 `frontend-web` 管理端入库审核列表页与详情页的共享 API 封装，移除页面对底层 `api/index` 的直接依赖，并补充 `ReviewListItem` / `ReviewDetail` / `ReviewSource` 类型。
+- 修复管理端审核详情页知识点字段契约偏差：后端返回 `knowledgePoints: string[]`，前端改为按数组展示，不再误读为单个 `knowledgePoint` 对象。
+- 新增 Issue：[Issue_20260621_Admin_Review_Detail_KnowledgePoints_Contract.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260621_Admin_Review_Detail_KnowledgePoints_Contract.md)，记录审核详情页知识点契约问题与本轮修复结果。
+- 复核当前 Web 前端回归门禁：`npm test` 共 43 个测试文件、139 个用例全部通过，`npm run build` 通过；本批入库审核链路已完成收口。
