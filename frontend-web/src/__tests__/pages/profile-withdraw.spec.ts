@@ -3,6 +3,7 @@ import { ElMessage } from 'element-plus'
 import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ProfileWithdrawPage from '@/pages/profile/withdraw/index.vue'
+import { elInputStub } from '@/__tests__/utils/element-plus-stubs'
 
 const routerBack = vi.fn()
 const apiMocks = vi.hoisted(() => ({
@@ -25,7 +26,7 @@ const mountPage = () =>
     global: {
       stubs: {
         'router-link': { template: '<a><slot /></a>' },
-        'el-input': { template: '<input />' },
+        'el-input': elInputStub,
         'el-button': { template: '<button><slot /></button>' },
       },
     },

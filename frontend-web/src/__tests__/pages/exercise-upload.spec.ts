@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ElMessage } from 'element-plus'
 import ExerciseUploadPage from '@/pages/contribute/exercise-upload/index.vue'
+import { elInputStub } from '@/__tests__/utils/element-plus-stubs'
 
 const push = vi.fn()
 const exerciseApiMocks = vi.hoisted(() => ({
@@ -39,7 +40,7 @@ describe('Exercise upload page', () => {
           'el-col': { template: '<div><slot /></div>' },
           'el-select': { template: '<div><slot /></div>' },
           'el-option': true,
-          'el-input': { template: '<input />' },
+          'el-input': elInputStub,
           'el-button': { template: '<button><slot /></button>' },
         },
       },
@@ -62,7 +63,7 @@ describe('Exercise upload page', () => {
           'el-col': { template: '<div><slot /></div>' },
           'el-select': { template: '<div><slot /></div>' },
           'el-option': true,
-          'el-input': { template: '<input />' },
+          'el-input': elInputStub,
           'el-button': { template: '<button><slot /></button>' },
         },
       },

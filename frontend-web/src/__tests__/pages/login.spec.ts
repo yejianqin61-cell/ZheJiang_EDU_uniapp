@@ -5,6 +5,7 @@ import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthStore } from '@/stores/auth'
 import LoginPage from '@/pages/login/index.vue'
+import { elInputStub } from '@/__tests__/utils/element-plus-stubs'
 
 const routerReplace = vi.fn()
 const routeState = vi.hoisted(() => ({
@@ -43,7 +44,7 @@ const mountPage = (pinia = createPinia()) =>
     global: {
       plugins: [pinia],
       stubs: {
-        'el-input': { template: '<input />' },
+        'el-input': elInputStub,
         'el-button': { template: '<button><slot /></button>' },
       },
     },

@@ -229,4 +229,6 @@
 - 调整 `frontend-web` 管理端仪表盘页面的数据获取与图表生命周期管理：统一复用 `getDashboardStats()` API、移除 `any`、避免原地排序，并在卸载时释放 ECharts 实例与 `resize` 监听。
 - 新增 `frontend-web` 管理端 API 与仪表盘页级测试，覆盖统计接口封装、批量删题请求体以及图表初始化/销毁链路。
 - 本轮执行 `cd frontend-web && npm test` 与 `cd frontend-web && npm run build` 均通过；另外登记 Issue：[Issue_20260621_Vitest_ElementPlus_Size_Warnings.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260621_Vitest_ElementPlus_Size_Warnings.md)，跟踪页面测试中的 Element Plus `size="large"` 告警清理。
+- 新增 `frontend-web/src/__tests__/utils/element-plus-stubs.ts`，为页面测试提供共享 `el-input` stub，避免将 `size="large"` 等组件属性透传到原生 DOM。
+- 将 `login`、`address-edit`、`exercise-upload`、`admin-exercises`、`admin-questions`、`profile-withdraw` 等页面测试切换到共享 stub，清理前端全量回归中的重复 Vue 告警输出。
 - 复核 `frontend-web` 全量回归与构建结果：`npm test` 共 42 个测试文件、127 个用例全部通过，`npm run build` 通过；本批管理端 API 契约与仪表盘清理已完成收口，可继续下一批 Web 端测试与优化。

@@ -3,6 +3,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminExercisesPage from '@/pages/admin/exercises/index.vue'
+import { elInputStub } from '@/__tests__/utils/element-plus-stubs'
 
 const apiMocks = vi.hoisted(() => ({
   post: vi.fn(),
@@ -46,7 +47,7 @@ const mountPage = () =>
         'el-collapse-item': { template: '<div><slot /></div>' },
         'el-button': { template: '<button><slot /></button>' },
         'el-dialog': { template: '<div><slot /><slot name="footer" /></div>' },
-        'el-input': { template: '<input />' },
+        'el-input': elInputStub,
       },
     },
   })

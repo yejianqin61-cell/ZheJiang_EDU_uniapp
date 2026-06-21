@@ -3,6 +3,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminQuestionsPage from '@/pages/admin/questions/index.vue'
+import { elInputStub } from '@/__tests__/utils/element-plus-stubs'
 
 const routerPush = vi.fn()
 const apiMocks = vi.hoisted(() => ({
@@ -29,7 +30,7 @@ const mountPage = () =>
       stubs: {
         'el-select': { template: '<div><slot /></div>' },
         'el-option': true,
-        'el-input': { template: '<input />' },
+        'el-input': elInputStub,
         'el-button': { template: '<button><slot /></button>' },
         'el-table': { template: '<div />' },
         'el-table-column': true,

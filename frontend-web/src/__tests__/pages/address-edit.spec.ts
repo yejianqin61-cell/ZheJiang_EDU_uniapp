@@ -3,6 +3,7 @@ import { ElMessage } from 'element-plus'
 import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AddressEditPage from '@/pages/address/edit/index.vue'
+import { elInputStub } from '@/__tests__/utils/element-plus-stubs'
 
 const routerBack = vi.fn()
 const routeState = vi.hoisted(() => ({
@@ -32,7 +33,7 @@ const mountPage = () =>
         'router-link': { template: '<a><slot /></a>' },
         'el-form': { template: '<form><slot /></form>' },
         'el-form-item': { template: '<div><slot /></div>' },
-        'el-input': { template: '<input />' },
+        'el-input': elInputStub,
         'el-row': { template: '<div><slot /></div>' },
         'el-col': { template: '<div><slot /></div>' },
         'el-checkbox': { template: '<input type="checkbox" />' },
