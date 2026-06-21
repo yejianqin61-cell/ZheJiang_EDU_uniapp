@@ -223,3 +223,4 @@
 - 新增 Issue：[Issue_20260621_Frontend_Build_Warnings.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260621_Frontend_Build_Warnings.md)，跟踪 `@vueuse/core` 的 Rolldown 三方告警与剩余大包问题。
 - 将 `frontend-web` 的 `element-plus` 接入改为按需注册，并补齐 TopNav / AdminSidebar 图标的显式依赖，移除对整包安装与隐式全局注册的依赖。
 - 继续细化 `frontend-web` 的 vendor 分包规则，消除 `element-plus` 与 `echarts` 的超大 chunk 告警；当前构建仅剩 `@vueuse/core` 在 Rolldown 下的三方兼容告警。
+- 在 `frontend-web/vite.config.ts` 中补充 Rolldown `invalidAnnotation` 检查开关，清理 `@vueuse/core` 触发的 `INVALID_ANNOTATION` 构建噪音；当前 Web 前端构建日志已恢复干净。

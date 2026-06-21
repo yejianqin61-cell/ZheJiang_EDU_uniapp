@@ -64,6 +64,9 @@ export default defineConfig({
   plugins: [vue()],
   build: {
     rollupOptions: {
+      checks: {
+        invalidAnnotation: false,
+      },
       output: {
         manualChunks(id) {
           const normalizedId = id.replace(/\\/g, '/')
