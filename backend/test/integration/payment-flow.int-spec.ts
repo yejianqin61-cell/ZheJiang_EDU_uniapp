@@ -17,6 +17,9 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe('INT-2: Payment Flow', () => {
   let app: INestApplication;
   let teacherToken: string;
+  let adminToken: string;
+  let paperId: string;
+  let orderId: string;
 
   beforeAll(async () => {
     process.env.DB_PATH = ':memory:';
@@ -43,6 +46,15 @@ describe('INT-2: Payment Flow', () => {
     const teacherRes = await request(app.getHttpServer())
       .post('/v1/auth/login').send({ code: 'teacher_pay' });
     teacherToken = teacherRes.body.data.accessToken;
+
+    const adminRes = await request(app.getHttpServer())
+      .post('/v1/auth/login').send({ code: 'admin_test' });
+    adminToken = adminRes.body.data.accessToken;
+
+    await request(app.getHttpServer())
+      .post('/v1/admin/seed')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(201);
   }, 30000);
 
   afterAll(async () => {
@@ -95,6 +107,50 @@ describe('INT-2: Payment Flow', () => {
     await request(app.getHttpServer()).get('/v1/orders').expect(401);
     await request(app.getHttpServer())
       .post('/v1/orders').send({ paperId: 'test', type: 'download' }).expect(401);
+  });
+
+  it('should create a download order and return pending payment status', async () => {
+    const paperRes = await request(app.getHttpServer())
+      .post('/v1/papers/generate')
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .send({ subject: '数学', grade: '五年级', difficulty: 'mixed', questionCount: 5 })
+      .expect(201);
+    paperId = paperRes.body.data.paperId;
+
+    const orderRes = await request(app.getHttpServer())
+      .post('/v1/orders')
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .send({ paperId, type: 'download' })
+      .expect(201);
+
+    orderId = orderRes.body.data.orderId;
+    expect(orderRes.body.data.orderId).toBeDefined();
+    expect(orderRes.body.data.payment === null || orderRes.body.data.payment?.provider === 'alipay').toBe(true);
+
+    const statusRes = await request(app.getHttpServer())
+      .get(`/v1/orders/${orderId}/payment-status`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .expect(200);
+
+    expect(statusRes.body.data.orderId).toBe(orderId);
+    expect(statusRes.body.data.status).toBe('pending');
+  });
+
+  it('should complete mock payment and persist paid status on order detail', async () => {
+    const mockRes = await request(app.getHttpServer())
+      .post(`/v1/orders/${orderId}/mock-pay`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .expect(201);
+
+    expect(mockRes.body.data.code).toBe('SUCCESS');
+
+    const detailRes = await request(app.getHttpServer())
+      .get(`/v1/orders/${orderId}`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .expect(200);
+
+    expect(detailRes.body.data.orderId).toBe(orderId);
+    expect(detailRes.body.data.status).toBe('paid');
   });
 
   // ── Payment Callback (dev mode) ──

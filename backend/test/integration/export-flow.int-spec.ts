@@ -17,6 +17,11 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe('INT-4: Export Flow', () => {
   let app: INestApplication;
   let teacherToken: string;
+  let adminToken: string;
+  let paperId: string;
+  let orderId: string;
+  let printOrderId: string;
+  let addressId: string;
 
   beforeAll(async () => {
     process.env.DB_PATH = ':memory:';
@@ -39,6 +44,15 @@ describe('INT-4: Export Flow', () => {
     const teacherRes = await request(app.getHttpServer())
       .post('/v1/auth/login').send({ code: 'teacher_export' });
     teacherToken = teacherRes.body.data.accessToken;
+
+    const adminRes = await request(app.getHttpServer())
+      .post('/v1/auth/login').send({ code: 'admin_test' });
+    adminToken = adminRes.body.data.accessToken;
+
+    await request(app.getHttpServer())
+      .post('/v1/admin/seed')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(201);
   }, 30000);
 
   afterAll(async () => {
@@ -116,5 +130,98 @@ describe('INT-4: Export Flow', () => {
       .expect(201);
 
     expect(res.body.data.accessToken).toBeDefined();
+  });
+
+  it('should reject DOCX export before payment and allow it after payment', async () => {
+    const paperRes = await request(app.getHttpServer())
+      .post('/v1/papers/generate')
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .send({ subject: '数学', grade: '五年级', difficulty: 'mixed', questionCount: 5 })
+      .expect(201);
+    paperId = paperRes.body.data.paperId;
+
+    const orderRes = await request(app.getHttpServer())
+      .post('/v1/orders')
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .send({ paperId, type: 'download' })
+      .expect(201);
+    orderId = orderRes.body.data.orderId;
+
+    await request(app.getHttpServer())
+      .post(`/v1/papers/${paperId}/export/docx`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .expect(409);
+
+    await request(app.getHttpServer())
+      .post(`/v1/orders/${orderId}/mock-pay`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .expect(201);
+
+    const exportRes = await request(app.getHttpServer())
+      .post(`/v1/papers/${paperId}/export/docx`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .expect(201);
+
+    expect(exportRes.body.data.downloadUrl).toContain('/download/');
+    expect(exportRes.body.data.expiresAt).toBeDefined();
+  });
+
+  it('should export PDF after DOCX and expose both download links on the order', async () => {
+    const pdfRes = await request(app.getHttpServer())
+      .post(`/v1/papers/${paperId}/export/pdf`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .expect(201);
+
+    expect(pdfRes.body.data.downloadUrl).toContain('/download/');
+
+    const downloadRes = await request(app.getHttpServer())
+      .get(`/v1/orders/${orderId}/download`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .expect(200);
+
+    expect(downloadRes.body.data.docxUrl).toContain('/download/');
+    expect(downloadRes.body.data.pdfUrl).toContain('/download/');
+  });
+
+  it('should allow admin to export a paid print order', async () => {
+    const addressRes = await request(app.getHttpServer())
+      .post('/v1/shipping-addresses')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        receiverName: 'Admin',
+        phone: '13800138000',
+        province: '浙江省',
+        city: '杭州市',
+        district: '西湖区',
+        detail: '测试地址 1 号',
+        isDefault: true,
+      })
+      .expect(201);
+    addressId = addressRes.body.data.id;
+
+    const paperRes = await request(app.getHttpServer())
+      .post('/v1/papers/generate')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ subject: '数学', grade: '五年级', difficulty: 'mixed', questionCount: 5 })
+      .expect(201);
+
+    const printOrderRes = await request(app.getHttpServer())
+      .post('/v1/orders')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ paperId: paperRes.body.data.paperId, type: 'print', copies: 3, shippingAddressId: addressId })
+      .expect(201);
+    printOrderId = printOrderRes.body.data.orderId;
+
+    await request(app.getHttpServer())
+      .post(`/v1/orders/${printOrderId}/mock-pay`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(201);
+
+    const adminExportRes = await request(app.getHttpServer())
+      .get(`/v1/admin/orders/${printOrderId}/export`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    expect(adminExportRes.body.data.downloadUrl).toContain('/download/');
   });
 });
