@@ -4,7 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../../database/entities/user.entity';
-import { UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { SmsService } from './services/sms.service';
 import { EmailService } from './services/email.service';
 import axios from 'axios';
@@ -16,6 +16,8 @@ describe('AuthService', () => {
   let service: AuthService;
   let userRepo: any;
   let jwtService: any;
+  let smsService: any;
+  let emailService: any;
 
   beforeEach(async () => {
     userRepo = {
@@ -32,6 +34,8 @@ describe('AuthService', () => {
     // Wire createQueryBuilder().getOne() to userRepo.findOne for backward compat
     userRepo.createQueryBuilder().getOne.mockImplementation(() => userRepo.findOne());
     jwtService = { sign: jest.fn().mockReturnValue('jwt.token.here') };
+    smsService = { sendCode: jest.fn(), verifyCode: jest.fn() };
+    emailService = { sendCode: jest.fn(), verifyCode: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -48,8 +52,8 @@ describe('AuthService', () => {
             }),
           },
         },
-        { provide: SmsService, useValue: { sendCode: jest.fn(), verifyCode: jest.fn() } },
-        { provide: EmailService, useValue: { sendCode: jest.fn(), verifyCode: jest.fn() } },
+        { provide: SmsService, useValue: smsService },
+        { provide: EmailService, useValue: emailService },
       ],
     }).compile();
 
@@ -110,6 +114,91 @@ describe('AuthService', () => {
     });
   });
 
+  describe('loginByPhone', () => {
+    it('should create a teacher account on first phone login', async () => {
+      userRepo.findOne.mockResolvedValue(null);
+      userRepo.save.mockResolvedValue({ id: 'u-phone-1', phone: '13800138000', role: 'teacher' });
+
+      const result = await service.loginByPhone('13800138000', '123456');
+
+      expect(smsService.verifyCode).toHaveBeenCalledWith('13800138000', '123456');
+      expect(userRepo.create).toHaveBeenCalledWith({ phone: '13800138000', phoneVerified: true, role: 'teacher' });
+      expect(result).toEqual({
+        accessToken: 'jwt.token.here',
+        role: 'teacher',
+        phone: '13800138000',
+      });
+    });
+
+    it('should reuse an existing user on phone login', async () => {
+      userRepo.findOne.mockResolvedValue({ id: 'u-phone-2', phone: '13800138000', role: 'admin' });
+
+      const result = await service.loginByPhone('13800138000', '123456');
+
+      expect(userRepo.save).not.toHaveBeenCalled();
+      expect(result.role).toBe('admin');
+    });
+  });
+
+  describe('email auth', () => {
+    it('should send email code for a valid email', async () => {
+      await expect(service.sendEmailCode('teacher@example.com')).resolves.toEqual({ message: '验证码已发送' });
+      expect(emailService.sendCode).toHaveBeenCalledWith('teacher@example.com');
+    });
+
+    it('should reject invalid email when sending code', async () => {
+      await expect(service.sendEmailCode('invalid-email')).rejects.toThrow(BadRequestException);
+    });
+
+    it('should register a new account by email', async () => {
+      emailService.verifyCode.mockReturnValue(true);
+      userRepo.findOne.mockResolvedValue(null);
+      userRepo.save.mockResolvedValue({ id: 'u-email-1', email: 'teacher@example.com', role: 'teacher' });
+
+      const result = await service.registerByEmail('teacher@example.com', '123456', 'secret123');
+
+      expect(emailService.verifyCode).toHaveBeenCalledWith('teacher@example.com', '123456');
+      expect(userRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+        email: 'teacher@example.com',
+        emailVerified: true,
+        role: 'teacher',
+      }));
+      expect(result).toEqual({
+        accessToken: 'jwt.token.here',
+        role: 'teacher',
+        email: 'teacher@example.com',
+      });
+    });
+
+    it('should reject registration when email code is invalid', async () => {
+      emailService.verifyCode.mockReturnValue(false);
+
+      await expect(service.registerByEmail('teacher@example.com', 'bad', 'secret123')).rejects.toThrow(BadRequestException);
+    });
+
+    it('should login by password for a registered user', async () => {
+      const bcrypt = await import('bcrypt');
+      const passwordHash = await bcrypt.hash('secret123', 1);
+      userRepo.findOne.mockResolvedValue({ id: 'u-email-2', email: 'teacher@example.com', role: 'teacher', passwordHash });
+
+      const result = await service.loginByPassword('teacher@example.com', 'secret123');
+
+      expect(result).toEqual({
+        accessToken: 'jwt.token.here',
+        role: 'teacher',
+        email: 'teacher@example.com',
+      });
+    });
+
+    it('should reject login when password is wrong', async () => {
+      const bcrypt = await import('bcrypt');
+      const passwordHash = await bcrypt.hash('secret123', 1);
+      userRepo.findOne.mockResolvedValue({ id: 'u-email-3', email: 'teacher@example.com', role: 'teacher', passwordHash });
+
+      await expect(service.loginByPassword('teacher@example.com', 'wrong-pass')).rejects.toThrow(BadRequestException);
+    });
+  });
+
   describe('login — production mode', () => {
     beforeEach(async () => {
       const module: TestingModule = await Test.createTestingModule({
@@ -118,8 +207,8 @@ describe('AuthService', () => {
           { provide: getRepositoryToken(User), useValue: userRepo },
           { provide: JwtService, useValue: jwtService },
           { provide: ConfigService, useValue: { get: jest.fn((k: string) => k === 'wx.appId' ? 'wx123' : k === 'wx.appSecret' ? 'sec123' : null) } },
-          { provide: SmsService, useValue: { sendCode: jest.fn(), verifyCode: jest.fn() } },
-          { provide: EmailService, useValue: { sendCode: jest.fn(), verifyCode: jest.fn() } },
+          { provide: SmsService, useValue: smsService },
+          { provide: EmailService, useValue: emailService },
         ],
       }).compile();
 

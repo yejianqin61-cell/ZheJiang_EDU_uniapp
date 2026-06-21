@@ -70,6 +70,47 @@ describe('PaymentService', () => {
     });
   });
 
+  describe('payByBalance', () => {
+    it('should deduct balance and mark order as paid for the owner', async () => {
+      orderRepo.findOne.mockResolvedValue({ id: 'o1', userId: 'user-1', paperId: 'p1', status: 'pending', amount: 500 });
+      paperRepo.findOne.mockResolvedValue({ id: 'p1' });
+
+      const result = await service.payByBalance('o1', 'user-1');
+
+      expect(balanceService.addBalance).toHaveBeenCalledWith(expect.objectContaining({
+        userId: 'user-1',
+        amount: -500,
+        type: 'pay_order',
+      }));
+      expect(orderRepo.update).toHaveBeenCalledWith('o1', expect.objectContaining({ status: 'paid' }));
+      expect(paperRepo.update).toHaveBeenCalledWith('p1', { status: 'paid' });
+      expect(result.code).toBe('SUCCESS');
+    });
+
+    it('should reject balance payment for another user order', async () => {
+      orderRepo.findOne.mockResolvedValue({ id: 'o1', userId: 'other-user', paperId: 'p1', status: 'pending', amount: 500 });
+
+      await expect(service.payByBalance('o1', 'user-1')).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('getPaymentStatus', () => {
+    it('should return the current order payment status', async () => {
+      orderRepo.findOne.mockResolvedValue({ id: 'o1', userId: 'user-1', status: 'paid', paidAt: new Date('2026-06-21T00:00:00Z') });
+
+      const result = await service.getPaymentStatus('o1', 'user-1');
+
+      expect(result.orderId).toBe('o1');
+      expect(result.status).toBe('paid');
+    });
+
+    it('should throw when the order is not found for the user', async () => {
+      orderRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.getPaymentStatus('missing', 'user-1')).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe('mockPay', () => {
     it('should update order and paper to paid', async () => {
       orderRepo.findOne.mockResolvedValue({ id: 'o1', paperId: 'p1', status: 'pending' });
