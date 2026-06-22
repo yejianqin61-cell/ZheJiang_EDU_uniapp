@@ -4,6 +4,10 @@ import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ContributeIndexPage from '@/pages/contribute/index.vue'
 
+type ContributeIndexPageVm = {
+  switchTab: (tab: string) => Promise<void> | void
+}
+
 const routerPush = vi.fn()
 const contributionApiMocks = vi.hoisted(() => ({
   listContributions: vi.fn(),
@@ -52,6 +56,10 @@ describe('Contribute index page', () => {
     vi.mocked(ElMessage.error).mockReset()
   })
 
+  function getVm(wrapper: ReturnType<typeof mountPage>) {
+    return wrapper.vm as ContributeIndexPageVm
+  }
+
   it('loads question contributions on mount', async () => {
     contributionApiMocks.listContributions.mockResolvedValue([
       { id: 'c1', filename: '数学题库.docx', status: 'pending_review' },
@@ -73,7 +81,7 @@ describe('Contribute index page', () => {
     const wrapper = mountPage()
     await nextTick()
 
-    await (wrapper.vm as any).switchTab('exercise')
+    await getVm(wrapper).switchTab('exercise')
 
     expect(exerciseApiMocks.getMyExerciseUploads).toHaveBeenCalledWith({})
   })
@@ -86,5 +94,25 @@ describe('Contribute index page', () => {
     await nextTick()
 
     expect(wrapper.text()).toContain('还没有题库贡献，上传试题获取返现')
+  })
+  it('shows error when loading question contributions fails', async () => {
+    contributionApiMocks.listContributions.mockRejectedValue(new Error('题库贡献服务异常'))
+
+    mountPage()
+    await nextTick()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('题库贡献服务异常')
+  })
+
+  it('shows error when loading exercise contributions fails', async () => {
+    contributionApiMocks.listContributions.mockResolvedValue([])
+    exerciseApiMocks.getMyExerciseUploads.mockRejectedValue(new Error('练习试卷贡献服务异常'))
+
+    const wrapper = mountPage()
+    await nextTick()
+
+    await getVm(wrapper).switchTab('exercise')
+
+    expect(ElMessage.error).toHaveBeenCalledWith('练习试卷贡献服务异常')
   })
 })

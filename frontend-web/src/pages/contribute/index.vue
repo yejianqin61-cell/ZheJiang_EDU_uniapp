@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { getMyExerciseUploads } from '@/api/modules/exercise'
 import { listContributions } from '@/api/modules/contribution'
 import type { ContributionItem, ExerciseUploadItem } from '@/types'
@@ -16,12 +17,17 @@ const qStLabels: Record<string, string> = {
   rejected: '已驳回',
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
 onMounted(async () => {
   try {
     qList.value = await listContributions()
   }
-  catch {
+  catch (error: unknown) {
     qList.value = []
+    ElMessage.error(getErrorMessage(error, '题库贡献加载失败'))
   }
   finally {
     qLoading.value = false
@@ -38,8 +44,9 @@ async function fetchExercises() {
     const data = await getMyExerciseUploads({})
     eList.value = data?.list ?? []
   }
-  catch {
+  catch (error: unknown) {
     eList.value = []
+    ElMessage.error(getErrorMessage(error, '练习试卷贡献加载失败'))
   }
   finally {
     eLoading.value = false
