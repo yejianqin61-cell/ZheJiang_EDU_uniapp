@@ -1,29 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { approveWithdrawal, getWithdrawals, rejectWithdrawal } from '@/api/modules/admin'
+import { approveWithdrawal, getWithdrawals, rejectWithdrawal, type AdminWithdrawalItem } from '@/api/modules/admin'
 
-interface WithdrawalItem {
-  id: string
-  userPhone: string
-  amount: number
-  status: 'pending' | 'approved' | 'rejected'
-  createdAt: string
-}
-
-interface PaginationState {
-  page: number
-  pageSize: number
-  total: number
-  totalPages: number
-}
-
-interface WithdrawalListResponse {
-  list?: WithdrawalItem[]
-  pagination?: PaginationState
-}
-
-const list = ref<WithdrawalItem[]>([])
+const list = ref<AdminWithdrawalItem[]>([])
 const loading = ref(true)
 const pagination = ref({ page: 1, pageSize: 20, total: 0, totalPages: 0 })
 
@@ -32,9 +12,9 @@ onMounted(() => fetchList())
 async function fetchList() {
   loading.value = true
   try {
-    const data = await getWithdrawals(pagination.value) as WithdrawalListResponse | WithdrawalItem[]
-    list.value = Array.isArray(data) ? data : (data.list ?? [])
-    if (!Array.isArray(data) && data.pagination) pagination.value = data.pagination
+    const data = await getWithdrawals({ page: pagination.value.page, pageSize: pagination.value.pageSize })
+    list.value = data.list ?? []
+    if (data.pagination) pagination.value = data.pagination
   } catch {
     // ignore list fallback
   } finally {
@@ -70,7 +50,7 @@ async function reject(id: string) {
   <div>
     <div class="page-header"><h1 class="page-header__title">提现管理</h1></div>
     <el-table :data="list" class="page-card" v-loading="loading" stripe>
-      <el-table-column prop="userPhone" label="用户" width="130" />
+      <el-table-column prop="userName" label="用户" width="130" />
       <el-table-column prop="amount" label="金额" width="100">
         <template #default="{ row }">¥{{ (row.amount / 100).toFixed(2) }}</template>
       </el-table-column>

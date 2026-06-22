@@ -142,14 +142,23 @@
 - 对齐 `CreateOrderResult.payment` 的前端类型约束，允许后端返回 `payment: null` 与 `payForm: null`
 - 新增 `payment` API 测试与支付页页面测试，覆盖支付宝重试拉单流程
 
+### 21. 管理端提现与地址 API 收口
+
+- 新增 [Issue_20260622_Admin_Address_Api_Duplication.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Address_Api_Duplication.md)，记录 `admin` API 模块重复维护地址接口及管理端提现字段漂移问题
+- 为 `admin` API 模块补齐提现列表的显式类型：`AdminWithdrawalItem`、`AdminWithdrawalListParams`、`AdminWithdrawalListResponse`
+- 管理端提现页改为直接消费共享 `admin` API 类型，移除页面层对返回结构的手工 `as` 断言
+- 修复管理端提现页用户字段，从错误的 `userPhone` 对齐为后端实际返回的 `userName`
+- 移除 `admin.ts` 中重复的地址接口声明，统一收口到共享 `address.ts` 模块
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
 - 定向测试：2 个测试文件、12 个用例通过
 - 定向测试：3 个测试文件、22 个用例通过
 - 定向测试：2 个测试文件、7 个用例通过
+- 定向测试：`src/__tests__/api/admin.spec.ts` 与 `src/__tests__/pages/admin-withdrawals.spec.ts` 在沙箱路径下触发 Vitest `setup.ts` 绝对路径解析异常，代码改动已通过全量回归验证
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm test`：48 个测试文件、176 个用例通过
+- `cd frontend-web && npm test`：48 个测试文件、177 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交

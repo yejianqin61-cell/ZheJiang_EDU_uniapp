@@ -54,8 +54,6 @@ describe('Admin withdrawals page', () => {
     expect(adminApiMocks.getWithdrawals).toHaveBeenCalledWith({
       page: 1,
       pageSize: 20,
-      total: 0,
-      totalPages: 0,
     })
   })
 

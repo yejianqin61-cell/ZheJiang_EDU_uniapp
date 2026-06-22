@@ -164,4 +164,15 @@ describe('Admin API', () => {
       params: { page: 1, pageSize: 20, scope: 'mine', type: 'download' },
     })
   })
+
+  it('getWithdrawals -> GET /admin/withdrawals with typed params', async () => {
+    const { getWithdrawals } = await import('@/api/modules/admin')
+    mockGet.mockResolvedValue({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
+
+    await getWithdrawals({ page: 2, pageSize: 10, status: 'pending' })
+
+    expect(mockGet).toHaveBeenCalledWith('/admin/withdrawals', {
+      params: { page: 2, pageSize: 10, status: 'pending' },
+    })
+  })
 })

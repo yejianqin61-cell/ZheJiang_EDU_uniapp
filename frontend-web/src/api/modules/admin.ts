@@ -68,6 +68,28 @@ interface AdminKnowledgePointListResponse {
   pagination: Pagination
 }
 
+interface AdminWithdrawalListParams {
+  page?: number
+  pageSize?: number
+  status?: 'pending' | 'approved' | 'completed' | 'rejected'
+}
+
+export interface AdminWithdrawalItem {
+  id: string
+  userName: string
+  amount: number
+  balance: number
+  status: 'pending' | 'approved' | 'completed' | 'rejected'
+  rejectReason?: string | null
+  reviewedAt?: string | null
+  createdAt: string
+}
+
+interface AdminWithdrawalListResponse {
+  list: AdminWithdrawalItem[]
+  pagination: Pagination
+}
+
 // ===== 仪表盘 =====
 export function getDashboardStats() { return api.get<DashboardStats>('/admin/questions/stats') }
 
@@ -116,7 +138,7 @@ export function getAdminOrders(params: AdminOrderListParams) { return api.get<Ad
 export function updatePrintStatus(orderId: string, printStatus: string) { return api.put(`/admin/orders/${orderId}/print-status`, { printStatus }) }
 
 // ===== 提现管理 =====
-export function getWithdrawals(params: Record<string, any>) { return api.get('/admin/withdrawals', { params }) }
+export function getWithdrawals(params: AdminWithdrawalListParams) { return api.get<AdminWithdrawalListResponse>('/admin/withdrawals', { params }) }
 export function approveWithdrawal(id: string) { return api.put(`/admin/withdrawals/${id}`, { action: 'approve' }) }
 export function rejectWithdrawal(id: string, reason: string) { return api.put(`/admin/withdrawals/${id}`, { action: 'reject', rejectReason: reason }) }
 
@@ -124,9 +146,3 @@ export function rejectWithdrawal(id: string, reason: string) { return api.put(`/
 export function getContributions() { return api.get('/contributions') }
 export function getContribution(fileId: string) { return api.get(`/contributions/${fileId}`) }
 export function submitContribution(fileId: string) { return api.post(`/contributions/${fileId}/submit`) }
-
-// ===== 收货地址 =====
-export function getAddresses() { return api.get('/shipping-addresses') }
-export function createAddress(data: any) { return api.post('/shipping-addresses', data) }
-export function updateAddress(id: string, data: any) { return api.put(`/shipping-addresses/${id}`, data) }
-export function deleteAddress(id: string) { return api.delete(`/shipping-addresses/${id}`) }
