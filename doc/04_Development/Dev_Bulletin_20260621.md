@@ -86,10 +86,17 @@
 - 修复个人中心页账户菜单余额文案在异步余额回写后不刷新的问题，将菜单项改为基于响应式余额的 `computed` 派生
 - 补充 API 层与页面层回归测试，覆盖用户统计读取、余额读取、提现校验、提现提交与管理员入口展示链路
 
+### 13. 订单链路 API 收口
+
+- 订单 store、订单列表页、订单详情页改为复用共享 `order` API 模块，移除对底层 `api` 的直接依赖
+- 为 `order` API 模块补齐 `OrderType`、`OrderListParams`、`OrderListResponse` 类型约束，并修正创建订单类型以覆盖已在业务中使用的 `exercise`
+- 订单详情页改为复用共享 `getOrder()`、`getOrderDownload()` 与 `exportDocx()`，统一下载订单与试卷导出链路的接口入口
+- 补充 API 层、store 层与页面层回归测试，覆盖订单列表加载、分页透传、练习订单创建、下载链接获取、订单详情加载与导出流程
+
 ## 验证结果
 
 - 定向测试：4 个测试文件、14 个用例通过
-- `cd frontend-web && npm test`：44 个测试文件、153 个用例通过
+- `cd frontend-web && npm test`：45 个测试文件、158 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -107,4 +114,5 @@
 - `d812823` `refactor: type admin knowledge and pricing apis`
 - `77dd650` `refactor: align admin upload pages with api modules`
 - `0b580e7` `refactor: align address pages with api module`
-- 本批提交：个人中心账户链路 API 收口
+- `5f973d0` `refactor: align profile pages with auth api module`
+- 本批提交：订单链路 API 收口

@@ -7,8 +7,8 @@ import { useOrderStore } from '@/stores/order'
 import OrdersIndexPage from '@/pages/orders/index.vue'
 
 const routerPush = vi.fn()
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
+const orderApiMocks = vi.hoisted(() => ({
+  getOrderDownload: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -17,9 +17,13 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
-}))
+vi.mock('@/api/modules/order', async () => {
+  const actual = await vi.importActual<typeof import('@/api/modules/order')>('@/api/modules/order')
+  return {
+    ...actual,
+    getOrderDownload: orderApiMocks.getOrderDownload,
+  }
+})
 
 const mountPage = (pinia = createPinia()) =>
   mount(OrdersIndexPage, {
@@ -41,7 +45,7 @@ describe('Orders index page', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     routerPush.mockReset()
-    apiMocks.get.mockReset()
+    orderApiMocks.getOrderDownload.mockReset()
     vi.mocked(ElMessage.warning).mockReset()
     vi.mocked(ElMessage.error).mockReset()
     vi.stubGlobal('open', vi.fn())
@@ -50,57 +54,46 @@ describe('Orders index page', () => {
   it('loads download orders on mount', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
-    apiMocks.get.mockResolvedValue({
-      list: [],
-      pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
-    })
+    const orderStore = useOrderStore()
+    vi.spyOn(orderStore, 'fetchOrders').mockResolvedValue()
 
     const wrapper = mountPage(pinia)
-    const orderStore = useOrderStore()
     await nextTick()
 
     expect(orderStore.activeTab).toBe('download')
-    expect(apiMocks.get).toHaveBeenCalledWith('/orders', {
-      params: { page: 1, pageSize: 20, type: 'download' },
-    })
-    expect(wrapper.text()).toContain('还没有下载订单')
+    expect(orderStore.fetchOrders).toHaveBeenCalledWith(1, 'download')
+    expect(wrapper.text()).toContain('还没有下载订单，去组一份试卷吧')
   })
 
   it('switches tab and fetches print orders', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
-    apiMocks.get
-      .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
-      .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
+    const orderStore = useOrderStore()
+    vi.spyOn(orderStore, 'fetchOrders').mockResolvedValue()
 
     const wrapper = mountPage(pinia)
-    const orderStore = useOrderStore()
     await nextTick()
 
     await (wrapper.vm as any).switchTab('print')
 
     expect(orderStore.activeTab).toBe('print')
-    expect(apiMocks.get).toHaveBeenNthCalledWith(2, '/orders', {
-      params: { page: 1, pageSize: 20, type: 'print' },
-    })
+    expect(orderStore.fetchOrders).toHaveBeenNthCalledWith(2, 1, 'print')
   })
 
   it('downloads paid order export file', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
-    apiMocks.get
-      .mockResolvedValueOnce({
-        list: [{ orderId: 'order-1', paperTitle: '数学卷', amount: 1200, status: 'paid', createdAt: '2026-06-21' }],
-        pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
-      })
-      .mockResolvedValueOnce({ docxUrl: 'https://example.com/order-1.docx' })
+    const orderStore = useOrderStore()
+    orderStore.orders = [{ orderId: 'order-1', orderNo: 'NO001', paperTitle: '数学卷', amount: 1200, status: 'paid', createdAt: '2026-06-21' }] as any
+    vi.spyOn(orderStore, 'fetchOrders').mockResolvedValue()
+    orderApiMocks.getOrderDownload.mockResolvedValue({ docxUrl: 'https://example.com/order-1.docx' })
 
     const wrapper = mountPage(pinia)
     await nextTick()
 
     await (wrapper.vm as any).handleDownload('order-1', { stopPropagation: vi.fn() })
 
-    expect(apiMocks.get).toHaveBeenNthCalledWith(2, '/orders/order-1/download')
+    expect(orderApiMocks.getOrderDownload).toHaveBeenCalledWith('order-1')
     expect(window.open).toHaveBeenCalledWith('https://example.com/order-1.docx', '_blank')
   })
 })

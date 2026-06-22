@@ -7,9 +7,12 @@ const routerBack = vi.fn()
 const routeState = vi.hoisted(() => ({
   params: { id: 'order-1' as string | undefined },
 }))
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  post: vi.fn(),
+const orderApiMocks = vi.hoisted(() => ({
+  getOrder: vi.fn(),
+  getOrderDownload: vi.fn(),
+}))
+const paperApiMocks = vi.hoisted(() => ({
+  exportDocx: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -19,8 +22,13 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/order', () => ({
+  getOrder: orderApiMocks.getOrder,
+  getOrderDownload: orderApiMocks.getOrderDownload,
+}))
+
+vi.mock('@/api/modules/paper', () => ({
+  exportDocx: paperApiMocks.exportDocx,
 }))
 
 const mountPage = () =>
@@ -40,8 +48,9 @@ describe('Order detail page', () => {
   beforeEach(() => {
     routeState.params.id = 'order-1'
     routerBack.mockReset()
-    apiMocks.get.mockReset()
-    apiMocks.post.mockReset()
+    orderApiMocks.getOrder.mockReset()
+    orderApiMocks.getOrderDownload.mockReset()
+    paperApiMocks.exportDocx.mockReset()
     vi.mocked(ElMessage.info).mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.warning).mockReset()
@@ -50,7 +59,7 @@ describe('Order detail page', () => {
   })
 
   it('loads order detail on mount', async () => {
-    apiMocks.get.mockResolvedValueOnce({
+    orderApiMocks.getOrder.mockResolvedValueOnce({
       orderId: 'order-1',
       paperId: 'paper-1',
       orderNo: 'NO001',
@@ -64,11 +73,11 @@ describe('Order detail page', () => {
     mountPage()
     await Promise.resolve()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/orders/order-1')
+    expect(orderApiMocks.getOrder).toHaveBeenCalledWith('order-1')
   })
 
   it('exports exercise order from download endpoint', async () => {
-    apiMocks.get.mockResolvedValueOnce({
+    orderApiMocks.getOrder.mockResolvedValueOnce({
       orderId: 'order-1',
       orderNo: 'NO001',
       paperTitle: '同步练习',
@@ -77,7 +86,7 @@ describe('Order detail page', () => {
       type: 'exercise',
       createdAt: '2026-06-21 10:00:00',
     })
-    apiMocks.get.mockResolvedValueOnce({
+    orderApiMocks.getOrderDownload.mockResolvedValueOnce({
       docxUrl: 'https://example.com/exercise.docx',
     })
 
@@ -86,13 +95,13 @@ describe('Order detail page', () => {
 
     await (wrapper.vm as any).handleExport()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/orders/order-1/download')
+    expect(orderApiMocks.getOrderDownload).toHaveBeenCalledWith('order-1')
     expect(window.open).toHaveBeenCalledWith('https://example.com/exercise.docx', '_blank')
     expect(ElMessage.success).toHaveBeenCalledWith('开始下载')
   })
 
   it('exports normal download order through paper export endpoint', async () => {
-    apiMocks.get.mockResolvedValueOnce({
+    orderApiMocks.getOrder.mockResolvedValueOnce({
       orderId: 'order-1',
       paperId: 'paper-9',
       orderNo: 'NO001',
@@ -102,7 +111,7 @@ describe('Order detail page', () => {
       type: 'download',
       createdAt: '2026-06-21 10:00:00',
     })
-    apiMocks.post.mockResolvedValueOnce({
+    paperApiMocks.exportDocx.mockResolvedValueOnce({
       downloadUrl: 'https://example.com/paper.docx',
     })
 
@@ -112,7 +121,7 @@ describe('Order detail page', () => {
     await (wrapper.vm as any).handleExport()
 
     expect(ElMessage.info).toHaveBeenCalledWith('正在生成试卷...')
-    expect(apiMocks.post).toHaveBeenCalledWith('/papers/paper-9/export/docx')
+    expect(paperApiMocks.exportDocx).toHaveBeenCalledWith('paper-9')
     expect(ElMessage.success).toHaveBeenCalledWith('导出成功')
     expect(window.open).toHaveBeenCalledWith('https://example.com/paper.docx', '_blank')
   })
