@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { adminListCategories, adminCreateCategory, adminUpdateCategory, adminDeleteCategory, adminListLessons, adminCreateLesson, adminDeleteLesson, adminListPapers, adminDeletePaper } from '@/api/modules/exercise'
-import api from '@/api/index'
+import { adminListCategories, adminCreateCategory, adminUpdateCategory, adminDeleteCategory, adminListLessons, adminCreateLesson, adminDeleteLesson, adminListPapers, adminCreatePaper, adminDeletePaper } from '@/api/modules/exercise'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const grade = ref(''); const subject = ref('')
@@ -83,7 +82,7 @@ async function doUpload() {
     const fd=new FormData(); fd.append('file',uploadForm.value.file); fd.append('title',uploadForm.value.title)
     if(uploadForm.value.categoryId) fd.append('categoryId',uploadForm.value.categoryId)
     if(uploadForm.value.lessonId) fd.append('lessonId',uploadForm.value.lessonId)
-    await api.post('/admin/exercise/papers', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+    await adminCreatePaper(fd)
     ElMessage.success('上传成功'); uploadDialog.value=false; loadAll()
   } catch(e:any) { ElMessage.error(e?.message??'上传失败') } finally { uploading.value=false }
 }

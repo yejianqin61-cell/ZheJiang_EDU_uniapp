@@ -96,6 +96,18 @@ describe('Exercise API', () => {
     expect(mockPost).toHaveBeenCalledWith('/exercise-contributions/admin/upload-1/approve')
   })
 
+  it('adminCreatePaper -> POST /admin/exercise/papers with multipart form', async () => {
+    const { adminCreatePaper } = await import('@/api/modules/exercise')
+    const payload = new FormData()
+    mockPost.mockResolvedValue({ id: 'paper-1' })
+
+    await adminCreatePaper(payload)
+
+    expect(mockPost).toHaveBeenCalledWith('/admin/exercise/papers', payload, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  })
+
   it('adminRejectExerciseUpload -> POST /exercise-contributions/admin/:id/reject', async () => {
     const { adminRejectExerciseUpload } = await import('@/api/modules/exercise')
     mockPost.mockResolvedValue({ status: 'rejected' })

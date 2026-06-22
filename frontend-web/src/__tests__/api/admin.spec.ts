@@ -69,6 +69,20 @@ describe('Admin API', () => {
     expect(mockGet).toHaveBeenCalledWith('/admin/pricing')
   })
 
+  it('uploadFile -> POST /admin/files/upload with multipart headers', async () => {
+    const { uploadFile } = await import('@/api/modules/admin')
+    const formData = new FormData()
+    const onUploadProgress = vi.fn()
+    mockPost.mockResolvedValue({ ok: true })
+
+    await uploadFile(formData, { onUploadProgress })
+
+    expect(mockPost).toHaveBeenCalledWith('/admin/files/upload', formData, {
+      onUploadProgress,
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  })
+
   it('updatePricing -> PUT /admin/pricing', async () => {
     const { updatePricing } = await import('@/api/modules/admin')
     const payload = {

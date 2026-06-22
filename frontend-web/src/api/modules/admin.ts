@@ -1,3 +1,4 @@
+import type { AxiosRequestConfig } from 'axios'
 import api from '../index'
 import type {
   DashboardStats,
@@ -71,7 +72,15 @@ interface AdminKnowledgePointListResponse {
 export function getDashboardStats() { return api.get<DashboardStats>('/admin/questions/stats') }
 
 // ===== 文件上传 =====
-export function uploadFile(formData: FormData) { return api.post('/admin/files/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }) }
+export function uploadFile(formData: FormData, config?: AxiosRequestConfig<FormData>) {
+  return api.post('/admin/files/upload', formData, {
+    ...config,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      ...config?.headers,
+    },
+  })
+}
 
 // ===== 审核 =====
 export function getReviewList(params: AdminReviewListParams) {

@@ -5,10 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminExercisesPage from '@/pages/admin/exercises/index.vue'
 import { elInputStub } from '@/__tests__/utils/element-plus-stubs'
 
-const apiMocks = vi.hoisted(() => ({
-  post: vi.fn(),
-}))
-
 const exerciseAdminMocks = vi.hoisted(() => ({
   adminListCategories: vi.fn(),
   adminCreateCategory: vi.fn(),
@@ -18,11 +14,8 @@ const exerciseAdminMocks = vi.hoisted(() => ({
   adminCreateLesson: vi.fn(),
   adminDeleteLesson: vi.fn(),
   adminListPapers: vi.fn(),
+  adminCreatePaper: vi.fn(),
   adminDeletePaper: vi.fn(),
-}))
-
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
 }))
 
 vi.mock('@/api/modules/exercise', () => ({
@@ -34,6 +27,7 @@ vi.mock('@/api/modules/exercise', () => ({
   adminCreateLesson: exerciseAdminMocks.adminCreateLesson,
   adminDeleteLesson: exerciseAdminMocks.adminDeleteLesson,
   adminListPapers: exerciseAdminMocks.adminListPapers,
+  adminCreatePaper: exerciseAdminMocks.adminCreatePaper,
   adminDeletePaper: exerciseAdminMocks.adminDeletePaper,
 }))
 
@@ -54,7 +48,6 @@ const mountPage = () =>
 
 describe('Admin exercises page', () => {
   beforeEach(() => {
-    apiMocks.post.mockReset()
     exerciseAdminMocks.adminListCategories.mockReset()
     exerciseAdminMocks.adminCreateCategory.mockReset()
     exerciseAdminMocks.adminUpdateCategory.mockReset()
@@ -63,6 +56,7 @@ describe('Admin exercises page', () => {
     exerciseAdminMocks.adminCreateLesson.mockReset()
     exerciseAdminMocks.adminDeleteLesson.mockReset()
     exerciseAdminMocks.adminListPapers.mockReset()
+    exerciseAdminMocks.adminCreatePaper.mockReset()
     exerciseAdminMocks.adminDeletePaper.mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.warning).mockReset()
@@ -144,11 +138,11 @@ describe('Admin exercises page', () => {
     await (wrapper.vm as any).doUpload()
 
     expect(ElMessage.warning).toHaveBeenCalledWith('请填写标题并选择文件')
-    expect(apiMocks.post).not.toHaveBeenCalled()
+    expect(exerciseAdminMocks.adminCreatePaper).not.toHaveBeenCalled()
   })
 
   it('uploads exercise paper and reloads list', async () => {
-    apiMocks.post.mockResolvedValue({ ok: true })
+    exerciseAdminMocks.adminCreatePaper.mockResolvedValue({ ok: true })
     exerciseAdminMocks.adminListCategories.mockResolvedValue([])
     exerciseAdminMocks.adminListLessons.mockResolvedValue([])
     exerciseAdminMocks.adminListPapers.mockResolvedValue([])
@@ -165,7 +159,7 @@ describe('Admin exercises page', () => {
 
     await (wrapper.vm as any).doUpload()
 
-    expect(apiMocks.post).toHaveBeenCalledTimes(1)
+    expect(exerciseAdminMocks.adminCreatePaper).toHaveBeenCalledTimes(1)
     expect(ElMessage.success).toHaveBeenCalledWith('上传成功')
   })
 })

@@ -65,10 +65,17 @@
 - 页面加载阶段补充默认值合并逻辑，确保后端返回字段不完整时仍能稳定渲染
 - 补充 API 层与页面层回归测试，覆盖定价读取、默认值兜底与保存提交流程
 
+### 10. 管理端上传与练习试卷页 API 收口
+
+- 管理端文件上传页改为复用共享 `uploadFile()` API 封装，移除页面层对底层 `api` 的直接依赖
+- 为 `uploadFile()` 补充可选请求配置透传，保留 `onUploadProgress` 等上传态回调能力，同时统一合并 multipart 请求头
+- 管理端练习试卷上传流程改为复用共享 `adminCreatePaper()` API 封装，收口 `/admin/exercise/papers` 的 multipart 提交逻辑
+- 补充 API 层与页面层回归测试，覆盖文件上传进度回调、练习试卷上传校验与成功提交流程
+
 ## 验证结果
 
-- 定向测试：2 个测试文件、12 个用例通过
-- `cd frontend-web && npm test`：43 个测试文件、141 个用例通过
+- 定向测试：4 个测试文件、31 个用例通过
+- `cd frontend-web && npm test`：43 个测试文件、144 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -81,4 +88,7 @@
 - `fc5c403` `refactor: align admin question pages with api module`
 - `516c0a9` `feat: add upload progress feedback`
 - `6df9695` `refactor: align admin review pages with api module`
-- 当前这批待提交：管理端定价页 API 收口
+- `a234f64` `docs: record admin review contract fix`
+- `f63e165` `refactor: align admin pricing page with api module`
+- `d812823` `refactor: type admin knowledge and pricing apis`
+- 本批提交：`refactor: align admin upload pages with api modules`
