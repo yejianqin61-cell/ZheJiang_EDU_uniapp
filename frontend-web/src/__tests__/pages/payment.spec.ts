@@ -13,9 +13,12 @@ const routeState = vi.hoisted(() => ({
     type: 'download',
   },
 }))
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  post: vi.fn(),
+const authApiMocks = vi.hoisted(() => ({
+  getMyBalance: vi.fn(),
+  payByBalance: vi.fn(),
+}))
+const paymentApiMocks = vi.hoisted(() => ({
+  payMock: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -26,14 +29,19 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/auth', () => ({
+  getMyBalance: authApiMocks.getMyBalance,
+  payByBalance: authApiMocks.payByBalance,
 }))
 
-const mountPage = () =>
+vi.mock('@/api/modules/payment', () => ({
+  payMock: paymentApiMocks.payMock,
+}))
+
+const mountPage = (pinia = createPinia()) =>
   mount(PaymentPage, {
     global: {
-      plugins: [createPinia()],
+      plugins: [pinia],
       stubs: {
         'router-link': { template: '<a><slot /></a>' },
         'el-button': { template: '<button><slot /></button>' },
@@ -50,40 +58,41 @@ describe('Payment page', () => {
     routeState.query.type = 'download'
     routerBack.mockReset()
     routerReplace.mockReset()
-    apiMocks.get.mockReset()
-    apiMocks.post.mockReset()
+    authApiMocks.getMyBalance.mockReset()
+    authApiMocks.payByBalance.mockReset()
+    paymentApiMocks.payMock.mockReset()
     vi.mocked(ElMessage.warning).mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.error).mockReset()
   })
 
   it('creates order on mount when paper id exists and current order is empty', async () => {
-    apiMocks.get.mockResolvedValue({ balance: 5000 })
-    apiMocks.post.mockResolvedValueOnce({
-      orderId: 'order-1',
-      orderNo: 'NO001',
-      amount: 1200,
-      type: 'download',
-    })
-
-    const wrapper = mountPage()
+    authApiMocks.getMyBalance.mockResolvedValue({ balance: 5000 })
+    const pinia = createPinia()
+    setActivePinia(pinia)
     const orderStore = useOrderStore()
+    const createSpy = vi.spyOn(orderStore, 'create').mockImplementation(async () => {
+      const result = {
+        orderId: 'order-1',
+        orderNo: 'NO001',
+        amount: 1200,
+        type: 'download',
+      } as any
+      orderStore.currentOrder = result
+      return result
+    })
+
+    const wrapper = mountPage(pinia)
     await Promise.resolve()
     await Promise.resolve()
 
-    expect(apiMocks.post).toHaveBeenCalledWith('/orders', {
-      paperId: 'paper-1',
-      type: 'download',
-      copies: undefined,
-      shippingAddressId: undefined,
-    })
-    expect(orderStore.currentOrder?.orderId).toBe('order-1')
+    expect(createSpy).toHaveBeenCalledWith('paper-1', 'download')
     expect((wrapper.vm as any).canBalancePay).toBe(true)
   })
 
   it('redirects to paper config when both paper id and current order are missing', async () => {
     routeState.query.paperId = undefined
-    apiMocks.get.mockResolvedValue({ balance: 0 })
+    authApiMocks.getMyBalance.mockResolvedValue({ balance: 0 })
 
     mountPage()
     await Promise.resolve()
@@ -95,23 +104,25 @@ describe('Payment page', () => {
   })
 
   it('submits balance payment and navigates to order detail', async () => {
-    apiMocks.get.mockResolvedValue({ balance: 5000 })
-    apiMocks.post.mockResolvedValue({ ok: true })
+    authApiMocks.getMyBalance.mockResolvedValue({ balance: 5000 })
+    authApiMocks.payByBalance.mockResolvedValue(undefined)
 
-    const wrapper = mountPage()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const wrapper = mountPage(pinia)
     const orderStore = useOrderStore()
     orderStore.currentOrder = {
       orderId: 'order-9',
       orderNo: 'NO009',
       amount: 1200,
       type: 'download',
-    }
+    } as any
     await Promise.resolve()
 
     await (wrapper.vm as any).handleBalancePay()
     await vi.runAllTimersAsync()
 
-    expect(apiMocks.post).toHaveBeenCalledWith('/orders/order-9/balance-pay')
+    expect(authApiMocks.payByBalance).toHaveBeenCalledWith('order-9')
     expect(ElMessage.success).toHaveBeenCalledWith('支付成功')
     expect(routerReplace).toHaveBeenCalledWith('/orders/order-9')
   })

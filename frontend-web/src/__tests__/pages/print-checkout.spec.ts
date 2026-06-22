@@ -10,9 +10,14 @@ const routerReplace = vi.fn()
 const routeState = vi.hoisted(() => ({
   query: { paperId: 'paper-1' as string | undefined },
 }))
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  post: vi.fn(),
+const pricingApiMocks = vi.hoisted(() => ({
+  getPublicPricing: vi.fn(),
+}))
+const addressApiMocks = vi.hoisted(() => ({
+  listAddresses: vi.fn(),
+}))
+const orderApiMocks = vi.hoisted(() => ({
+  createOrder: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -23,9 +28,21 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/pricing', () => ({
+  getPublicPricing: pricingApiMocks.getPublicPricing,
 }))
+
+vi.mock('@/api/modules/address', () => ({
+  listAddresses: addressApiMocks.listAddresses,
+}))
+
+vi.mock('@/api/modules/order', async () => {
+  const actual = await vi.importActual<typeof import('@/api/modules/order')>('@/api/modules/order')
+  return {
+    ...actual,
+    createOrder: orderApiMocks.createOrder,
+  }
+})
 
 const mountPage = () =>
   mount(PrintCheckoutPage, {
@@ -49,8 +66,9 @@ describe('Print checkout page', () => {
     routeState.query.paperId = 'paper-1'
     routerPush.mockReset()
     routerReplace.mockReset()
-    apiMocks.get.mockReset()
-    apiMocks.post.mockReset()
+    pricingApiMocks.getPublicPricing.mockReset()
+    addressApiMocks.listAddresses.mockReset()
+    orderApiMocks.createOrder.mockReset()
     vi.mocked(ElMessage.warning).mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.error).mockReset()
@@ -67,8 +85,8 @@ describe('Print checkout page', () => {
   })
 
   it('warns when shipping address is not selected', async () => {
-    apiMocks.get.mockResolvedValueOnce({ print: [] })
-    apiMocks.get.mockResolvedValueOnce([])
+    pricingApiMocks.getPublicPricing.mockResolvedValue({ print: [] })
+    addressApiMocks.listAddresses.mockResolvedValue([])
 
     const wrapper = mountPage()
     await Promise.resolve()
@@ -77,13 +95,13 @@ describe('Print checkout page', () => {
     await (wrapper.vm as any).handleSubmit()
 
     expect(ElMessage.warning).toHaveBeenCalledWith('请选择收货地址')
-    expect(apiMocks.post).not.toHaveBeenCalled()
+    expect(orderApiMocks.createOrder).not.toHaveBeenCalled()
   })
 
   it('creates print order and navigates to payment page', async () => {
-    apiMocks.get.mockResolvedValueOnce({ print: [{ minQuantity: 1, maxQuantity: null, unitPrice: 200 }] })
-    apiMocks.get.mockResolvedValueOnce([{ id: 'addr-1', receiverName: '张三', phone: '13800000000', province: '浙', city: '杭', district: '西湖', detail: '1号' }])
-    apiMocks.post.mockResolvedValue({
+    pricingApiMocks.getPublicPricing.mockResolvedValue({ print: [{ minQuantity: 1, maxQuantity: null, unitPrice: 200 }] })
+    addressApiMocks.listAddresses.mockResolvedValue([{ id: 'addr-1', receiverName: '张三', phone: '13800000000', province: '浙', city: '杭', district: '西湖', detail: '1号' }])
+    orderApiMocks.createOrder.mockResolvedValue({
       orderId: 'order-1',
       orderNo: 'NO001',
       amount: 2000,
@@ -98,7 +116,7 @@ describe('Print checkout page', () => {
     ;(wrapper.vm as any).selectedAddr = 'addr-1'
     await (wrapper.vm as any).handleSubmit()
 
-    expect(apiMocks.post).toHaveBeenCalledWith('/orders', {
+    expect(orderApiMocks.createOrder).toHaveBeenCalledWith({
       paperId: 'paper-1',
       type: 'print',
       copies: 10,

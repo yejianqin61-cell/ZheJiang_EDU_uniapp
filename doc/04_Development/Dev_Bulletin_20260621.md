@@ -100,10 +100,17 @@
 - 为题库贡献链路补齐 `ContributionItem`、`ContributionQuestion` 类型约束，并在 API 层统一归一化贡献列表与预览题目结构
 - 补充 API 层与页面层回归测试，覆盖贡献列表加载、详情回显、上传进度回调、预览题目读取与提交审核流程
 
+### 15. 支付与打印结算链路 API 收口
+
+- 新增共享 `pricing` API 模块，并扩展 `payment` API 模块，集中收口公开定价、余额支付与 Mock 支付接口
+- 支付页改为复用 `getMyBalance()`、`payByBalance()`、`payMock()` 与订单 store，移除页面层对底层 `api` 的直接依赖
+- 打印结算页改为复用 `getPublicPricing()`、`listAddresses()`、`createOrder()`，统一串联定价、地址与下单链路
+- 补充 API 层与页面层回归测试，覆盖公开定价读取、支付页订单创建与余额支付、打印结算页地址校验与打印订单创建流程
+
 ## 验证结果
 
-- 定向测试：4 个测试文件、14 个用例通过
-- `cd frontend-web && npm test`：46 个测试文件、163 个用例通过
+- 定向测试：3 个测试文件、7 个用例通过
+- `cd frontend-web && npm test`：47 个测试文件、164 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -123,4 +130,5 @@
 - `0b580e7` `refactor: align address pages with api module`
 - `5f973d0` `refactor: align profile pages with auth api module`
 - `436a2d8` `refactor: align order pages with api modules`
-- 本批提交：题库贡献链路 API 收口
+- `0423ee6` `refactor: align contribution pages with api module`
+- 本批提交：支付与打印结算链路 API 收口
