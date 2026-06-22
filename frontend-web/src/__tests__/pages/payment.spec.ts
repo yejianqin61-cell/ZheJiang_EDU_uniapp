@@ -60,6 +60,10 @@ type PaymentPageVm = {
   handleAlipay: () => Promise<void>
 }
 
+type FormSubmitTarget = {
+  submit: () => void
+}
+
 function createOrder(overrides: Partial<Order> = {}): Order {
   return {
     orderId: 'order-1',
@@ -160,7 +164,7 @@ describe('Payment page', () => {
 
     const appendChild = vi.spyOn(document.body, 'appendChild')
     const submit = vi.fn()
-    const querySelector = vi.spyOn(HTMLDivElement.prototype, 'querySelector').mockReturnValue({ submit } as any)
+    const querySelector = vi.spyOn(HTMLDivElement.prototype, 'querySelector').mockReturnValue({ submit } as FormSubmitTarget as Element)
 
     const pinia = createPinia()
     setActivePinia(pinia)
@@ -183,5 +187,26 @@ describe('Payment page', () => {
 
     querySelector.mockRestore()
     appendChild.mockRestore()
+  })
+
+  it('shows alipay error message when payForm request fails', async () => {
+    authApiMocks.getMyBalance.mockResolvedValue({ balance: 5000 })
+    paymentApiMocks.payAlipay.mockRejectedValue(new Error('支付宝拉单失败'))
+
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const wrapper = mountPage(pinia)
+    const orderStore = useOrderStore()
+    orderStore.currentOrder = createOrder({
+      orderId: 'order-11',
+      orderNo: 'NO011',
+      amount: 1600,
+      payment: null,
+    })
+    await Promise.resolve()
+
+    await (wrapper.vm as PaymentPageVm).handleAlipay()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('支付宝拉单失败')
   })
 })

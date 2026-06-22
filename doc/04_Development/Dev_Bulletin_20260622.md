@@ -46,9 +46,21 @@
 - `frontend-web/src/__tests__/pages/admin-exercise-contributions.spec.ts`
   - 补充“练习审核列表首次加载失败会提示错误并清空列表”的回归用例
 
+### 5. 支付页支付宝分支错误类型收口
+
+- 对应 Issue：
+  - [Issue_20260622_Balance_Payment_Error_Type_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Balance_Payment_Error_Type_Gap.md)
+- `frontend-web/src/pages/payment/index.vue`
+  - 支付宝支付分支统一复用页面内的错误消息提取逻辑，避免支付异常继续退化为无类型兜底
+  - 保持原有“支付失败”兜底文案与支付流程不变
+- `frontend-web/src/__tests__/pages/payment.spec.ts`
+  - 移除支付宝表单提交桩中的 `as any`
+  - 补充“支付宝拉单失败会提示真实错误信息”的回归用例
+
 ## 验证结果
 
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-withdrawals.spec.ts`：1 个测试文件、5 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-exercise-contributions.spec.ts src/__tests__/pages/admin-exercises.spec.ts`：2 个测试文件、12 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-upload.spec.ts src/__tests__/pages/admin-review-detail.spec.ts`：2 个测试文件、6 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-exercise-contributions.spec.ts`：1 个测试文件、6 个用例通过
+- `cd frontend-web && npm.cmd test -- src/__tests__/pages/payment.spec.ts`：1 个测试文件、6 个用例通过

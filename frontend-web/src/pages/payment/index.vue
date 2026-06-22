@@ -114,8 +114,8 @@ async function handleAlipay() {
     } else {
       ElMessage.warning('支付宝未就绪，请稍后重试或改用余额支付')
     }
-  } catch {
-    ElMessage.error('支付失败')
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '支付失败'))
   } finally {
     paying.value = false
   }
