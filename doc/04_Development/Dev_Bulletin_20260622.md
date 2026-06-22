@@ -135,6 +135,7 @@
 - `cd backend && npm.cmd test -- src/modules/auth/services/sms.service.spec.ts src/modules/auth/auth.service.spec.ts src/modules/auth/auth.controller.spec.ts`：3 个测试文件、29 个用例通过
 - `cd backend && npm.cmd test -- src/modules/order/order.service.spec.ts`：1 个测试文件、16 个用例通过
 - `cd backend && npm.cmd test -- src/modules/exercise-contribution/services/exercise-contribution.service.spec.ts`：1 个测试文件、9 个用例通过
+- `cd backend && npm.cmd test -- src/modules/knowledge-base/services/review.service.spec.ts`：1 个测试文件、8 个用例通过
 
 ### 12. 短信发送失败显式报错与状态回滚
 
@@ -168,3 +169,14 @@
 - `backend/src/modules/exercise-contribution/services/exercise-contribution.service.spec.ts`
   - 新增“缩略图生成失败仍上传成功并记录告警”“返现失败仍审核成功并记录告警”两条回归用例
   - 通过文件系统桩避免测试写入本地上传产物，保证该组单测纯净可重复
+
+### 15. 知识库审核返现静默失败收口
+
+- 对应 Issue：
+  - [Issue_20260622_Backend_Silent_Error_Cleanup_Backlog.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Backend_Silent_Error_Cleanup_Backlog.md)
+- `backend/src/modules/knowledge-base/services/review.service.ts`
+  - 为教师题目录入审核通过后的返现失败补充明确告警，避免补贴链路继续静默吞掉
+  - 保持审核主流程成功逻辑不变，返现异常时仍完成审核，但后台可追踪后续补偿
+- `backend/src/modules/knowledge-base/services/review.service.spec.ts`
+  - 新增“返现失败仍审核成功并记录告警”的回归用例
+  - 校验审核统计结果不受影响，同时确实留下可追踪的告警日志

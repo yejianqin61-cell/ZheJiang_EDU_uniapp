@@ -10,6 +10,7 @@ import { User } from '../../../database/entities/user.entity';
 import { PricingConfig } from '../../../database/entities/pricing-config.entity';
 import { BalanceService } from '../../balance/services/balance.service';
 import { mockRepo } from '../../../test-utils';
+import { Logger } from '@nestjs/common';
 
 describe('ReviewService', () => {
   let service: ReviewService;
@@ -18,6 +19,10 @@ describe('ReviewService', () => {
   let userRepo: any;
   let pricingRepo: any;
   let balanceService: any;
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   beforeEach(async () => {
     questionRepo = mockRepo();
@@ -106,6 +111,27 @@ describe('ReviewService', () => {
         amount: 100,
         type: 'cashback',
       }));
+    });
+
+    it('should log warning and keep approval success when cashback fails', async () => {
+      const loggerSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+      questionRepo.find.mockResolvedValue([{
+        id: 'q-1', status: 'pending_review', isDeleted: false, sourceFileId: 'f1',
+        sourceFile: { id: 'f1', uploader: { id: 'u1', role: 'teacher' } },
+        content: '题目内容', subject: '数学',
+      }]);
+      questionRepo.count.mockResolvedValue(0);
+      pricingRepo.findOne.mockResolvedValue({ unitPrice: 100 });
+      balanceService.addBalance.mockRejectedValue(new Error('cashback failed'));
+
+      const result = await service.batchReview('admin-1', ['q-1'], 'approve');
+
+      expect(result.approved).toBe(1);
+      expect(result.failed).toBe(0);
+      expect(loggerSpy).toHaveBeenCalledWith(
+        'Failed to grant question cashback for question q-1',
+        expect.any(String),
+      );
     });
 
     it('should NOT trigger cashback for admin-uploaded questions', async () => {

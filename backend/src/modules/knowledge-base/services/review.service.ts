@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Question } from '../../../database/entities/question.entity';
@@ -10,6 +10,8 @@ import { PaginatedResult } from '../../../common/dto/pagination.dto';
 
 @Injectable()
 export class ReviewService {
+  private readonly logger = new Logger(ReviewService.name);
+
   constructor(
     @InjectRepository(Question)
     private readonly questionRepo: Repository<Question>,
@@ -150,13 +152,20 @@ export class ReviewService {
           const file = (q as any).sourceFile;
           const uploader = file?.uploader;
           if (uploader && uploader.role === 'teacher') {
-            await this.balanceService.addBalance({
-              userId: uploader.id,
-              amount: cashbackPrice,
-              type: 'cashback',
-              refId: q.id,
-              note: `题目审核通过: ${q.subject}-${q.content.slice(0, 20)}`,
-            }).catch(() => {}); // don't block review on cashback failure
+            try {
+              await this.balanceService.addBalance({
+                userId: uploader.id,
+                amount: cashbackPrice,
+                type: 'cashback',
+                refId: q.id,
+                note: `题目审核通过: ${q.subject}-${q.content.slice(0, 20)}`,
+              });
+            } catch (error) {
+              this.logger.warn(
+                `Failed to grant question cashback for question ${q.id}`,
+                error instanceof Error ? error.stack : undefined,
+              );
+            }
           }
 
           if (q.sourceFileId) fileIds.add(q.sourceFileId);
