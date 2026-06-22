@@ -12,6 +12,18 @@ const grades = ['一年级', '二年级', '三年级', '四年级', '五年级',
 
 const uploadStatusText = computed(() => (uploading.value ? `上传中 ${uploadPercent.value}%` : '等待上传'))
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message
+  }
+
+  return '上传失败'
+}
+
 function onFileChange(event: Event) {
   file.value = (event.target as HTMLInputElement).files?.[0] ?? null
 }
@@ -49,8 +61,8 @@ async function submit() {
     ElMessage.success('上传成功，AI解析中...')
     form.value = { subject: '', grade: '' }
     file.value = null
-  } catch (error: any) {
-    ElMessage.error(error?.message ?? '上传失败')
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error))
   } finally {
     uploading.value = false
   }

@@ -205,6 +205,12 @@
 - 题目详情页删除动作改为用 `unknown` 接住异常，并在页面内收口最小错误消息提取逻辑
 - 保持原有删除成功/失败提示和返回行为不变，只收紧错误分支类型
 
+### 30. 管理端上传页错误类型收口
+
+- 新增 [Issue_20260622_Admin_Upload_Error_Type_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Upload_Error_Type_Gap.md)，记录管理端上传页提交异常仍在使用弱错误类型的问题
+- 上传页改为用 `unknown` 接住上传异常，并在页面内收口最小错误消息提取逻辑
+- 保持原有上传进度和成功/失败提示行为不变，只收紧错误分支类型
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -220,6 +226,7 @@
 - 定向测试：`src/__tests__/pages/orders-index.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-review.spec.ts` 与 `src/__tests__/pages/admin-review-detail.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-question-detail.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/admin-upload.spec.ts` 在沙箱路径下触发 Vitest `setup.ts` 绝对路径解析异常，代码改动已通过全量回归验证
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm test`：48 个测试文件、181 个用例通过
 - `cd frontend-web && npm run build`：通过
