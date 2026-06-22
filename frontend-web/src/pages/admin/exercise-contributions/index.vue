@@ -48,6 +48,14 @@ const exTypeLabels: Record<ExerciseUploadItem['exerciseType'], string> = {
 
 onMounted(() => fetchList())
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
+function isCancelAction(error: unknown) {
+  return error === 'cancel' || error === 'close'
+}
+
 async function fetchList() {
   loading.value = true
   const params: ExerciseUploadListParams = {
@@ -65,9 +73,11 @@ async function fetchList() {
     const data = await adminListExerciseUploads(params)
     list.value = data.list ?? []
     pagination.value = data.pagination ?? pagination.value
-  } catch {
+  }
+  catch {
     list.value = []
-  } finally {
+  }
+  finally {
     loading.value = false
     selected.value = []
   }
@@ -94,7 +104,10 @@ async function approveOne(id: string) {
     await adminApproveExerciseUpload(id)
     ElMessage.success('已通过')
     fetchList()
-  } catch {}
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '审核通过失败'))
+  }
 }
 
 async function rejectOne(id: string) {
@@ -106,7 +119,14 @@ async function rejectOne(id: string) {
     await adminRejectExerciseUpload(id, note || undefined)
     ElMessage.success('已拒绝')
     fetchList()
-  } catch {}
+  }
+  catch (error: unknown) {
+    if (isCancelAction(error)) {
+      return
+    }
+
+    ElMessage.error(getErrorMessage(error, '审核拒绝失败'))
+  }
 }
 
 function downloadFile(url: string) {
@@ -150,7 +170,14 @@ async function batchAction(action: 'approve' | 'reject') {
     await adminBatchExerciseUploads(payload)
     ElMessage.success('操作成功')
     fetchList()
-  } catch {}
+  }
+  catch (error: unknown) {
+    if (isCancelAction(error)) {
+      return
+    }
+
+    ElMessage.error(getErrorMessage(error, '批量操作失败'))
+  }
 }
 </script>
 

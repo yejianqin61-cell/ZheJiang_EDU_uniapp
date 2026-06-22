@@ -43,6 +43,7 @@ describe('Admin exercise contributions page', () => {
     exerciseAdminMocks.adminBatchExerciseUploads.mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.warning).mockReset()
+    vi.mocked(ElMessage.error).mockReset()
     vi.mocked(ElMessageBox.confirm).mockReset()
     vi.mocked(ElMessageBox.prompt).mockReset()
   })
@@ -74,6 +75,20 @@ describe('Admin exercise contributions page', () => {
     expect(exerciseAdminMocks.adminListExerciseUploads).toHaveBeenCalledTimes(2)
   })
 
+  it('shows error when approving a single upload fails', async () => {
+    exerciseAdminMocks.adminListExerciseUploads.mockResolvedValue({
+      list: [],
+      pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
+    })
+    exerciseAdminMocks.adminApproveExerciseUpload.mockRejectedValue(new Error('审核失败'))
+
+    const wrapper = mountPage()
+
+    await (wrapper.vm as any).approveOne('upload-1')
+
+    expect(ElMessage.error).toHaveBeenCalledWith('审核失败')
+  })
+
   it('warns when batch action is triggered without selection', async () => {
     exerciseAdminMocks.adminListExerciseUploads.mockResolvedValue({
       list: [],
@@ -86,5 +101,22 @@ describe('Admin exercise contributions page', () => {
 
     expect(ElMessage.warning).toHaveBeenCalledWith('请先选择')
     expect(exerciseAdminMocks.adminBatchExerciseUploads).not.toHaveBeenCalled()
+  })
+
+  it('shows error when batch reject fails', async () => {
+    exerciseAdminMocks.adminListExerciseUploads.mockResolvedValue({
+      list: [],
+      pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
+    })
+    exerciseAdminMocks.adminBatchExerciseUploads.mockRejectedValue(new Error('批量审核失败'))
+    vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm' as any)
+    vi.mocked(ElMessageBox.prompt).mockResolvedValue({ value: '内容不合规' } as any)
+
+    const wrapper = mountPage()
+    ;(wrapper.vm as any).selected = ['u1', 'u2']
+
+    await (wrapper.vm as any).batchAction('reject')
+
+    expect(ElMessage.error).toHaveBeenCalledWith('批量审核失败')
   })
 })

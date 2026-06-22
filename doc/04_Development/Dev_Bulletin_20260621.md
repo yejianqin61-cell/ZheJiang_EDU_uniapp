@@ -286,6 +286,13 @@
 - 对真实失败补充明确错误提示，保持原有成功提示与刷新行为不变
 - 补充页面回归测试，覆盖创建课时失败和删除分类失败的提示行为
 
+### 42. 管理端练习审核页静默失败收口
+
+- 新增 [Issue_20260622_Admin_Exercise_Contributions_Silent_Error_Handling_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Exercise_Contributions_Silent_Error_Handling_Gap.md)，记录管理端练习审核页多条操作链路仍存在静默失败的问题
+- 为单条通过、单条拒绝和批量审核分支区分弹窗取消与接口失败
+- 对真实失败补充明确错误提示，保持原有成功提示与列表刷新行为不变
+- 补充页面回归测试，覆盖单条审核失败和批量审核失败的提示行为
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -313,8 +320,9 @@
 - 定向测试：`src/__tests__/pages/exercise-draw.spec.ts` 在沙箱路径下触发 Vitest `setup.ts` 绝对路径解析异常，代码改动已通过全量回归验证
 - 定向测试：`src/__tests__/pages/login.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-exercises.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/admin-exercise-contributions.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm test`：48 个测试文件、192 个用例通过
+- `cd frontend-web && npm test`：48 个测试文件、194 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
