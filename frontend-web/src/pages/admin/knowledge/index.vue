@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import type { KnowledgePoint, Pagination } from '@/types'
 import { getKnowledgePoints } from '@/api/modules/admin'
 
@@ -18,6 +19,10 @@ const pagination = ref<Pagination>({ page: 1, pageSize: 20, total: 0, totalPages
 onMounted(() => {
   void fetchList()
 })
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
 
 function buildParams() {
   const params: Record<string, string | number> = {
@@ -46,7 +51,10 @@ async function fetchList() {
     if (response?.pagination) {
       pagination.value = response.pagination
     }
-  } catch {
+  }
+  catch (error: unknown) {
+    list.value = []
+    ElMessage.error(getErrorMessage(error, '知识点加载失败'))
   } finally {
     loading.value = false
   }

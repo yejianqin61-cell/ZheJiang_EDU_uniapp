@@ -1,7 +1,16 @@
 import { mount } from '@vue/test-utils'
+import { ElMessage } from 'element-plus'
 import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminKnowledgePage from '@/pages/admin/knowledge/index.vue'
+
+type AdminKnowledgePageVm = {
+  filters: {
+    subject: string
+    grade: string
+  }
+  fetchList: () => Promise<void>
+}
 
 const adminApiMocks = vi.hoisted(() => ({
   getKnowledgePoints: vi.fn(),
@@ -31,7 +40,12 @@ const mountPage = () =>
 describe('Admin knowledge page', () => {
   beforeEach(() => {
     adminApiMocks.getKnowledgePoints.mockReset()
+    vi.mocked(ElMessage.error).mockReset()
   })
+
+  function getVm(wrapper: ReturnType<typeof mountPage>) {
+    return wrapper.vm as AdminKnowledgePageVm
+  }
 
   it('loads knowledge point list on mount', async () => {
     adminApiMocks.getKnowledgePoints.mockResolvedValue({
@@ -57,9 +71,9 @@ describe('Admin knowledge page', () => {
     const wrapper = mountPage()
     await nextTick()
 
-    ;(wrapper.vm as any).filters.subject = '数学'
-    ;(wrapper.vm as any).filters.grade = '五年级'
-    await (wrapper.vm as any).fetchList()
+    getVm(wrapper).filters.subject = '数学'
+    getVm(wrapper).filters.grade = '五年级'
+    await getVm(wrapper).fetchList()
 
     expect(adminApiMocks.getKnowledgePoints).toHaveBeenNthCalledWith(2, {
       subject: '数学',
@@ -67,5 +81,13 @@ describe('Admin knowledge page', () => {
       page: 1,
       pageSize: 20,
     })
+  })
+  it('shows error when loading knowledge points fails', async () => {
+    adminApiMocks.getKnowledgePoints.mockRejectedValue(new Error('知识点服务异常'))
+
+    mountPage()
+    await nextTick()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('知识点服务异常')
   })
 })
