@@ -295,10 +295,10 @@
 
 ### 43. 地址列表页静默失败收口
 
-- 新增 [Issue_20260622_Address_List_Silent_Error_Handling_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Address_List_Silent_Error_Handling_Gap.md)，记录地址列表页删除链路仍存在静默失败的问题
-- 为地址删除分支区分弹窗取消与接口失败
-- 对真实失败补充明确错误提示，保持原有成功提示与列表刷新行为不变
-- 补充页面回归测试，覆盖删除请求失败时的提示行为
+- 新增 [Issue_20260622_Address_List_Silent_Error_Handling_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Address_List_Silent_Error_Handling_Gap.md)，记录地址列表页仍存在静默失败的问题
+- 为地址列表加载失败补充明确提示
+- 为地址删除分支区分弹窗取消与接口失败，避免真实失败静默
+- 补充页面回归测试，覆盖地址加载失败和删除地址失败的提示行为
 
 ## 验证结果
 
