@@ -1,7 +1,13 @@
 import { mount } from '@vue/test-utils'
+import { ElMessage } from 'element-plus'
 import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ExercisePaperDetailPage from '@/pages/exercises/paper-detail/index.vue'
+
+type ExercisePaperDetailPageVm = {
+  goDownload: () => void
+  goPrint: () => void
+}
 
 const routerBack = vi.fn()
 const routerPush = vi.fn()
@@ -40,7 +46,12 @@ describe('Exercise paper detail page', () => {
     routerPush.mockReset()
     routeState.params.id = 'paper-1'
     exerciseApiMocks.getPaperDetail.mockReset()
+    vi.mocked(ElMessage.error).mockReset()
   })
+
+  function getVm(wrapper: ReturnType<typeof mountPage>) {
+    return wrapper.vm as ExercisePaperDetailPageVm
+  }
 
   it('returns back when paper id is missing', async () => {
     routeState.params.id = undefined
@@ -80,10 +91,20 @@ describe('Exercise paper detail page', () => {
     await nextTick()
     await nextTick()
 
-    await (wrapper.vm as any).goDownload()
-    await (wrapper.vm as any).goPrint()
+    getVm(wrapper).goDownload()
+    getVm(wrapper).goPrint()
 
     expect(routerPush).toHaveBeenNthCalledWith(1, '/payment?paperId=paper-8&type=exercise')
     expect(routerPush).toHaveBeenNthCalledWith(2, '/print/checkout?paperId=paper-8')
+  })
+
+  it('shows error when loading exercise paper detail fails', async () => {
+    exerciseApiMocks.getPaperDetail.mockRejectedValue(new Error('练习试卷详情服务异常'))
+
+    mountPage()
+    await nextTick()
+    await nextTick()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('练习试卷详情服务异常')
   })
 })

@@ -466,6 +466,13 @@
 - 在加载失败时清空当前试卷列表，避免用户把请求异常误判成真实空态
 - 为 `src/__tests__/pages/exercise-papers.spec.ts` 提取带类型的页面 VM 访问辅助，移除详情跳转中的弱类型断言，并补充加载失败回归测试
 
+### 67. 练习试卷详情页静默失败收口
+
+- 新增 [Issue_20260622_Exercise_Paper_Detail_Silent_Error_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Exercise_Paper_Detail_Silent_Error_Gap.md)，记录练习试卷详情页加载失败仍会静默吞错的问题
+- 为 `src/pages/exercises/paper-detail/index.vue` 补充统一错误消息提取逻辑，保证详情加载失败时给出明确提示
+- 在加载失败时清空当前试卷详情，避免旧态残留
+- 为 `src/__tests__/pages/exercise-paper-detail.spec.ts` 提取带类型的页面 VM 访问辅助，移除下载和打印跳转中的弱类型断言，并补充详情加载失败回归测试
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -512,6 +519,7 @@
 - 定向测试：`src/__tests__/pages/contribute-exercise-detail.spec.ts` 通过（5 个用例）
 - 定向测试：`src/__tests__/pages/contribute-preview.spec.ts` 通过（4 个用例）
 - 定向测试：`src/__tests__/pages/exercise-papers.spec.ts` 通过（5 个用例）
+- 定向测试：`src/__tests__/pages/exercise-paper-detail.spec.ts` 通过（4 个用例）
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm.cmd test`：48 个测试文件、222 个用例通过
 - `cd frontend-web && npm.cmd test`：48 个测试文件、223 个用例通过
@@ -520,6 +528,7 @@
 - `cd frontend-web && npm.cmd test`：48 个测试文件、228 个用例通过
 - `cd frontend-web && npm.cmd test`：48 个测试文件、229 个用例通过
 - `cd frontend-web && npm.cmd test`：48 个测试文件、230 个用例通过
+- `cd frontend-web && npm.cmd test`：48 个测试文件、231 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交

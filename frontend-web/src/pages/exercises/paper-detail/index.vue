@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { getPaperDetail } from '@/api/modules/exercise'
 import type { ExercisePaper } from '@/types'
 
@@ -8,6 +9,10 @@ const route = useRoute()
 const router = useRouter()
 const paper = ref<ExercisePaper | null>(null)
 const loading = ref(true)
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
 
 onMounted(async () => {
   const id = route.params.id as string
@@ -18,9 +23,12 @@ onMounted(async () => {
 
   try {
     paper.value = await getPaperDetail(id)
-  } catch {
-    // fallback: keep empty state when detail loading fails
-  } finally {
+  }
+  catch (error: unknown) {
+    paper.value = null
+    ElMessage.error(getErrorMessage(error, '练习试卷详情加载失败'))
+  }
+  finally {
     loading.value = false
   }
 })
