@@ -25,8 +25,8 @@ type CategoryDialogForm = ExerciseCategoryCreatePayload & { id?: string }
 
 const grade = ref('')
 const subject = ref('')
-const grades = ['一年级','二年级','三年级','四年级','五年级','六年级','七年级','八年级','九年级','高一','高二','高三']
-const subjects = ['语文','数学','英语','物理','化学','生物','政治','历史','地理','科学']
+const grades = ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级', '七年级', '八年级', '九年级', '高一', '高二', '高三']
+const subjects = ['语文', '数学', '英语', '物理', '化学', '生物', '政治', '历史', '地理', '科学']
 
 const unitCats = ref<ExerciseCategory[]>([])
 const topicCats = ref<ExerciseCategory[]>([])
@@ -47,8 +47,18 @@ const uploading = ref(false)
 
 onMounted(() => loadAll())
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
+function isCancelAction(error: unknown) {
+  return error === 'cancel' || error === 'close'
+}
+
 async function loadAll() {
-  if (!grade.value || !subject.value) return
+  if (!grade.value || !subject.value) {
+    return
+  }
 
   const params = { grade: grade.value, subject: subject.value }
 
@@ -107,7 +117,8 @@ async function saveCat() {
         examType: dialogForm.value.examType,
       }
       await adminUpdateCategory(dialogForm.value.id, payload)
-    } else {
+    }
+    else {
       await adminCreateCategory({
         type: dialogForm.value.type,
         grade: dialogForm.value.grade,
@@ -120,8 +131,9 @@ async function saveCat() {
     ElMessage.success('已保存')
     dialog.value = false
     loadAll()
-  } catch (error: unknown) {
-    ElMessage.error(error instanceof Error ? error.message : '保存失败')
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '保存失败'))
   }
 }
 
@@ -131,7 +143,14 @@ async function delCat(id: string) {
     await adminDeleteCategory(id)
     ElMessage.success('已删除')
     loadAll()
-  } catch {}
+  }
+  catch (error: unknown) {
+    if (isCancelAction(error)) {
+      return
+    }
+
+    ElMessage.error(getErrorMessage(error, '删除失败'))
+  }
 }
 
 async function openNewLesson(unitId: string) {
@@ -142,7 +161,14 @@ async function openNewLesson(unitId: string) {
       ElMessage.success('已创建')
       loadAll()
     }
-  } catch {}
+  }
+  catch (error: unknown) {
+    if (isCancelAction(error)) {
+      return
+    }
+
+    ElMessage.error(getErrorMessage(error, '创建课时失败'))
+  }
 }
 
 async function delLesson(id: string) {
@@ -151,7 +177,14 @@ async function delLesson(id: string) {
     await adminDeleteLesson(id)
     ElMessage.success('已删除')
     loadAll()
-  } catch {}
+  }
+  catch (error: unknown) {
+    if (isCancelAction(error)) {
+      return
+    }
+
+    ElMessage.error(getErrorMessage(error, '删除课时失败'))
+  }
 }
 
 function openUpload(categoryId?: string, lessonId?: string) {
@@ -180,9 +213,11 @@ async function doUpload() {
     ElMessage.success('上传成功')
     uploadDialog.value = false
     loadAll()
-  } catch (error: unknown) {
-    ElMessage.error(error instanceof Error ? error.message : '上传失败')
-  } finally {
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '上传失败'))
+  }
+  finally {
     uploading.value = false
   }
 }
@@ -193,7 +228,14 @@ async function delPaper(id: string) {
     await adminDeletePaper(id)
     ElMessage.success('已删除')
     loadAll()
-  } catch {}
+  }
+  catch (error: unknown) {
+    if (isCancelAction(error)) {
+      return
+    }
+
+    ElMessage.error(getErrorMessage(error, '删除试卷失败'))
+  }
 }
 </script>
 

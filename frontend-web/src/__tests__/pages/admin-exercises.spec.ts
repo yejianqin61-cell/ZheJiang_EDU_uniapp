@@ -132,6 +132,28 @@ describe('Admin exercises page', () => {
     expect(ElMessage.success).toHaveBeenCalledWith('已保存')
   })
 
+  it('shows error when creating lesson fails', async () => {
+    vi.mocked(ElMessageBox.prompt).mockResolvedValue({ value: '第一课' } as any)
+    exerciseAdminMocks.adminCreateLesson.mockRejectedValue(new Error('创建课时失败'))
+
+    const wrapper = mountPage()
+
+    await (wrapper.vm as any).openNewLesson('unit-1')
+
+    expect(ElMessage.error).toHaveBeenCalledWith('创建课时失败')
+  })
+
+  it('shows error when deleting category fails', async () => {
+    vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm' as any)
+    exerciseAdminMocks.adminDeleteCategory.mockRejectedValue(new Error('删除分类失败'))
+
+    const wrapper = mountPage()
+
+    await (wrapper.vm as any).delCat('cat-1')
+
+    expect(ElMessage.error).toHaveBeenCalledWith('删除分类失败')
+  })
+
   it('warns when upload title or file is missing', async () => {
     const wrapper = mountPage()
 
