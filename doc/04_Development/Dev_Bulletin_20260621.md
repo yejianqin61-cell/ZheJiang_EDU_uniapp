@@ -266,6 +266,12 @@
 - 模板标签切换改为使用 typed handler，移除 `as any`
 - 同时整理页面脚本与模板命名，保持原有入口展示和跳转行为不变
 
+### 39. 练习抽题页错误类型收口
+
+- 新增 [Issue_20260622_Exercise_Draw_Error_Type_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Exercise_Draw_Error_Type_Gap.md)，记录练习抽题页错误解析仍在使用弱错误类型的问题
+- 练习抽题页改为使用 `unknown` 接住抽题异常，并为错误解析收口最小结构类型
+- 保持原有“暂无试卷 / 网络失败 / 服务异常”提示语义和下载、打印分流行为不变
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -290,6 +296,7 @@
 - 定向测试：`src/__tests__/pages/contribute-preview.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/print-checkout.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/exercises-index.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/exercise-draw.spec.ts` 在沙箱路径下触发 Vitest `setup.ts` 绝对路径解析异常，代码改动已通过全量回归验证
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm test`：48 个测试文件、185 个用例通过
 - `cd frontend-web && npm run build`：通过

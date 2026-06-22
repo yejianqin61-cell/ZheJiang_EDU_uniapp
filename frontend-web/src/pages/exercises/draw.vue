@@ -6,6 +6,17 @@ import type { ExercisePaper } from '@/types'
 
 type DrawNodeType = 'category' | 'lesson'
 
+interface DrawErrorResponseData {
+  message?: string
+}
+
+interface DrawErrorLike {
+  response?: {
+    status?: number
+    data?: DrawErrorResponseData
+  }
+}
+
 const route = useRoute()
 const router = useRouter()
 const nodeType = ((route.query.nodeType as string) || 'category') as DrawNodeType
@@ -24,24 +35,31 @@ onMounted(async () => {
     paper.value = nodeType === 'lesson'
       ? await drawLesson(nodeId)
       : await drawCategory(nodeId)
-  } catch (e: any) {
-    error.value = resolveDrawErrorMessage(e)
-  } finally {
+  }
+  catch (caughtError: unknown) {
+    error.value = resolveDrawErrorMessage(caughtError)
+  }
+  finally {
     setTimeout(() => {
       drawing.value = false
     }, 1500)
   }
 })
 
-function resolveDrawErrorMessage(error: any) {
-  const status = error?.response?.status
-  const message = String(error?.response?.data?.message || '').trim()
+function getDrawErrorLike(error: unknown): DrawErrorLike | null {
+  return typeof error === 'object' && error !== null ? error as DrawErrorLike : null
+}
+
+function resolveDrawErrorMessage(error: unknown) {
+  const drawError = getDrawErrorLike(error)
+  const status = drawError?.response?.status
+  const message = String(drawError?.response?.data?.message || '').trim()
 
   if (status === 404 || message.includes('暂无试卷')) {
     return '暂无试卷，请联系管理员上传'
   }
 
-  if (!error?.response) {
+  if (!drawError?.response) {
     return '抽题失败，请检查网络后重试'
   }
 
@@ -49,12 +67,18 @@ function resolveDrawErrorMessage(error: any) {
 }
 
 function goDownload() {
-  if (!paper.value) return
+  if (!paper.value) {
+    return
+  }
+
   router.push(`/payment?paperId=${paper.value.id}&type=exercise`)
 }
 
 function goPrint() {
-  if (!paper.value) return
+  if (!paper.value) {
+    return
+  }
+
   router.push(`/print/checkout?paperId=${paper.value.id}`)
 }
 </script>
