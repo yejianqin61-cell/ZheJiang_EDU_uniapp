@@ -410,6 +410,13 @@
 - 保持详情页展示、下载与导出成功行为不变
 - 补充页面回归测试，覆盖加载失败与导出失败兜底分支，并顺手收口测试中的弱类型断言
 
+### 59. 认证 store 无效 token 旧态残留收口
+
+- 新增 [Issue_20260622_Auth_Store_Invalid_Token_Stale_User_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Auth_Store_Invalid_Token_Stale_User_Gap.md)，记录认证 store 在无效 token 场景下可能残留旧用户态的问题
+- 抽出统一认证清理逻辑，保证 token 缺失或无效时同步清理 user 和本地存储
+- 保持现有登录、开发登录和登出行为不变
+- 补充 store 回归测试，覆盖无效 token 初始化分支
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -449,7 +456,7 @@
 - 定向测试：`src/__tests__/pages/exercise-upload.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-review.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm.cmd test`：48 个测试文件、221 个用例通过
+- `cd frontend-web && npm.cmd test`：48 个测试文件、222 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -485,3 +492,4 @@
 - 本批提交：组卷知识点 store 静默失败收口
 - 本批提交：地址编辑页加载静默跳回收口
 - 本批提交：订单链路失败兜底收口
+- 本批提交：认证 store 无效 token 旧态残留收口

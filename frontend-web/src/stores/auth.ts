@@ -20,16 +20,24 @@ export const useAuthStore = defineStore('auth', () => {
     return p.slice(0, 3) + '****' + p.slice(-4)
   })
 
+  function clearAuth(): void {
+    token.value = ''
+    user.value = null
+    localStorage.removeItem('accessToken')
+  }
+
   // 从 token 解析用户信息
   function parseToken(): void {
-    if (!token.value) return
+    if (!token.value) {
+      user.value = null
+      return
+    }
     try {
       const payload = JSON.parse(atob(token.value.split('.')[1]))
       user.value = { phone: payload.phone ?? null, role: payload.role }
     } catch {
       // token 无效，清除
-      token.value = ''
-      localStorage.removeItem('accessToken')
+      clearAuth()
     }
   }
 
@@ -88,9 +96,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 退出登录
   function logout(): void {
-    token.value = ''
-    user.value = null
-    localStorage.removeItem('accessToken')
+    clearAuth()
     window.location.href = '/login'
   }
 

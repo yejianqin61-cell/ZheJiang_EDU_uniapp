@@ -84,6 +84,15 @@ describe('AuthStore', () => {
     expect(auth.user).toEqual({ phone: '13800138000', role: 'teacher' })
   })
 
+  it('clears invalid stored token during initialization', () => {
+    localStorage.setItem('accessToken', 'invalid-token')
+    const auth = useAuthStore()
+
+    expect(auth.token).toBe('')
+    expect(auth.user).toBeNull()
+    expect(localStorage.getItem('accessToken')).toBeNull()
+  })
+
   it('logout clears token from storage', () => {
     const auth = useAuthStore()
     localStorage.setItem('accessToken', 'test-token')
