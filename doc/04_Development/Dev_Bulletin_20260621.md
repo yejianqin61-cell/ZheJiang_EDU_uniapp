@@ -230,6 +230,13 @@
 - 管理端订单页改为使用 `unknown` 接住状态更新异常，并在页面内收口最小错误消息提取逻辑
 - 同时补齐订单列表响应归一化辅助逻辑的显式类型，保持原有筛选、刷新与状态流转行为不变
 
+### 34. 管理端提现页异常处理收口
+
+- 新增 [Issue_20260622_Admin_Withdrawals_Error_Handling_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Withdrawals_Error_Handling_Gap.md)，记录管理端提现页仍存在弱错误类型和静默失败的问题
+- 提现管理页改为使用 `unknown` 接住审核异常，并在页面内收口最小错误消息提取逻辑
+- 区分拒绝弹窗取消与接口失败，保持取消静默，同时补上失败提示
+- 补充页面回归测试，覆盖拒绝提现请求失败时的错误提示行为
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -249,8 +256,9 @@
 - 定向测试：`src/__tests__/pages/exercise-upload.spec.ts` 与 `src/__tests__/pages/contribute-exercise-detail.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/address-edit.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-orders.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/admin-withdrawals.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm test`：48 个测试文件、181 个用例通过
+- `cd frontend-web && npm test`：48 个测试文件、182 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交

@@ -89,4 +89,20 @@ describe('Admin withdrawals page', () => {
     expect(ElMessage.success).toHaveBeenCalledWith('已拒绝')
     expect(adminApiMocks.getWithdrawals).toHaveBeenCalledTimes(2)
   })
+
+  it('shows error when reject request fails', async () => {
+    adminApiMocks.getWithdrawals.mockResolvedValue({
+      list: [],
+      pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
+    })
+    adminApiMocks.rejectWithdrawal.mockRejectedValue(new Error('提交失败'))
+    vi.mocked(ElMessageBox.prompt).mockResolvedValue({ value: '资料不完整' } as any)
+
+    const wrapper = mountPage()
+    await nextTick()
+
+    await (wrapper.vm as any).reject('wd-1')
+
+    expect(ElMessage.error).toHaveBeenCalledWith('提交失败')
+  })
 })

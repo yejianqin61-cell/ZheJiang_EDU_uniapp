@@ -2,22 +2,35 @@
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { approveWithdrawal, getWithdrawals, rejectWithdrawal, type AdminWithdrawalItem } from '@/api/modules/admin'
+import type { Pagination } from '@/types'
 
 const list = ref<AdminWithdrawalItem[]>([])
 const loading = ref(true)
-const pagination = ref({ page: 1, pageSize: 20, total: 0, totalPages: 0 })
+const pagination = ref<Pagination>({ page: 1, pageSize: 20, total: 0, totalPages: 0 })
 
 onMounted(() => fetchList())
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : '操作失败'
+}
+
+function isPromptCancel(error: unknown) {
+  return error === 'cancel' || error === 'close'
+}
 
 async function fetchList() {
   loading.value = true
   try {
     const data = await getWithdrawals({ page: pagination.value.page, pageSize: pagination.value.pageSize })
     list.value = data.list ?? []
-    if (data.pagination) pagination.value = data.pagination
-  } catch {
+    if (data.pagination) {
+      pagination.value = data.pagination
+    }
+  }
+  catch {
     // ignore list fallback
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -27,21 +40,29 @@ async function approve(id: string) {
     await approveWithdrawal(id)
     ElMessage.success('已通过')
     fetchList()
-  } catch (error: any) {
-    ElMessage.error(error?.message ?? '操作失败')
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error))
   }
 }
 
 async function reject(id: string) {
   try {
     const { value: reason } = await ElMessageBox.prompt('请输入拒绝原因', '拒绝提现', { type: 'warning' })
-    if (!reason) return
+    if (!reason) {
+      return
+    }
 
     await rejectWithdrawal(id, reason)
     ElMessage.success('已拒绝')
     fetchList()
-  } catch {
-    // prompt cancel or request failure handled silently here
+  }
+  catch (error: unknown) {
+    if (isPromptCancel(error)) {
+      return
+    }
+
+    ElMessage.error(getErrorMessage(error))
   }
 }
 </script>
