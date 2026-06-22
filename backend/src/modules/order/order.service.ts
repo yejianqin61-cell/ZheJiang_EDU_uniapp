@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan, Not } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -31,6 +31,8 @@ export interface ListOrdersParams {
 
 @Injectable()
 export class OrderService {
+  private readonly logger = new Logger(OrderService.name);
+
   constructor(
     @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
@@ -182,7 +184,12 @@ export class OrderService {
            WHERE ec.subject = ?`, [subject]
         );
         paperIds.push(...exRows.map((r: any) => r.id));
-      } catch { /* ignore */ }
+      } catch (error) {
+        this.logger.warn(
+          `Failed to load exercise paper IDs for subject ${subject}`,
+          error instanceof Error ? error.stack : undefined,
+        );
+      }
 
       if (paperIds.length > 0) {
         qb.andWhere('o.paperId IN (:...paperIds)', { paperIds });
@@ -221,7 +228,12 @@ export class OrderService {
           missingIds,
         );
         for (const row of exRows) titleMap.set(row.id, row.title);
-      } catch { /* ignore */ }
+      } catch (error) {
+        this.logger.warn(
+          `Failed to load exercise paper titles for order list: ${missingIds.join(',')}`,
+          error instanceof Error ? error.stack : undefined,
+        );
+      }
     }
 
     const isOwnOrders = scope !== 'others';
@@ -272,7 +284,12 @@ export class OrderService {
           `SELECT title FROM exercise_paper WHERE id = ?`, [order.paperId]
         );
         if (exRows.length > 0) paperTitle = exRows[0].title;
-      } catch { /* ignore */ }
+      } catch (error) {
+        this.logger.warn(
+          `Failed to load exercise paper title for order detail: ${order.paperId}`,
+          error instanceof Error ? error.stack : undefined,
+        );
+      }
     }
 
     const baseInfo = {

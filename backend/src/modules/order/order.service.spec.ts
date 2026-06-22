@@ -6,7 +6,7 @@ import { Order } from '../../database/entities/order.entity';
 import { Paper } from '../../database/entities/paper.entity';
 import { PricingService } from '../print/services/pricing.service';
 import { ShippingAddressService } from '../print/services/shipping-address.service';
-import { NotFoundException, ConflictException } from '@nestjs/common';
+import { NotFoundException, ConflictException, Logger } from '@nestjs/common';
 
 describe('OrderService', () => {
   let service: OrderService;
@@ -14,6 +14,10 @@ describe('OrderService', () => {
   let paperRepo: any;
   let pricingService: any;
   let shippingAddressService: any;
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   beforeEach(async () => {
     orderRepo = {
@@ -157,6 +161,68 @@ describe('OrderService', () => {
       await service.list({ userId: 'u1', page: 1, pageSize: 20, type: 'print' });
       expect(qb.andWhere).toHaveBeenCalled();
     });
+
+    it('should log and continue when exercise subject fallback query fails', async () => {
+      const loggerSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+      paperRepo.createQueryBuilder.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([{ id: 'paper-1' }]),
+      });
+      paperRepo.manager.query.mockRejectedValue(new Error('exercise lookup failed'));
+
+      await service.list({ userId: 'u1', page: 1, pageSize: 20, subject: '数学' });
+
+      expect(loggerSpy).toHaveBeenCalledWith(
+        'Failed to load exercise paper IDs for subject 数学',
+        expect.any(String),
+      );
+    });
+
+    it('should log and keep empty title when exercise title fallback query fails', async () => {
+      const loggerSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+      orderRepo.createQueryBuilder.mockReturnValue({
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([[
+          {
+            id: 'o1',
+            orderNo: 'NO1',
+            paperId: 'missing-paper',
+            type: 'exercise',
+            amount: 500,
+            status: 'paid',
+            copies: null,
+            printStatus: null,
+            shippingSnapshot: null,
+            pricingSnapshot: null,
+            unitPrice: 0,
+            createdAt: new Date(),
+            userId: 'u1',
+            paidAt: null,
+            expiredAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ], 1]),
+      });
+      paperRepo.createQueryBuilder.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      });
+      paperRepo.manager.query.mockRejectedValue(new Error('title lookup failed'));
+
+      const result = await service.list({ userId: 'u1', page: 1, pageSize: 20 });
+
+      expect(result.list[0].paperTitle).toBe('');
+      expect(loggerSpy).toHaveBeenCalledWith(
+        'Failed to load exercise paper titles for order list: missing-paper',
+        expect.any(String),
+      );
+    });
   });
 
   describe('getDetail', () => {
@@ -177,6 +243,25 @@ describe('OrderService', () => {
     it('should throw if order not found', async () => {
       orderRepo.findOne.mockResolvedValue(null);
       await expect(service.getDetail('bad', 'u1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should log and keep empty title when detail fallback query fails', async () => {
+      const loggerSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+      orderRepo.findOne.mockResolvedValue({
+        id: 'o1', paperId: 'exercise-paper-1', orderNo: 'NO1', type: 'exercise', amount: 500, unitPrice: 200,
+        status: 'paid', copies: null, printStatus: null, shippingSnapshot: null, pricingSnapshot: null,
+        paidAt: null, expiredAt: new Date(), createdAt: new Date(), updatedAt: new Date(), userId: 'u1',
+      });
+      paperRepo.findOne.mockResolvedValue(null);
+      paperRepo.manager.query.mockRejectedValue(new Error('detail title lookup failed'));
+
+      const result = await service.getDetail('o1', 'u1');
+
+      expect(result.paperTitle).toBe('');
+      expect(loggerSpy).toHaveBeenCalledWith(
+        'Failed to load exercise paper title for order detail: exercise-paper-1',
+        expect.any(String),
+      );
     });
   });
 

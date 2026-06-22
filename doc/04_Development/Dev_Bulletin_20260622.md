@@ -133,6 +133,7 @@
 - `cd frontend-web && npm.cmd test -- src/__tests__/stores/auth.spec.ts src/__tests__/api/admin.spec.ts`：2 个测试文件、21 个用例通过
 - `cd backend && npm.cmd test -- src/modules/auth/services/sms.service.spec.ts`：1 个测试文件、9 个用例通过
 - `cd backend && npm.cmd test -- src/modules/auth/services/sms.service.spec.ts src/modules/auth/auth.service.spec.ts src/modules/auth/auth.controller.spec.ts`：3 个测试文件、29 个用例通过
+- `cd backend && npm.cmd test -- src/modules/order/order.service.spec.ts`：1 个测试文件、16 个用例通过
 
 ### 12. 短信发送失败显式报错与状态回滚
 
@@ -144,3 +145,14 @@
 - `backend/src/modules/auth/services/sms.service.spec.ts`
   - 新增“短信供应商发送失败时回滚状态并抛出明确错误”的回归用例
   - 校验失败场景下日志记录、验证码缓存和发送频控缓存都被正确清理
+
+### 13. 订单练习试卷回退查询告警补齐
+
+- 对应 Issue：
+  - [Issue_20260622_Backend_Silent_Error_Cleanup_Backlog.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Backend_Silent_Error_Cleanup_Backlog.md)
+- `backend/src/modules/order/order.service.ts`
+  - 为订单列表和详情里的练习试卷回退查询补充 `Logger` 告警，避免科目回退、标题回退失败时继续静默
+  - 保持原有兜底行为不变，查询异常时仍返回空标题或现有列表结果，不影响甲方当前下单与查单主流程
+- `backend/src/modules/order/order.service.spec.ts`
+  - 新增练习科目回退失败、订单列表标题回退失败、订单详情标题回退失败三条回归用例
+  - 校验异常场景下服务会记录明确告警，并继续按现有兜底结果返回
