@@ -1,7 +1,10 @@
 import api from '../index'
 import type { ExercisePaper } from '@/types'
 
-// ===== 用户端 =====
+interface ExercisePaperListResponse {
+  list: ExercisePaper[]
+}
+
 export function getExerciseCategories(params: { type?: string; grade?: string; subject?: string }) {
   return api.get('/exercise/categories', { params })
 }
@@ -9,10 +12,10 @@ export function getExerciseLessons(unitId: string) {
   return api.get('/exercise/lessons', { params: { unitId } })
 }
 export function getPapersByCategory(categoryId: string) {
-  return api.get('/exercise/papers', { params: { categoryId } })
+  return api.get<ExercisePaper[] | ExercisePaperListResponse>('/exercise/papers', { params: { categoryId } })
 }
 export function getPapersByLesson(lessonId: string) {
-  return api.get('/exercise/papers', { params: { lessonId } })
+  return api.get<ExercisePaper[] | ExercisePaperListResponse>('/exercise/papers', { params: { lessonId } })
 }
 export function getPaperDetail(id: string) {
   return api.get<ExercisePaper>(`/exercise/papers/${id}`)
@@ -28,7 +31,6 @@ export function getExercisePaper(id: string) {
   return api.get<ExercisePaper>(`/exercise/papers/${id}`)
 }
 
-// ===== 管理端 =====
 export function adminListCategories(params: { type?: string; grade?: string; subject?: string }) {
   return api.get('/admin/exercise/categories', { params })
 }
@@ -63,7 +65,6 @@ export function adminDeletePaper(id: string) {
   return api.delete(`/admin/exercise/papers/${id}`)
 }
 
-// ===== 练习试卷贡献（教师上传 → 管理员审核）=====
 export function uploadExercisePaper(formData: FormData) {
   return api.post('/exercise-contributions/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
 }
@@ -83,7 +84,6 @@ export function getUploadLessons(categoryId: string) {
   return api.get('/exercise-contributions/lessons', { params: { categoryId } })
 }
 
-// ===== 管理端：练习审核 =====
 export function adminListExerciseUploads(params: { page?: number; pageSize?: number; status?: string; subject?: string; grade?: string; exerciseType?: string }) {
   return api.get('/exercise-contributions/admin/list', { params })
 }

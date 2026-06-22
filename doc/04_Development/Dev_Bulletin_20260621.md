@@ -107,10 +107,17 @@
 - 打印结算页改为复用 `getPublicPricing()`、`listAddresses()`、`createOrder()`，统一串联定价、地址与下单链路
 - 补充 API 层与页面层回归测试，覆盖公开定价读取、支付页订单创建与余额支付、打印结算页地址校验与打印订单创建流程
 
+### 16. Paper 链路 API 收口
+
+- `paper` store 改为复用共享 `paper` API 模块中的 `getKnowledgePoints()` 与 `generatePaper()`，移除 store 对底层 `api` 的直接依赖
+- 试卷预览页改为复用共享 `pricing` API 模块中的 `getPublicPricing()`，统一下载与打印价格展示链路
+- 练习试卷列表页改为复用共享 `exercise` API 模块中的 `getPapersByCategory()` 与 `getPapersByLesson()`，移除页面层对底层 `api` 的直接依赖
+- 补强 `paper` / `exercise` API 返回类型与 store / 页面回归测试，覆盖知识点加载、试卷生成、试卷预览价格展示、练习试卷列表查询与跳转流程
+
 ## 验证结果
 
-- 定向测试：3 个测试文件、7 个用例通过
-- `cd frontend-web && npm test`：47 个测试文件、164 个用例通过
+- 定向测试：5 个测试文件、26 个用例通过
+- `cd frontend-web && npm test`：47 个测试文件、165 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -131,4 +138,5 @@
 - `5f973d0` `refactor: align profile pages with auth api module`
 - `436a2d8` `refactor: align order pages with api modules`
 - `0423ee6` `refactor: align contribution pages with api module`
-- 本批提交：支付与打印结算链路 API 收口
+- `ff227ca` `refactor: align payment pages with api modules`
+- 本批提交：Paper 链路 API 收口

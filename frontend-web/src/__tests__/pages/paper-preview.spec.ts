@@ -7,8 +7,8 @@ import PaperPreviewPage from '@/pages/paper/preview/index.vue'
 
 const routerPush = vi.fn()
 const routerReplace = vi.fn()
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
+const pricingApiMocks = vi.hoisted(() => ({
+  getPublicPricing: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -18,8 +18,8 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/pricing', () => ({
+  getPublicPricing: pricingApiMocks.getPublicPricing,
 }))
 
 vi.mock('@/composables/useMarkdown', () => ({
@@ -43,7 +43,7 @@ describe('Paper preview page', () => {
     setActivePinia(createPinia())
     routerPush.mockReset()
     routerReplace.mockReset()
-    apiMocks.get.mockReset()
+    pricingApiMocks.getPublicPricing.mockReset()
   })
 
   it('redirects to paper config when current paper is missing', async () => {
@@ -70,7 +70,7 @@ describe('Paper preview page', () => {
         { index: 6, type: '应用题', content: '题目6', options: [] },
       ],
     } as any
-    apiMocks.get.mockResolvedValue({
+    pricingApiMocks.getPublicPricing.mockResolvedValue({
       download: { unitPrice: 150 },
       print: [
         { minQuantity: 1, maxQuantity: 9, unitPrice: 80 },
@@ -99,7 +99,7 @@ describe('Paper preview page', () => {
       generateTime: 1,
       questions: [{ index: 1, type: '选择题', content: '题目1', options: [] }],
     } as any
-    apiMocks.get.mockResolvedValue({
+    pricingApiMocks.getPublicPricing.mockResolvedValue({
       download: { unitPrice: 100 },
       print: [{ minQuantity: 1, maxQuantity: null, unitPrice: 50 }],
     })

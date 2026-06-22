@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { PaperCondition, PaperResult, KnowledgePointItem } from '@/types'
-import api from '@/api/index'
+import { generatePaper, getKnowledgePoints } from '@/api/modules/paper'
+import type { KnowledgePointItem, PaperCondition, PaperResult } from '@/types'
 
 export const usePaperStore = defineStore('paper', () => {
   const condition = ref<PaperCondition>({
@@ -17,21 +17,24 @@ export const usePaperStore = defineStore('paper', () => {
   const loading = ref(false)
 
   async function fetchKnowledgePoints() {
-    if (!condition.value.subject || !condition.value.grade) return
+    if (!condition.value.subject || !condition.value.grade) {
+      return
+    }
+
     try {
-      const data = await api.get('/papers/knowledge-points', {
-        params: { subject: condition.value.subject, grade: condition.value.grade },
-      })
-      knowledgePoints.value = Array.isArray(data) ? data : (data?.list ?? data ?? [])
-    } catch { /* ignore */ }
+      const data = await getKnowledgePoints(condition.value.subject, condition.value.grade)
+      knowledgePoints.value = Array.isArray(data) ? data : (data?.list ?? [])
+    }
+    catch {}
   }
 
   async function generate() {
     loading.value = true
+
     try {
-      const data = await api.post('/papers/generate', condition.value)
-      currentPaper.value = data
-    } finally {
+      currentPaper.value = await generatePaper(condition.value)
+    }
+    finally {
       loading.value = false
     }
   }

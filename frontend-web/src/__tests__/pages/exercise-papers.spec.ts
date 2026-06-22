@@ -11,8 +11,9 @@ const routeState = vi.hoisted(() => ({
     nodeName: '第一单元',
   },
 }))
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
+const exerciseApiMocks = vi.hoisted(() => ({
+  getPapersByCategory: vi.fn(),
+  getPapersByLesson: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -22,8 +23,9 @@ vi.mock('vue-router', () => ({
   useRoute: () => routeState,
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/exercise', () => ({
+  getPapersByCategory: exerciseApiMocks.getPapersByCategory,
+  getPapersByLesson: exerciseApiMocks.getPapersByLesson,
 }))
 
 const mountPage = () =>
@@ -43,11 +45,12 @@ describe('Exercise papers page', () => {
     routeState.query.categoryId = 'cat-1'
     routeState.query.lessonId = undefined
     routeState.query.nodeName = '第一单元'
-    apiMocks.get.mockReset()
+    exerciseApiMocks.getPapersByCategory.mockReset()
+    exerciseApiMocks.getPapersByLesson.mockReset()
   })
 
   it('loads papers by category on mount', async () => {
-    apiMocks.get.mockResolvedValue([
+    exerciseApiMocks.getPapersByCategory.mockResolvedValue([
       { id: 'paper-1', title: '同步练习卷', fileType: 'pdf', fileSize: 2048, pageCount: 3 },
     ])
 
@@ -55,27 +58,23 @@ describe('Exercise papers page', () => {
     await nextTick()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/exercise/papers', {
-      params: { categoryId: 'cat-1' },
-    })
+    expect(exerciseApiMocks.getPapersByCategory).toHaveBeenCalledWith('cat-1')
     expect(wrapper.text()).toContain('同步练习卷')
   })
 
   it('loads papers by lesson when lesson id exists', async () => {
     routeState.query.categoryId = undefined
     routeState.query.lessonId = 'lesson-1'
-    apiMocks.get.mockResolvedValue([])
+    exerciseApiMocks.getPapersByLesson.mockResolvedValue([])
 
     mountPage()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/exercise/papers', {
-      params: { lessonId: 'lesson-1' },
-    })
+    expect(exerciseApiMocks.getPapersByLesson).toHaveBeenCalledWith('lesson-1')
   })
 
   it('shows empty state and upload entry when papers are empty', async () => {
-    apiMocks.get.mockResolvedValue([])
+    exerciseApiMocks.getPapersByCategory.mockResolvedValue([])
 
     const wrapper = mountPage()
     await nextTick()
@@ -86,7 +85,7 @@ describe('Exercise papers page', () => {
   })
 
   it('navigates to paper detail page', async () => {
-    apiMocks.get.mockResolvedValue([])
+    exerciseApiMocks.getPapersByCategory.mockResolvedValue([])
     const wrapper = mountPage()
 
     await (wrapper.vm as any).goDetail('paper-9')
