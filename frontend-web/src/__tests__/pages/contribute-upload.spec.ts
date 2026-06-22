@@ -80,4 +80,19 @@ describe('Contribute upload page', () => {
     expect(ElMessage.success).toHaveBeenCalledWith('上传成功，AI解析中...')
     expect(routerPush).toHaveBeenCalledWith('/contribute')
   })
+
+  it('shows upload error message when request fails', async () => {
+    contributionApiMocks.uploadContributionFile.mockRejectedValue(new Error('上传服务异常'))
+
+    const wrapper = mountPage()
+    ;(wrapper.vm as any).form.subject = '数学'
+    ;(wrapper.vm as any).form.grade = '五年级'
+    ;(wrapper.vm as any).form.file = new File(['demo'], 'questions.docx', {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    })
+
+    await (wrapper.vm as any).submit()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('上传服务异常')
+  })
 })
