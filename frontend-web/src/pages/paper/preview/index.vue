@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { renderMarkdown } from '@/composables/useMarkdown'
 import { getPublicPricing } from '@/api/modules/pricing'
 import { usePaperStore } from '@/stores/paper'
@@ -14,6 +15,10 @@ const PREVIEW_LIMIT = 5
 const previewQuestions = computed(() => paper.currentPaper?.questions.slice(0, PREVIEW_LIMIT) ?? [])
 const totalQuestions = computed(() => paper.currentPaper?.questions.length ?? 0)
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
 onMounted(async () => {
   if (!paper.currentPaper) {
     router.replace('/paper/config')
@@ -23,7 +28,9 @@ onMounted(async () => {
   try {
     pricing.value = await getPublicPricing()
   }
-  catch {}
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '价格信息加载失败'))
+  }
 })
 
 function calcDownloadPrice(): string {
