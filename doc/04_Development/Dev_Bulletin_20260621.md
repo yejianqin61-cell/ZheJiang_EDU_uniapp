@@ -114,10 +114,17 @@
 - 练习试卷列表页改为复用共享 `exercise` API 模块中的 `getPapersByCategory()` 与 `getPapersByLesson()`，移除页面层对底层 `api` 的直接依赖
 - 补强 `paper` / `exercise` API 返回类型与 store / 页面回归测试，覆盖知识点加载、试卷生成、试卷预览价格展示、练习试卷列表查询与跳转流程
 
+### 17. 登录页 API 收口
+
+- 登录页邮件验证码发送、邮箱注册、邮箱密码登录统一复用共享 `auth` API 模块，移除页面层对底层 `api` 的最后三处直接依赖
+- 为 `auth` API 模块补齐 `sendEmailCode()`、`registerByEmail()`、`loginByPassword()`，并扩展登录响应类型以覆盖邮箱链路返回字段
+- 更新登录页页面测试与 `auth` API 模块测试，覆盖邮件验证码发送、邮箱注册跳转、邮箱密码登录跳转三条回归链路
+
 ## 验证结果
 
-- 定向测试：5 个测试文件、26 个用例通过
-- `cd frontend-web && npm test`：47 个测试文件、165 个用例通过
+- 定向测试：3 个测试文件、20 个用例通过
+- `cd frontend-web && npm.cmd run build`：通过
+- `cd frontend-web && npm test`：47 个测试文件、170 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交

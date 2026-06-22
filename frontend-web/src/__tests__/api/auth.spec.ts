@@ -32,6 +32,42 @@ describe('Auth API', () => {
     expect(response.accessToken).toBe('token')
   })
 
+  it('sendEmailCode -> POST /auth/send-email-code', async () => {
+    const { sendEmailCode } = await import('@/api/modules/auth')
+    mockPost.mockResolvedValue({ message: '验证码已发送' })
+
+    await sendEmailCode('teacher@example.com')
+
+    expect(mockPost).toHaveBeenCalledWith('/auth/send-email-code', { email: 'teacher@example.com' })
+  })
+
+  it('registerByEmail -> POST /auth/register', async () => {
+    const { registerByEmail } = await import('@/api/modules/auth')
+    mockPost.mockResolvedValue({ accessToken: 'token', role: 'teacher', email: 'teacher@example.com' })
+
+    const response = await registerByEmail('teacher@example.com', '123456', 'secret123')
+
+    expect(mockPost).toHaveBeenCalledWith('/auth/register', {
+      email: 'teacher@example.com',
+      code: '123456',
+      password: 'secret123',
+    })
+    expect(response.email).toBe('teacher@example.com')
+  })
+
+  it('loginByPassword -> POST /auth/login-by-password', async () => {
+    const { loginByPassword } = await import('@/api/modules/auth')
+    mockPost.mockResolvedValue({ accessToken: 'token', role: 'teacher', email: 'teacher@example.com' })
+
+    const response = await loginByPassword('teacher@example.com', 'secret123')
+
+    expect(mockPost).toHaveBeenCalledWith('/auth/login-by-password', {
+      email: 'teacher@example.com',
+      password: 'secret123',
+    })
+    expect(response.accessToken).toBe('token')
+  })
+
   it('devLogin -> POST /auth/login with code', async () => {
     const { devLogin } = await import('@/api/modules/auth')
     mockPost.mockResolvedValue({ accessToken: 'token', role: 'admin' })

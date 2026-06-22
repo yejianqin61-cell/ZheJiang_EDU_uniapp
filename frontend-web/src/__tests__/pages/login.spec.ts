@@ -11,12 +11,12 @@ const routerReplace = vi.fn()
 const routeState = vi.hoisted(() => ({
   query: { redirect: '/profile' as string | undefined },
 }))
-const apiMocks = vi.hoisted(() => ({
-  post: vi.fn(),
-}))
 const authModuleMocks = vi.hoisted(() => ({
   sendSms: vi.fn(),
+  sendEmailCode: vi.fn(),
   login: vi.fn(),
+  registerByEmail: vi.fn(),
+  loginByPassword: vi.fn(),
   devLogin: vi.fn(),
   getProfile: vi.fn(),
 }))
@@ -28,13 +28,12 @@ vi.mock('vue-router', () => ({
   useRoute: () => routeState,
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
-}))
-
 vi.mock('@/api/modules/auth', () => ({
   sendSms: authModuleMocks.sendSms,
+  sendEmailCode: authModuleMocks.sendEmailCode,
   login: authModuleMocks.login,
+  registerByEmail: authModuleMocks.registerByEmail,
+  loginByPassword: authModuleMocks.loginByPassword,
   devLogin: authModuleMocks.devLogin,
   getProfile: authModuleMocks.getProfile,
 }))
@@ -55,9 +54,11 @@ describe('Login page', () => {
     setActivePinia(createPinia())
     routeState.query.redirect = '/profile'
     routerReplace.mockReset()
-    apiMocks.post.mockReset()
     authModuleMocks.sendSms.mockReset()
+    authModuleMocks.sendEmailCode.mockReset()
     authModuleMocks.login.mockReset()
+    authModuleMocks.registerByEmail.mockReset()
+    authModuleMocks.loginByPassword.mockReset()
     authModuleMocks.devLogin.mockReset()
     authModuleMocks.getProfile.mockReset()
     vi.mocked(ElMessage.warning).mockReset()
@@ -78,7 +79,7 @@ describe('Login page', () => {
     const pinia = createPinia()
     setActivePinia(pinia)
     authModuleMocks.getProfile.mockResolvedValue({ phone: '13800138000', role: 'teacher' })
-    apiMocks.post.mockResolvedValueOnce({ accessToken: 'token-register' })
+    authModuleMocks.registerByEmail.mockResolvedValueOnce({ accessToken: 'token-register', role: 'teacher' })
 
     const wrapper = mountPage(pinia)
     ;(wrapper.vm as any).regEmail = 'teacher@example.com'
@@ -89,14 +90,21 @@ describe('Login page', () => {
     await (wrapper.vm as any).handleRegister()
     await nextTick()
 
-    expect(apiMocks.post).toHaveBeenCalledWith('/auth/register', {
-      email: 'teacher@example.com',
-      code: '123456',
-      password: '123456',
-    })
+    expect(authModuleMocks.registerByEmail).toHaveBeenCalledWith('teacher@example.com', '123456', '123456')
     expect(localStorage.getItem('accessToken')).toBe('token-register')
     expect(ElMessage.success).toHaveBeenCalledWith('登录成功')
     expect(routerReplace).toHaveBeenCalledWith('/profile')
+  })
+
+  it('sends registration email code with auth api module', async () => {
+    authModuleMocks.sendEmailCode.mockResolvedValue(undefined)
+    const wrapper = mountPage()
+    ;(wrapper.vm as any).regEmail = 'teacher@example.com'
+
+    await (wrapper.vm as any).handleSendRegCode()
+
+    expect(authModuleMocks.sendEmailCode).toHaveBeenCalledWith('teacher@example.com')
+    expect(ElMessage.success).toHaveBeenCalledWith('验证码已发送，请查看邮箱')
   })
 
   it('sends sms and logs in with phone', async () => {
@@ -116,6 +124,24 @@ describe('Login page', () => {
     expect(authModuleMocks.sendSms).toHaveBeenCalledWith('13800138000')
     expect(authModuleMocks.login).toHaveBeenCalledWith('13800138000', '123456')
     expect(ElMessage.success).toHaveBeenCalledWith('验证码已发送')
+    expect(routerReplace).toHaveBeenCalledWith('/profile')
+  })
+
+  it('logs in with email and redirects on success', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    authModuleMocks.getProfile.mockResolvedValue({ phone: '13800138000', role: 'teacher' })
+    authModuleMocks.loginByPassword.mockResolvedValueOnce({ accessToken: 'token-email', role: 'teacher' })
+
+    const wrapper = mountPage(pinia)
+    ;(wrapper.vm as any).loginEmail = 'teacher@example.com'
+    ;(wrapper.vm as any).loginPassword = 'secret123'
+
+    await (wrapper.vm as any).handleEmailLogin()
+    await nextTick()
+
+    expect(authModuleMocks.loginByPassword).toHaveBeenCalledWith('teacher@example.com', 'secret123')
+    expect(localStorage.getItem('accessToken')).toBe('token-email')
     expect(routerReplace).toHaveBeenCalledWith('/profile')
   })
 

@@ -4,6 +4,7 @@ export interface LoginResponse {
   accessToken: string
   role: 'teacher' | 'admin'
   phone?: string
+  email?: string
 }
 
 export interface UserProfile {
@@ -27,8 +28,20 @@ export function sendSms(phone: string): Promise<void> {
   return api.post('/auth/send-sms', { phone })
 }
 
+export function sendEmailCode(email: string): Promise<void> {
+  return api.post('/auth/send-email-code', { email })
+}
+
 export function login(phone: string, smsCode: string): Promise<LoginResponse> {
   return api.post('/auth/login', { phone, smsCode })
+}
+
+export function registerByEmail(email: string, code: string, password: string): Promise<LoginResponse> {
+  return api.post('/auth/register', { email, code, password })
+}
+
+export function loginByPassword(email: string, password: string): Promise<LoginResponse> {
+  return api.post('/auth/login-by-password', { email, password })
 }
 
 export function devLogin(code: string): Promise<LoginResponse> {

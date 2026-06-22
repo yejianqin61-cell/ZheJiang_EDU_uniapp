@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import api from '@/api/index'
+import { loginByPassword, registerByEmail, sendEmailCode } from '@/api/modules/auth'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
@@ -59,7 +59,7 @@ async function handleSendRegCode() {
   if (!regEmail.value.includes('@')) { ElMessage.warning('请输入正确的邮箱'); return }
   if (regCountdown.value > 0) return
   try {
-    await api.post('/auth/send-email-code', { email: regEmail.value })
+    await sendEmailCode(regEmail.value)
     ElMessage.success('验证码已发送，请查看邮箱')
     startRegCountdown()
   } catch { /* */ }
@@ -72,7 +72,7 @@ async function handleRegister() {
   if (regPassword.value !== regPassword2.value) { ElMessage.warning('两次密码不一致'); return }
   regSubmitting.value = true
   try {
-    const res = await api.post('/auth/register', { email: regEmail.value, code: regCode.value, password: regPassword.value })
+    const res = await registerByEmail(regEmail.value, regCode.value, regPassword.value)
     authStore.token = res.accessToken
     localStorage.setItem('accessToken', res.accessToken)
     authStore.fetchProfile()
@@ -90,7 +90,7 @@ async function handleEmailLogin() {
   if (!loginPassword.value) { ElMessage.warning('请输入密码'); return }
   loginSubmitting.value = true
   try {
-    const res = await api.post('/auth/login-by-password', { email: loginEmail.value, password: loginPassword.value })
+    const res = await loginByPassword(loginEmail.value, loginPassword.value)
     authStore.token = res.accessToken
     localStorage.setItem('accessToken', res.accessToken)
     authStore.fetchProfile()
