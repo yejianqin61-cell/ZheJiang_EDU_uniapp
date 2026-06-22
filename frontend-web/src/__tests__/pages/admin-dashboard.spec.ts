@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils'
+import { ElMessage } from 'element-plus'
 import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminDashboardPage from '@/pages/admin/dashboard/index.vue'
@@ -50,6 +51,7 @@ describe('Admin dashboard page', () => {
     chartMocks.chartInit.mockReset()
     chartMocks.resizeSpy.mockReset()
     chartMocks.disposeSpy.mockReset()
+    vi.mocked(ElMessage.error).mockReset()
     addEventListenerSpy.mockClear()
     removeEventListenerSpy.mockClear()
     chartMocks.chartInit.mockImplementation(() => ({
@@ -82,6 +84,17 @@ describe('Admin dashboard page', () => {
     expect(chartMocks.chartSetOption).toHaveBeenCalled()
     expect(addEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function))
     expect(wrapper.text()).toContain('120')
+  })
+
+  it('shows error when dashboard stats fail to load', async () => {
+    apiMocks.get.mockRejectedValue(new Error('仪表盘服务异常'))
+
+    mountPage()
+    await nextTick()
+    await nextTick()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('仪表盘服务异常')
+    expect(chartMocks.chartInit).toHaveBeenCalledTimes(3)
   })
 
   it('removes resize listener and disposes charts on unmount', async () => {

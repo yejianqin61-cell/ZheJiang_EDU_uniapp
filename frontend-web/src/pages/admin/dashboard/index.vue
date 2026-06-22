@@ -5,6 +5,7 @@ import { PieChart, BarChart } from 'echarts/charts'
 import { TooltipComponent, LegendComponent, GridComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import { init, type EChartsType } from 'echarts/core'
+import { ElMessage } from 'element-plus'
 import { getDashboardStats } from '@/api/modules/admin'
 import type { DashboardStats } from '@/types'
 
@@ -27,8 +28,25 @@ const subjectChart = ref<HTMLDivElement>()
 const gradeChart = ref<HTMLDivElement>()
 const difficultyChart = ref<HTMLDivElement>()
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message
+  }
+
+  return fallback
+}
+
 onMounted(async () => {
-  try { stats.value = await getDashboardStats() } catch { /* ignore dashboard fallback */ }
+  try {
+    stats.value = await getDashboardStats()
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '仪表盘统计加载失败'))
+  }
   loading.value = false
   await nextTick()
   renderSubjectChart()

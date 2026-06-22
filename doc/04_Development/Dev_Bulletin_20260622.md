@@ -68,6 +68,16 @@
   - 重写页面 VM 访问为显式类型辅助，移除该文件中的 `as any`
   - 补充“组卷失败会提示错误并留在配置页”的回归用例
 
+### 7. 管理端仪表盘首屏加载静默失败收口
+
+- 对应 Issue：
+  - [Issue_20260622_Admin_Dashboard_Silent_Error_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Dashboard_Silent_Error_Gap.md)
+- `frontend-web/src/pages/admin/dashboard/index.vue`
+  - 仪表盘统计加载失败时不再静默吞错，改为提示明确错误信息
+  - 保持默认统计值兜底和图表初始化逻辑不变，避免首屏渲染中断
+- `frontend-web/src/__tests__/pages/admin-dashboard.spec.ts`
+  - 补充“仪表盘首屏加载失败会提示错误”的回归用例
+
 ## 验证结果
 
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-withdrawals.spec.ts`：1 个测试文件、5 个用例通过
@@ -76,3 +86,4 @@
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-exercise-contributions.spec.ts`：1 个测试文件、6 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/payment.spec.ts`：1 个测试文件、6 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/paper-config.spec.ts`：1 个测试文件、4 个用例通过
+- `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-dashboard.spec.ts`：1 个测试文件、3 个用例通过
