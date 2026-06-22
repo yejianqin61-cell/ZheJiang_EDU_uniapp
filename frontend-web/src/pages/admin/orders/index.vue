@@ -24,8 +24,8 @@ const psLabels: Record<string, string> = { null: '待处理', printing: '打印�
 
 onMounted(() => fetchList())
 
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : '操作失败'
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
 }
 
 function normalizeOrderListResponse(data: AdminOrderListResult) {
@@ -50,8 +50,9 @@ async function fetchList() {
       pagination.value = normalized.pagination
     }
   }
-  catch {
-    // ignore list fallback
+  catch (error: unknown) {
+    list.value = []
+    ElMessage.error(getErrorMessage(error, '订单列表加载失败'))
   }
   finally {
     loading.value = false
@@ -77,7 +78,7 @@ async function updateStatus(orderId: string, status: AdminOrderPrintStatus) {
     fetchList()
   }
   catch (error: unknown) {
-    ElMessage.error(getErrorMessage(error))
+    ElMessage.error(getErrorMessage(error, '操作失败'))
   }
 }
 </script>

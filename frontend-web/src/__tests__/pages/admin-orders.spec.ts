@@ -4,6 +4,11 @@ import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminOrdersPage from '@/pages/admin/orders/index.vue'
 
+type AdminOrdersPageVm = {
+  switchScope: (scope: string) => Promise<void> | void
+  updateStatus: (orderId: string, status: 'printing' | 'shipped' | 'delivered') => Promise<void>
+}
+
 const adminApiMocks = vi.hoisted(() => ({
   getAdminOrders: vi.fn(),
   updatePrintStatus: vi.fn(),
@@ -42,6 +47,10 @@ describe('Admin orders page', () => {
     vi.mocked(ElMessage.error).mockReset()
   })
 
+  function getVm(wrapper: ReturnType<typeof mountPage>) {
+    return wrapper.vm as AdminOrdersPageVm
+  }
+
   it('loads mine download orders on mount', async () => {
     adminApiMocks.getAdminOrders.mockResolvedValue({
       list: [],
@@ -67,7 +76,7 @@ describe('Admin orders page', () => {
     const wrapper = mountPage()
     await nextTick()
 
-    await (wrapper.vm as any).switchScope('others')
+    await getVm(wrapper).switchScope('others')
 
     expect(adminApiMocks.getAdminOrders).toHaveBeenNthCalledWith(2, {
       page: 1,
@@ -86,10 +95,18 @@ describe('Admin orders page', () => {
     const wrapper = mountPage()
     await nextTick()
 
-    await (wrapper.vm as any).updateStatus('order-1', 'printing')
+    await getVm(wrapper).updateStatus('order-1', 'printing')
 
     expect(adminApiMocks.updatePrintStatus).toHaveBeenCalledWith('order-1', 'printing')
     expect(ElMessage.success).toHaveBeenCalledWith('状态已更新')
     expect(adminApiMocks.getAdminOrders).toHaveBeenCalledTimes(2)
+  })
+  it('shows error when loading orders fails', async () => {
+    adminApiMocks.getAdminOrders.mockRejectedValue(new Error('订单列表服务异常'))
+
+    mountPage()
+    await nextTick()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('订单列表服务异常')
   })
 })
