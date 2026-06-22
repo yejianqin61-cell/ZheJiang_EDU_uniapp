@@ -23,6 +23,10 @@ function getErrorMessage(error: unknown) {
   return '操作失败'
 }
 
+function isDismissedMessageBoxAction(error: unknown) {
+  return error === 'cancel' || error === 'close'
+}
+
 onMounted(() => {
   void fetchList()
 })
@@ -59,7 +63,14 @@ async function batchAction(action: 'approve' | 'reject') {
     await batchReview(selected.value, action)
     ElMessage.success('操作成功')
     await fetchList()
-  } catch {}
+  }
+  catch (error: unknown) {
+    if (isDismissedMessageBoxAction(error)) {
+      return
+    }
+
+    ElMessage.error(getErrorMessage(error))
+  }
 }
 
 async function singleAction(id: string, action: 'approve' | 'reject') {

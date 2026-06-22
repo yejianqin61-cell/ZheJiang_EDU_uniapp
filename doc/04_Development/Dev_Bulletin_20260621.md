@@ -375,6 +375,13 @@
 - 保持现有空列表兜底和上传流程不变，避免页面交互被初始化失败阻断
 - 补充页面回归测试，覆盖三个失败分支的提示行为
 
+### 54. 管理端入库审核批量静默失败收口
+
+- 新增 [Issue_20260622_Admin_Review_Batch_Silent_Error_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Review_Batch_Silent_Error_Gap.md)，记录管理端入库审核页仍存在批量静默失败分支的问题
+- 为批量审核操作区分确认框取消与真实接口失败，对真实失败补充明确提示
+- 保持单条审核、列表刷新与选中重置逻辑不变
+- 补充页面回归测试，覆盖批量取消和批量失败分支
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -412,8 +419,9 @@
 - 定向测试：`src/__tests__/pages/admin-pricing.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/print-checkout.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/exercise-upload.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/admin-review.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm.cmd test`：48 个测试文件、214 个用例通过
+- `cd frontend-web && npm.cmd test`：48 个测试文件、216 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -445,3 +453,4 @@
 - `e5ff392` `refactor: tighten print checkout load errors`
 - `b02aa0c` `test: type print checkout fixtures`
 - 本批提交：练习试卷上传页静默失败收口
+- 本批提交：管理端入库审核批量静默失败收口
