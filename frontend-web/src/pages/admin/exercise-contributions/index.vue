@@ -74,8 +74,9 @@ async function fetchList() {
     list.value = data.list ?? []
     pagination.value = data.pagination ?? pagination.value
   }
-  catch {
+  catch (error: unknown) {
     list.value = []
+    ElMessage.error(getErrorMessage(error, '练习审核列表加载失败'))
   }
   finally {
     loading.value = false

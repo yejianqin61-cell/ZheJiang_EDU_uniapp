@@ -37,6 +37,7 @@ const mountPage = () =>
   })
 
 type AdminExerciseContributionsVm = ComponentPublicInstance & {
+  list: Array<{ id: string }>
   selected: string[]
   approveOne(id: string): Promise<void>
   batchAction(action: 'approve' | 'reject'): Promise<void>
@@ -71,6 +72,17 @@ describe('Admin exercise contributions page', () => {
     mountPage()
 
     expect(exerciseAdminMocks.adminListExerciseUploads).toHaveBeenCalled()
+  })
+
+  it('shows error and clears list when loading exercise uploads fails', async () => {
+    exerciseAdminMocks.adminListExerciseUploads.mockRejectedValue(new Error('练习审核服务异常'))
+
+    const wrapper = mountPage()
+
+    await Promise.resolve()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('练习审核服务异常')
+    expect(getPageVm(wrapper).list).toEqual([])
   })
 
   it('approves a single upload and refreshes list', async () => {

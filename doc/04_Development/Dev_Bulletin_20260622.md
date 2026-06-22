@@ -36,8 +36,19 @@
   - 为审核详情页的通过/拒绝动作补齐显式页面方法类型辅助
   - 移除页面方法调用中的 `as any`
 
+### 4. 管理端练习审核列表加载静默失败收口
+
+- 对应 Issue：
+  - [Issue_20260622_Admin_Exercise_Contributions_Silent_Error_Handling_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Exercise_Contributions_Silent_Error_Handling_Gap.md)
+- `frontend-web/src/pages/admin/exercise-contributions/index.vue`
+  - 练习审核列表加载失败时不再静默吞错，改为清空当前列表并提示明确错误信息
+  - 保持单条审核、批量审核的成功提示与刷新行为不变
+- `frontend-web/src/__tests__/pages/admin-exercise-contributions.spec.ts`
+  - 补充“练习审核列表首次加载失败会提示错误并清空列表”的回归用例
+
 ## 验证结果
 
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-withdrawals.spec.ts`：1 个测试文件、5 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-exercise-contributions.spec.ts src/__tests__/pages/admin-exercises.spec.ts`：2 个测试文件、12 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-upload.spec.ts src/__tests__/pages/admin-review-detail.spec.ts`：2 个测试文件、6 个用例通过
+- `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-exercise-contributions.spec.ts`：1 个测试文件、6 个用例通过
