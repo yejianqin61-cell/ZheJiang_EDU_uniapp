@@ -18,6 +18,18 @@ const addresses = ref<ShippingAddress[]>([])
 const selectedAddr = ref('')
 const submitting = ref(false)
 
+function getLoadErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message
+  }
+
+  return fallback
+}
+
 onMounted(async () => {
   if (!paperId.value) {
     ElMessage.warning('请从试卷预览页进入')
@@ -28,12 +40,16 @@ onMounted(async () => {
   try {
     pricing.value = await getPublicPricing()
   }
-  catch {}
+  catch (error: unknown) {
+    ElMessage.error(getLoadErrorMessage(error, '打印定价加载失败'))
+  }
 
   try {
     addresses.value = await listAddresses()
   }
-  catch {}
+  catch (error: unknown) {
+    ElMessage.error(getLoadErrorMessage(error, '地址加载失败'))
+  }
 })
 
 function hasResponse(error: unknown) {
@@ -41,7 +57,7 @@ function hasResponse(error: unknown) {
 }
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : '创建订单失败'
+  return getLoadErrorMessage(error, '创建订单失败')
 }
 
 function getTier() {

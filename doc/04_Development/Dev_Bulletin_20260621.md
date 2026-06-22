@@ -348,6 +348,13 @@
 - 为保存操作区分弹窗取消与真实接口失败，对真实失败补充明确提示
 - 补充页面回归测试，覆盖加载失败和保存失败时的提示行为
 
+### 51. 打印下单页初始化静默失败收口
+
+- 新增 [Issue_20260622_Print_Checkout_Load_Silent_Error_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Print_Checkout_Load_Silent_Error_Gap.md)，记录打印下单页初始化加载链路仍存在静默失败的问题
+- 为打印定价和地址列表加载失败补充明确提示，避免用户把接口异常误判成无可用数据
+- 保持页面当前兜底展示和提交流程不变，避免初始化异常导致渲染中断
+- 补充页面回归测试，覆盖两个初始化请求失败时的提示行为
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -383,8 +390,9 @@
 - 定向测试：`src/__tests__/pages/payment.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/paper-preview.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-pricing.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/print-checkout.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm.cmd test`：48 个测试文件、205 个用例通过
+- `cd frontend-web && npm.cmd test`：48 个测试文件、207 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交

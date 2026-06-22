@@ -1,9 +1,11 @@
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { ElMessage } from 'element-plus'
+import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useOrderStore } from '@/stores/order'
 import PrintCheckoutPage from '@/pages/print/checkout/index.vue'
+import type { CreateOrderResult, PricingConfig, ShippingAddress } from '@/types'
 
 const routerPush = vi.fn()
 const routerReplace = vi.fn()
@@ -60,6 +62,41 @@ const mountPage = () =>
     },
   })
 
+type PrintCheckoutPageVm = {
+  selectedAddr: string
+  handleSubmit: () => Promise<void>
+}
+
+function createPricing(print: PricingConfig['print']): Partial<PricingConfig> {
+  return { print }
+}
+
+function createAddress(overrides: Partial<ShippingAddress> = {}): ShippingAddress {
+  return {
+    id: 'addr-1',
+    receiverName: '张三',
+    phone: '13800000000',
+    province: '浙',
+    city: '杭',
+    district: '西湖',
+    detail: '1号',
+    isDefault: false,
+    ...overrides,
+  }
+}
+
+function createOrderResult(overrides: Partial<CreateOrderResult> = {}): CreateOrderResult {
+  return {
+    orderId: 'order-1',
+    orderNo: 'NO001',
+    amount: 2000,
+    unitPrice: 200,
+    type: 'print',
+    copies: 10,
+    ...overrides,
+  }
+}
+
 describe('Print checkout page', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -85,17 +122,41 @@ describe('Print checkout page', () => {
   })
 
   it('warns when shipping address is not selected', async () => {
-    pricingApiMocks.getPublicPricing.mockResolvedValue({ print: [] })
+    pricingApiMocks.getPublicPricing.mockResolvedValue(createPricing([]))
     addressApiMocks.listAddresses.mockResolvedValue([])
 
     const wrapper = mountPage()
     await Promise.resolve()
     await Promise.resolve()
 
-    await (wrapper.vm as any).handleSubmit()
+    await (wrapper.vm as PrintCheckoutPageVm).handleSubmit()
 
     expect(ElMessage.warning).toHaveBeenCalledWith('请选择收货地址')
     expect(orderApiMocks.createOrder).not.toHaveBeenCalled()
+  })
+
+  it('shows error when pricing fails to load', async () => {
+    pricingApiMocks.getPublicPricing.mockRejectedValue(new Error('打印定价接口异常'))
+    addressApiMocks.listAddresses.mockResolvedValue([])
+
+    mountPage()
+    await nextTick()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('打印定价接口异常')
+  })
+
+  it('shows error when addresses fail to load', async () => {
+    pricingApiMocks.getPublicPricing.mockResolvedValue(createPricing([]))
+    addressApiMocks.listAddresses.mockRejectedValue(new Error('地址接口异常'))
+
+    mountPage()
+    await nextTick()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('地址接口异常')
   })
 
   it('creates print order and navigates to payment page', async () => {
