@@ -6,11 +6,14 @@ import type { OrderItem, Pagination } from '@/types'
 
 type AdminOrderScope = 'mine' | 'others'
 type AdminOrderTab = 'download' | 'print'
+type AdminOrderPrintStatus = 'printing' | 'shipped' | 'delivered'
 
 interface AdminOrderListResponse {
   list?: OrderItem[]
   pagination?: Pagination
 }
+
+type AdminOrderListResult = AdminOrderListResponse | OrderItem[]
 
 const list = ref<OrderItem[]>([])
 const loading = ref(true)
@@ -21,6 +24,16 @@ const psLabels: Record<string, string> = { null: '待处理', printing: '打印�
 
 onMounted(() => fetchList())
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : '操作失败'
+}
+
+function normalizeOrderListResponse(data: AdminOrderListResult) {
+  return Array.isArray(data)
+    ? { list: data, pagination: null }
+    : { list: data.list ?? [], pagination: data.pagination ?? null }
+}
+
 async function fetchList() {
   loading.value = true
   try {
@@ -29,13 +42,18 @@ async function fetchList() {
       pageSize: pagination.value.pageSize,
       scope: scope.value,
       type: tab.value,
-    }) as AdminOrderListResponse | OrderItem[]
+    }) as AdminOrderListResult
 
-    list.value = Array.isArray(data) ? data : (data.list ?? [])
-    if (!Array.isArray(data) && data.pagination) pagination.value = data.pagination
-  } catch {
+    const normalized = normalizeOrderListResponse(data)
+    list.value = normalized.list
+    if (normalized.pagination) {
+      pagination.value = normalized.pagination
+    }
+  }
+  catch {
     // ignore list fallback
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -52,13 +70,14 @@ function switchTab(nextTab: string) {
   fetchList()
 }
 
-async function updateStatus(orderId: string, status: string) {
+async function updateStatus(orderId: string, status: AdminOrderPrintStatus) {
   try {
     await updatePrintStatus(orderId, status)
     ElMessage.success('状态已更新')
     fetchList()
-  } catch (error: any) {
-    ElMessage.error(error?.message ?? '操作失败')
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error))
   }
 }
 </script>
