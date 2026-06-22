@@ -2,13 +2,19 @@
 import { onMounted, ref } from 'vue'
 import { getMyBalance } from '@/api/modules/auth'
 
-const balance = ref(0)
+const summary = ref({
+  balance: 0,
+  totalEarned: 0,
+  totalSpent: 0,
+})
 const loading = ref(true)
 
 onMounted(async () => {
   try {
     const data = await getMyBalance()
-    balance.value = data?.balance ?? 0
+    summary.value.balance = data?.balance ?? 0
+    summary.value.totalEarned = data?.totalEarned ?? 0
+    summary.value.totalSpent = data?.totalSpent ?? 0
   }
   catch {}
   finally {
@@ -28,7 +34,17 @@ onMounted(async () => {
     </div>
     <div class="page-card balance-card">
       <p class="balance-label">账户余额</p>
-      <p class="balance-value">¥{{ (balance / 100).toFixed(2) }}</p>
+      <p class="balance-value">¥{{ (summary.balance / 100).toFixed(2) }}</p>
+    </div>
+    <div class="balance-stats mt-md">
+      <div class="page-card stat-card">
+        <p class="stat-card__label">累计收入</p>
+        <p class="stat-card__value stat-card__value--positive">¥{{ (summary.totalEarned / 100).toFixed(2) }}</p>
+      </div>
+      <div class="page-card stat-card">
+        <p class="stat-card__label">累计支出</p>
+        <p class="stat-card__value">¥{{ (summary.totalSpent / 100).toFixed(2) }}</p>
+      </div>
     </div>
     <div class="page-card mt-md">
       <h3>余额说明</h3>
@@ -47,6 +63,32 @@ onMounted(async () => {
   text-align: center;
 }
 
+.balance-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $spacing-md;
+}
+
+.stat-card {
+  padding: $spacing-lg;
+}
+
+.stat-card__label {
+  margin-bottom: $spacing-sm;
+  font-size: $font-size-sm;
+  color: $text-color-secondary;
+}
+
+.stat-card__value {
+  font-size: 28px;
+  font-weight: 700;
+  color: $text-color;
+}
+
+.stat-card__value--positive {
+  color: #2e7d32;
+}
+
 .balance-label {
   font-size: $font-size-sm;
   color: $text-color-secondary;
@@ -57,5 +99,11 @@ onMounted(async () => {
   font-size: 40px;
   font-weight: 700;
   color: $color-primary;
+}
+
+@media (max-width: 768px) {
+  .balance-stats {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

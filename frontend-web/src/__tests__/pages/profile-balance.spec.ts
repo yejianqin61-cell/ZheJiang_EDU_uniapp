@@ -25,14 +25,20 @@ describe('Profile balance page', () => {
     authApiMocks.getMyBalance.mockReset()
   })
 
-  it('loads user balance on mount', async () => {
-    authApiMocks.getMyBalance.mockResolvedValue({ balance: 12345 })
+  it('loads balance summary on mount', async () => {
+    authApiMocks.getMyBalance.mockResolvedValue({
+      balance: 12345,
+      totalEarned: 23456,
+      totalSpent: 11111,
+    })
 
     const wrapper = mountPage()
     await nextTick()
     await flushPromises()
 
     expect(authApiMocks.getMyBalance).toHaveBeenCalledTimes(1)
-    expect(wrapper.text()).toContain('¥123.45')
+    expect(wrapper.text()).toContain('123.45')
+    expect(wrapper.text()).toContain('234.56')
+    expect(wrapper.text()).toContain('111.11')
   })
 })

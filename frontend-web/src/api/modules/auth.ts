@@ -34,6 +34,42 @@ export interface UserStats {
 
 export interface BalanceSummary {
   balance: number
+  totalEarned: number
+  totalSpent: number
+}
+
+export type BalanceLogType =
+  | 'cashback'
+  | 'pay_order'
+  | 'withdraw'
+  | 'admin_adjust'
+  | 'exercise_cashback'
+
+export interface BalanceLogItem {
+  id: string
+  amount: number
+  type: BalanceLogType
+  note: string | null
+  balanceAfter: number
+  createdAt: string
+}
+
+export interface BalanceLogPagination {
+  page: number
+  pageSize: number
+  total: number
+  totalPages: number
+}
+
+export interface BalanceLogListResponse {
+  list: BalanceLogItem[]
+  pagination: BalanceLogPagination
+}
+
+export interface BalanceLogListParams {
+  page?: number
+  pageSize?: number
+  type?: BalanceLogType
 }
 
 export function sendSms(phone: string): Promise<void> {
@@ -76,8 +112,8 @@ export function payByBalance(orderId: string): Promise<void> {
   return api.post(`/orders/${orderId}/balance-pay`)
 }
 
-export function getBalanceLog(): Promise<any> {
-  return api.get('/users/me/balance-log')
+export function getBalanceLog(params?: BalanceLogListParams): Promise<BalanceLogListResponse> {
+  return api.get('/users/me/balance-log', { params })
 }
 
 export function withdraw(amount: number): Promise<void> {

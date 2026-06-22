@@ -158,6 +158,14 @@
 - 将分类编辑提交改为区分 create/update payload，避免把页面临时字段直接透传到更新接口
 - 补充 `exercise` API 测试，覆盖后台分类/课时 CRUD 的 typed payload 提交
 
+### 23. 余额契约与余额页展示对齐
+
+- 新增 [Issue_20260622_Balance_Contract_Mismatch.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Balance_Contract_Mismatch.md)，记录余额汇总与余额流水接口长期缺少完整前端契约的问题
+- 将前端 `auth` API 模块中的 `BalanceSummary` 对齐为后端真实返回结构：`balance`、`totalEarned`、`totalSpent`
+- 为 `getBalanceLog()` 补齐余额流水 item、分页和查询参数类型，移除该接口的 `any` 返回值
+- 余额页改为同时展示账户余额、累计收入与累计支出，补齐对真实接口字段的消费
+- 更新 `auth` API 测试与余额页页面测试，覆盖余额汇总和余额流水参数提交断言
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -166,8 +174,9 @@
 - 定向测试：2 个测试文件、7 个用例通过
 - 定向测试：`src/__tests__/api/admin.spec.ts` 与 `src/__tests__/pages/admin-withdrawals.spec.ts` 在沙箱路径下触发 Vitest `setup.ts` 绝对路径解析异常，代码改动已通过全量回归验证
 - 定向测试：2 个测试文件、18 个用例通过
+- 定向测试：2 个测试文件、12 个用例通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm test`：48 个测试文件、180 个用例通过
+- `cd frontend-web && npm test`：48 个测试文件、181 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交

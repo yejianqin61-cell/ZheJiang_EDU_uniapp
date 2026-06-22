@@ -101,11 +101,27 @@ describe('Auth API', () => {
 
   it('getMyBalance -> GET /users/me/balance', async () => {
     const { getMyBalance } = await import('@/api/modules/auth')
-    mockGet.mockResolvedValue({ balance: 5200 })
+    mockGet.mockResolvedValue({ balance: 5200, totalEarned: 8000, totalSpent: 2800 })
 
-    await getMyBalance()
+    const response = await getMyBalance()
 
     expect(mockGet).toHaveBeenCalledWith('/users/me/balance')
+    expect(response.totalEarned).toBe(8000)
+  })
+
+  it('getBalanceLog -> GET /users/me/balance-log with params', async () => {
+    const { getBalanceLog } = await import('@/api/modules/auth')
+    mockGet.mockResolvedValue({
+      list: [{ id: 'log-1', amount: 500, type: 'cashback', note: '返现', balanceAfter: 1500, createdAt: '2026-06-22T00:00:00.000Z' }],
+      pagination: { page: 2, pageSize: 10, total: 12, totalPages: 2 },
+    })
+
+    const response = await getBalanceLog({ page: 2, pageSize: 10, type: 'cashback' })
+
+    expect(mockGet).toHaveBeenCalledWith('/users/me/balance-log', {
+      params: { page: 2, pageSize: 10, type: 'cashback' },
+    })
+    expect(response.pagination.totalPages).toBe(2)
   })
 
   it('withdraw -> POST /withdrawals', async () => {
