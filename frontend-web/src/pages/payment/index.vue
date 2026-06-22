@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getMyBalance, payByBalance } from '@/api/modules/auth'
-import { payMock } from '@/api/modules/payment'
+import { payAlipay, payMock } from '@/api/modules/payment'
 import { useOrderStore } from '@/stores/order'
 
 const router = useRouter()
@@ -110,15 +110,24 @@ async function handleAlipay() {
   paying.value = true
 
   try {
-    const payment = order.currentOrder.payment
-    if (payment?.payForm) {
+    let payForm = order.currentOrder.payment?.payForm ?? null
+
+    if (!payForm) {
+      const payment = await payAlipay(order.currentOrder.orderId)
+      payForm = payment.payForm
+      order.currentOrder.payment = {
+        provider: 'alipay',
+        payForm,
+      }
+    }
+
+    if (payForm) {
       const container = document.createElement('div')
-      container.innerHTML = payment.payForm
+      container.innerHTML = payForm
       document.body.appendChild(container)
       ;(container.querySelector('form') as HTMLFormElement | null)?.submit()
-    }
-    else {
-      ElMessage.warning('支付宝未配置，请使用余额或 Mock 支付')
+    } else {
+      ElMessage.warning('支付宝未就绪，请稍后重试或改用余额支付')
     }
   }
   catch {

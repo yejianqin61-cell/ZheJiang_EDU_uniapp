@@ -134,13 +134,22 @@
 - 移除 `auth` store 中 Dev 登录对 `(res as any).user` 的弱类型依赖，改为直接消费显式类型契约
 - 重写 `auth` store 回归测试，覆盖 token 恢复、Dev 登录、资料回填、失败回退和退出登录链路
 
+### 20. 支付页支付宝重试链路补齐
+
+- 新增 [Issue_20260622_Alipay_Retry_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Alipay_Retry_Gap.md)，记录“订单已创建但首次支付单创建失败时，支付页无法重试支付宝支付”的链路缺口
+- 支付页改为在本地缺少 `payForm` 时主动调用 `payAlipay(orderId)` 拉取支付表单，补齐支付宝重试链路
+- 为 `payment` API 模块补齐 `AlipayPaymentResponse` 与 `PaymentStatusResponse`，修正 `checkPayStatus()` 的返回类型
+- 对齐 `CreateOrderResult.payment` 的前端类型约束，允许后端返回 `payment: null` 与 `payForm: null`
+- 新增 `payment` API 测试与支付页页面测试，覆盖支付宝重试拉单流程
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
 - 定向测试：2 个测试文件、12 个用例通过
 - 定向测试：3 个测试文件、22 个用例通过
+- 定向测试：2 个测试文件、7 个用例通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm test`：47 个测试文件、172 个用例通过
+- `cd frontend-web && npm test`：48 个测试文件、176 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交

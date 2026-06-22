@@ -18,6 +18,7 @@ const authApiMocks = vi.hoisted(() => ({
   payByBalance: vi.fn(),
 }))
 const paymentApiMocks = vi.hoisted(() => ({
+  payAlipay: vi.fn(),
   payMock: vi.fn(),
 }))
 
@@ -35,6 +36,7 @@ vi.mock('@/api/modules/auth', () => ({
 }))
 
 vi.mock('@/api/modules/payment', () => ({
+  payAlipay: paymentApiMocks.payAlipay,
   payMock: paymentApiMocks.payMock,
 }))
 
@@ -60,6 +62,7 @@ describe('Payment page', () => {
     routerReplace.mockReset()
     authApiMocks.getMyBalance.mockReset()
     authApiMocks.payByBalance.mockReset()
+    paymentApiMocks.payAlipay.mockReset()
     paymentApiMocks.payMock.mockReset()
     vi.mocked(ElMessage.warning).mockReset()
     vi.mocked(ElMessage.success).mockReset()
@@ -125,5 +128,36 @@ describe('Payment page', () => {
     expect(authApiMocks.payByBalance).toHaveBeenCalledWith('order-9')
     expect(ElMessage.success).toHaveBeenCalledWith('支付成功')
     expect(routerReplace).toHaveBeenCalledWith('/orders/order-9')
+  })
+  it('requests alipay payForm when current order payment payload is missing', async () => {
+    authApiMocks.getMyBalance.mockResolvedValue({ balance: 5000 })
+    paymentApiMocks.payAlipay.mockResolvedValue({ paymentId: 'pay-2', payForm: '<form id="alipay-form"></form>' })
+
+    const appendChild = vi.spyOn(document.body, 'appendChild')
+    const submit = vi.fn()
+    const querySelector = vi.spyOn(HTMLDivElement.prototype, 'querySelector').mockReturnValue({ submit } as any)
+
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const wrapper = mountPage(pinia)
+    const orderStore = useOrderStore()
+    orderStore.currentOrder = {
+      orderId: 'order-10',
+      orderNo: 'NO010',
+      amount: 1600,
+      type: 'download',
+      payment: null,
+    } as any
+    await Promise.resolve()
+
+    await (wrapper.vm as any).handleAlipay()
+
+    expect(paymentApiMocks.payAlipay).toHaveBeenCalledWith('order-10')
+    expect(appendChild).toHaveBeenCalledTimes(1)
+    expect(submit).toHaveBeenCalledTimes(1)
+    expect((orderStore.currentOrder as any).payment?.provider).toBe('alipay')
+
+    querySelector.mockRestore()
+    appendChild.mockRestore()
   })
 })

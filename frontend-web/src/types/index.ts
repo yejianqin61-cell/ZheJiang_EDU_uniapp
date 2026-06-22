@@ -80,10 +80,10 @@ export interface CreateOrderResult {
   copies?: number | null
   payment?: {
     provider: string
-    payForm?: string
+    payForm?: string | null
     codeUrl?: string
-    amount: number
-  }
+    amount?: number
+  } | null
 }
 
 export interface Pagination {
