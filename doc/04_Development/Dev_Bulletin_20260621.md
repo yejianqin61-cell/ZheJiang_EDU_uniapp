@@ -417,6 +417,13 @@
 - 保持现有登录、开发登录和登出行为不变
 - 补充 store 回归测试，覆盖无效 token 初始化分支
 
+### 60. 地址列表页测试类型收口
+
+- 本批未发现新的产品缺陷，未新增 Issue
+- 为 `src/__tests__/pages/address-list.spec.ts` 提取带类型的页面 VM 访问辅助，移除删除流程测试中的 `wrapper.vm as any`
+- 收口确认弹窗桩返回值类型，移除 `ElMessageBox.confirm` 的弱类型断言
+- 保持地址列表加载、删除刷新和删除失败提示行为不变
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -455,6 +462,7 @@
 - 定向测试：`src/__tests__/pages/print-checkout.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/exercise-upload.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-review.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/address-list.spec.ts` 通过（5 个用例）
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm.cmd test`：48 个测试文件、222 个用例通过
 - `cd frontend-web && npm run build`：通过

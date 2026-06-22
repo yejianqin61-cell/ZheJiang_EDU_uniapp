@@ -4,6 +4,10 @@ import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AddressListPage from '@/pages/address/list/index.vue'
 
+type AddressListPageVm = {
+  del: (id: string) => Promise<void>
+}
+
 const routerPush = vi.fn()
 const addressApiMocks = vi.hoisted(() => ({
   listAddresses: vi.fn(),
@@ -41,6 +45,10 @@ describe('Address list page', () => {
     vi.mocked(ElMessage.error).mockReset()
     vi.mocked(ElMessageBox.confirm).mockReset()
   })
+
+  function getVm(wrapper: ReturnType<typeof mountPage>) {
+    return wrapper.vm as AddressListPageVm
+  }
 
   it('loads address list on mount', async () => {
     addressApiMocks.listAddresses.mockResolvedValue([
@@ -80,12 +88,12 @@ describe('Address list page', () => {
       .mockResolvedValueOnce([{ id: 'a1', receiverName: '张三', phone: '13800000000', province: '浙江', city: '杭州', district: '西湖', detail: '1号', isDefault: false }])
       .mockResolvedValueOnce([])
     addressApiMocks.deleteAddress.mockResolvedValue({ ok: true })
-    vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm' as any)
+    vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm')
 
     const wrapper = mountPage()
     await nextTick()
 
-    await (wrapper.vm as any).del('a1')
+    await getVm(wrapper).del('a1')
 
     expect(addressApiMocks.deleteAddress).toHaveBeenCalledWith('a1')
     expect(ElMessage.success).toHaveBeenCalledWith('已删除')
@@ -95,12 +103,12 @@ describe('Address list page', () => {
   it('shows error when deleting address fails', async () => {
     addressApiMocks.listAddresses.mockResolvedValue([])
     addressApiMocks.deleteAddress.mockRejectedValue(new Error('删除失败'))
-    vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm' as any)
+    vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm')
 
     const wrapper = mountPage()
     await nextTick()
 
-    await (wrapper.vm as any).del('a1')
+    await getVm(wrapper).del('a1')
 
     expect(ElMessage.error).toHaveBeenCalledWith('删除失败')
   })
