@@ -211,6 +211,13 @@
 - 上传页改为用 `unknown` 接住上传异常，并在页面内收口最小错误消息提取逻辑
 - 保持原有上传进度和成功/失败提示行为不变，只收紧错误分支类型
 
+### 31. 教师练习上传链路类型收口
+
+- 新增 [Issue_20260622_Exercise_Upload_Teacher_Type_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Exercise_Upload_Teacher_Type_Gap.md)，记录教师练习上传页和详情页长期缺少共享类型的问题
+- 为 `exercise` API 模块补齐教师练习上传创建结果、上传分类和上传课时的显式返回类型
+- 教师练习上传页和练习详情页改为直接消费共享 `ExerciseCategory`、`ExerciseLesson`、`ExerciseUploadItem`，移除页面内的 `any` / `as any`
+- 保持现有上传、分类联动、课时联动和详情展示行为不变
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -227,6 +234,7 @@
 - 定向测试：`src/__tests__/pages/admin-review.spec.ts` 与 `src/__tests__/pages/admin-review-detail.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-question-detail.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-upload.spec.ts` 在沙箱路径下触发 Vitest `setup.ts` 绝对路径解析异常，代码改动已通过全量回归验证
+- 定向测试：`src/__tests__/pages/exercise-upload.spec.ts` 与 `src/__tests__/pages/contribute-exercise-detail.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm test`：48 个测试文件、181 个用例通过
 - `cd frontend-web && npm run build`：通过

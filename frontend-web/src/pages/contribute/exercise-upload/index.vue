@@ -2,7 +2,13 @@
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { uploadExercisePaper, getUploadCategories, getUploadLessons } from '@/api/modules/exercise'
+import {
+  getUploadCategories,
+  getUploadLessons,
+  uploadExercisePaper,
+  type ExerciseCategory,
+  type ExerciseLesson,
+} from '@/api/modules/exercise'
 
 const router = useRouter()
 
@@ -15,8 +21,8 @@ const lessonId = ref('')
 const file = ref<File | null>(null)
 const submitting = ref(false)
 
-const categories = ref<any[]>([])
-const lessons = ref<any[]>([])
+const categories = ref<ExerciseCategory[]>([])
+const lessons = ref<ExerciseLesson[]>([])
 
 const subjects = ['语文', '数学', '英语', '物理', '化学', '生物', '政治', '历史', '地理', '科学']
 const grades = ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级', '七年级', '八年级', '九年级', '高一', '高二', '高三']
@@ -30,14 +36,14 @@ async function loadCategories() {
       grade: grade.value,
       subject: subject.value,
       exerciseType: exerciseType.value,
-    }) as any[]
+    })
   } catch { categories.value = [] }
 }
 
 // 加载课时（仅同步练）
 async function loadLessons() {
   if (exerciseType.value !== 'sync' || !categoryId.value) { lessons.value = []; return }
-  try { lessons.value = await getUploadLessons(categoryId.value) as any[] } catch { lessons.value = [] }
+  try { lessons.value = await getUploadLessons(categoryId.value) } catch { lessons.value = [] }
 }
 
 watch([grade, subject, exerciseType], () => { categoryId.value = ''; lessonId.value = ''; loadCategories() })

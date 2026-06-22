@@ -90,6 +90,11 @@ export interface ExerciseUploadRejectResponse {
   status: 'rejected'
 }
 
+export interface ExerciseUploadCreateResponse {
+  id: string
+  status: ExerciseUploadItem['status']
+}
+
 export function getExerciseCategories(params: { type?: string; grade?: string; subject?: string }) {
   return api.get('/exercise/categories', { params })
 }
@@ -151,7 +156,7 @@ export function adminDeletePaper(id: string) {
 }
 
 export function uploadExercisePaper(formData: FormData) {
-  return api.post('/exercise-contributions/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+  return api.post<ExerciseUploadCreateResponse>('/exercise-contributions/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
 }
 export function getMyExerciseUploads(params: Pick<ExerciseUploadListParams, 'page' | 'pageSize' | 'status'>) {
   return api.get<ExerciseUploadListResponse>('/exercise-contributions', { params })
@@ -163,10 +168,10 @@ export function deleteMyExerciseUpload(id: string) {
   return api.delete(`/exercise-contributions/${id}`)
 }
 export function getUploadCategories(params: { grade?: string; subject?: string; exerciseType?: string }) {
-  return api.get('/exercise-contributions/categories', { params })
+  return api.get<ExerciseCategory[]>('/exercise-contributions/categories', { params })
 }
 export function getUploadLessons(categoryId: string) {
-  return api.get('/exercise-contributions/lessons', { params: { categoryId } })
+  return api.get<ExerciseLesson[]>('/exercise-contributions/lessons', { params: { categoryId } })
 }
 
 export function adminListExerciseUploads(params: ExerciseUploadListParams) {

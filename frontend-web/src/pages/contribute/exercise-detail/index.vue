@@ -16,7 +16,7 @@ const stTypes: Record<string, string> = { pending_review: 'warning', approved: '
 onMounted(async () => {
   const id = route.params.id as string
   if (!id) { router.back(); return }
-  try { item.value = await getMyExerciseUploadDetail(id) as any } catch { ElMessage.error('加载失败') } finally { loading.value = false }
+  try { item.value = await getMyExerciseUploadDetail(id) } catch { ElMessage.error('加载失败') } finally { loading.value = false }
 })
 
 async function handleDelete() {
