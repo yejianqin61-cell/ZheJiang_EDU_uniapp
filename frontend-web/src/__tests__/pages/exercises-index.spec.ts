@@ -1,4 +1,5 @@
-import { mount } from '@vue/test-utils'
+import { mount, type VueWrapper } from '@vue/test-utils'
+import type { ComponentPublicInstance } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ExercisesIndex from '@/pages/exercises/index.vue'
 
@@ -7,6 +8,15 @@ const push = vi.fn()
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push }),
 }))
+
+type ExercisesIndexVm = ComponentPublicInstance & {
+  grade: string
+  subject: string
+  tab: 'sync' | 'unit' | 'topic' | 'exam'
+  goNext(): void
+}
+
+const getPageVm = (wrapper: VueWrapper<ComponentPublicInstance>) => wrapper.vm as ExercisesIndexVm
 
 describe('Exercises index page', () => {
   beforeEach(() => {
@@ -47,12 +57,13 @@ describe('Exercises index page', () => {
         },
       },
     })
+    const vm = getPageVm(wrapper)
 
-    ;(wrapper.vm as any).grade = '五年级'
-    ;(wrapper.vm as any).subject = '数学'
-    ;(wrapper.vm as any).tab = 'unit'
+    vm.grade = '五年级'
+    vm.subject = '数学'
+    vm.tab = 'unit'
 
-    await (wrapper.vm as any).goNext()
+    vm.goNext()
 
     expect(push).toHaveBeenCalledWith('/exercises/category?type=unit&grade=五年级&subject=数学')
   })

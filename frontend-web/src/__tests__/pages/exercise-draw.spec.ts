@@ -1,4 +1,5 @@
-import { mount } from '@vue/test-utils'
+import { mount, type VueWrapper } from '@vue/test-utils'
+import type { ComponentPublicInstance } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ExerciseDrawPage from '@/pages/exercises/draw.vue'
 
@@ -38,6 +39,13 @@ const mountPage = () =>
     },
   })
 
+type ExerciseDrawPageVm = ComponentPublicInstance & {
+  goDownload(): void
+  goPrint(): void
+}
+
+const getPageVm = (wrapper: VueWrapper<ComponentPublicInstance>) => wrapper.vm as ExerciseDrawPageVm
+
 describe('Exercise draw page', () => {
   beforeEach(() => {
     vi.useFakeTimers()
@@ -69,8 +77,8 @@ describe('Exercise draw page', () => {
     expect(exerciseApiMocks.drawCategory).toHaveBeenCalledWith('cat-1')
     expect(wrapper.text()).toContain('单元练习卷')
 
-    await (wrapper.vm as any).goDownload()
-    await (wrapper.vm as any).goPrint()
+    getPageVm(wrapper).goDownload()
+    getPageVm(wrapper).goPrint()
 
     expect(routerPush).toHaveBeenNthCalledWith(1, '/payment?paperId=paper-1&type=exercise')
     expect(routerPush).toHaveBeenNthCalledWith(2, '/print/checkout?paperId=paper-1')

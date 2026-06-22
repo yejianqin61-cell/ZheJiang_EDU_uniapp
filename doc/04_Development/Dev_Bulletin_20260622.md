@@ -88,6 +88,18 @@
 - `frontend-web/src/__tests__/pages/exercise-category.spec.ts`
   - 新增练习类目页回归测试，覆盖类目加载、类目失败、同步课时部分失败三条链路
 
+### 9. 练习与首页页测弱类型收口
+
+- 对应 Issue：
+  - [Issue_20260622_Admin_Test_AsAny_Backlog.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Test_AsAny_Backlog.md)
+- `frontend-web/src/__tests__/pages/home.spec.ts`
+  - 为首页“开始组卷”入口补齐显式页面方法类型辅助，移除 `as any`
+- `frontend-web/src/__tests__/pages/exercises-index.spec.ts`
+  - 为练习入口页的年级、学科和模式状态补齐显式页面 VM 类型
+- `frontend-web/src/__tests__/pages/exercise-draw.spec.ts`
+  - 为练习抽卷页下载/打印分流动作补齐显式页面方法类型辅助
+  - 移除页面方法调用中的 `as any`
+
 ## 验证结果
 
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-withdrawals.spec.ts`：1 个测试文件、5 个用例通过
@@ -98,3 +110,4 @@
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/paper-config.spec.ts`：1 个测试文件、4 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-dashboard.spec.ts`：1 个测试文件、3 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/exercise-category.spec.ts`：1 个测试文件、3 个用例通过
+- `cd frontend-web && npm.cmd test -- src/__tests__/pages/home.spec.ts src/__tests__/pages/exercises-index.spec.ts src/__tests__/pages/exercise-draw.spec.ts`：3 个测试文件、9 个用例通过

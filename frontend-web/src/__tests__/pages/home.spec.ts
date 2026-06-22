@@ -1,6 +1,6 @@
-import { mount } from '@vue/test-utils'
+import { mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { nextTick } from 'vue'
+import { nextTick, type ComponentPublicInstance } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthStore } from '@/stores/auth'
 import HomePage from '@/pages/index/index.vue'
@@ -20,6 +20,12 @@ const mountPage = (pinia = createPinia()) =>
     },
   })
 
+type HomePageVm = ComponentPublicInstance & {
+  startPaper(): void
+}
+
+const getPageVm = (wrapper: VueWrapper<ComponentPublicInstance>) => wrapper.vm as HomePageVm
+
 describe('Home page', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -30,7 +36,7 @@ describe('Home page', () => {
   it('routes logged-out user to login when starting paper', async () => {
     const wrapper = mountPage()
 
-    await (wrapper.vm as any).startPaper()
+    getPageVm(wrapper).startPaper()
 
     expect(routerPush).toHaveBeenCalledWith('/login')
   })
@@ -44,7 +50,7 @@ describe('Home page', () => {
     const wrapper = mountPage(pinia)
     await nextTick()
 
-    await (wrapper.vm as any).startPaper()
+    getPageVm(wrapper).startPaper()
 
     expect(routerPush).toHaveBeenCalledWith('/paper/config')
   })
