@@ -1,6 +1,6 @@
-import { mount } from '@vue/test-utils'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { nextTick } from 'vue'
+import { mount, type VueWrapper } from '@vue/test-utils'
+import { ElMessage, ElMessageBox, type MessageBoxData } from 'element-plus'
+import { nextTick, type ComponentPublicInstance } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminWithdrawalsPage from '@/pages/admin/withdrawals/index.vue'
 
@@ -32,6 +32,19 @@ const mountPage = () =>
     },
   })
 
+type AdminWithdrawalsPageVm = ComponentPublicInstance & {
+  list: AdminWithdrawalItem[]
+  approve(id: string): Promise<void>
+  reject(id: string): Promise<void>
+}
+
+const getPageVm = (wrapper: VueWrapper<ComponentPublicInstance>) => wrapper.vm as AdminWithdrawalsPageVm
+
+const buildPromptResult = (value: string): MessageBoxData => ({
+  value,
+  action: 'confirm',
+})
+
 describe('Admin withdrawals page', () => {
   beforeEach(() => {
     adminApiMocks.getWithdrawals.mockReset()
@@ -57,6 +70,16 @@ describe('Admin withdrawals page', () => {
     })
   })
 
+  it('shows error and clears list when loading withdrawals fails', async () => {
+    adminApiMocks.getWithdrawals.mockRejectedValue(new Error('提现列表服务异常'))
+
+    const wrapper = mountPage()
+    await nextTick()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('提现列表服务异常')
+    expect(getPageVm(wrapper).list).toEqual([])
+  })
+
   it('approves withdrawal and refreshes list', async () => {
     adminApiMocks.getWithdrawals
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 } })
@@ -66,7 +89,7 @@ describe('Admin withdrawals page', () => {
     const wrapper = mountPage()
     await nextTick()
 
-    await (wrapper.vm as any).approve('wd-1')
+    await getPageVm(wrapper).approve('wd-1')
 
     expect(adminApiMocks.approveWithdrawal).toHaveBeenCalledWith('wd-1')
     expect(ElMessage.success).toHaveBeenCalledWith('已通过')
@@ -78,12 +101,12 @@ describe('Admin withdrawals page', () => {
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 } })
       .mockResolvedValueOnce({ list: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } })
     adminApiMocks.rejectWithdrawal.mockResolvedValue({ ok: true })
-    vi.mocked(ElMessageBox.prompt).mockResolvedValue({ value: '资料不完整' } as any)
+    vi.mocked(ElMessageBox.prompt).mockResolvedValue(buildPromptResult('资料不完整'))
 
     const wrapper = mountPage()
     await nextTick()
 
-    await (wrapper.vm as any).reject('wd-1')
+    await getPageVm(wrapper).reject('wd-1')
 
     expect(adminApiMocks.rejectWithdrawal).toHaveBeenCalledWith('wd-1', '资料不完整')
     expect(ElMessage.success).toHaveBeenCalledWith('已拒绝')
@@ -96,12 +119,12 @@ describe('Admin withdrawals page', () => {
       pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
     })
     adminApiMocks.rejectWithdrawal.mockRejectedValue(new Error('提交失败'))
-    vi.mocked(ElMessageBox.prompt).mockResolvedValue({ value: '资料不完整' } as any)
+    vi.mocked(ElMessageBox.prompt).mockResolvedValue(buildPromptResult('资料不完整'))
 
     const wrapper = mountPage()
     await nextTick()
 
-    await (wrapper.vm as any).reject('wd-1')
+    await getPageVm(wrapper).reject('wd-1')
 
     expect(ElMessage.error).toHaveBeenCalledWith('提交失败')
   })

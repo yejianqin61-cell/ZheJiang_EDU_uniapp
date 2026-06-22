@@ -10,8 +10,8 @@ const pagination = ref<Pagination>({ page: 1, pageSize: 20, total: 0, totalPages
 
 onMounted(() => fetchList())
 
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : '操作失败'
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
 }
 
 function isPromptCancel(error: unknown) {
@@ -27,8 +27,9 @@ async function fetchList() {
       pagination.value = data.pagination
     }
   }
-  catch {
-    // ignore list fallback
+  catch (error: unknown) {
+    list.value = []
+    ElMessage.error(getErrorMessage(error, '提现列表加载失败'))
   }
   finally {
     loading.value = false
@@ -42,7 +43,7 @@ async function approve(id: string) {
     fetchList()
   }
   catch (error: unknown) {
-    ElMessage.error(getErrorMessage(error))
+    ElMessage.error(getErrorMessage(error, '操作失败'))
   }
 }
 
@@ -62,7 +63,7 @@ async function reject(id: string) {
       return
     }
 
-    ElMessage.error(getErrorMessage(error))
+    ElMessage.error(getErrorMessage(error, '操作失败'))
   }
 }
 </script>
