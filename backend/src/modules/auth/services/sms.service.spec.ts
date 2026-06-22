@@ -1,11 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { ConfigService } from '@nestjs/config'
 import { SmsService } from './sms.service'
-import { BadRequestException, HttpException } from '@nestjs/common'
+import { BadRequestException, HttpException, Logger } from '@nestjs/common'
 
 describe('SmsService', () => {
   let service: SmsService
   let configGet: jest.Mock
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
 
   beforeEach(async () => {
     configGet = jest.fn().mockReturnValue('')
@@ -37,6 +41,24 @@ describe('SmsService', () => {
       await service.sendCode('13800138000')
       limitMap.set('13800138000', Date.now() - 61000) // 61秒前
       await expect(service.sendCode('13800138000')).resolves.toBeUndefined()
+    })
+
+    it('短信供应商发送失败时应回滚状态并抛出明确错误', async () => {
+      configGet.mockImplementation((key: string) => (key === 'sms.accessKeyId' ? 'mock-key' : 'mock-value'))
+      const sendViaAlibabaSpy = jest
+        .spyOn(service as any, 'sendViaAlibaba')
+        .mockRejectedValue(new Error('provider unavailable'))
+      const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation()
+
+      await expect(service.sendCode('13800138000')).rejects.toThrow(HttpException)
+
+      const codeMap = (service as any).codeMap as Map<string, { code: string; expires: number }>
+      const limitMap = (service as any).limitMap as Map<string, number>
+
+      expect(sendViaAlibabaSpy).toHaveBeenCalledWith('13800138000', expect.any(String))
+      expect(codeMap.has('13800138000')).toBe(false)
+      expect(limitMap.has('13800138000')).toBe(false)
+      expect(loggerSpy).toHaveBeenCalledWith('SMS send failed for 13800138000', expect.any(String))
     })
   })
 

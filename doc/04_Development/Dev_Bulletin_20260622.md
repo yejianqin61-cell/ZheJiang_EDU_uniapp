@@ -131,3 +131,16 @@
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/home.spec.ts src/__tests__/pages/exercises-index.spec.ts src/__tests__/pages/exercise-draw.spec.ts`：3 个测试文件、9 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/contribute-upload.spec.ts`：1 个测试文件、4 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/stores/auth.spec.ts src/__tests__/api/admin.spec.ts`：2 个测试文件、21 个用例通过
+- `cd backend && npm.cmd test -- src/modules/auth/services/sms.service.spec.ts`：1 个测试文件、9 个用例通过
+- `cd backend && npm.cmd test -- src/modules/auth/services/sms.service.spec.ts src/modules/auth/auth.service.spec.ts src/modules/auth/auth.controller.spec.ts`：3 个测试文件、29 个用例通过
+
+### 12. 短信发送失败显式报错与状态回滚
+
+- 对应 Issue：
+  - [Issue_20260622_Backend_Silent_Error_Cleanup_Backlog.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Backend_Silent_Error_Cleanup_Backlog.md)
+- `backend/src/modules/auth/services/sms.service.ts`
+  - 为短信服务补充 `Logger`，阿里云短信发送失败时记录明确错误日志，避免线上异常继续静默吞掉
+  - 将短信供应商异常从“假成功”改为显式 `502` 返回，并同步回滚验证码与频控状态，避免用户未收到验证码却被误判为已发送
+- `backend/src/modules/auth/services/sms.service.spec.ts`
+  - 新增“短信供应商发送失败时回滚状态并抛出明确错误”的回归用例
+  - 校验失败场景下日志记录、验证码缓存和发送频控缓存都被正确清理

@@ -1,8 +1,9 @@
-import { Injectable, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, BadRequestException, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SmsService {
+  private readonly logger = new Logger(SmsService.name);
   private readonly codeMap = new Map<string, { code: string; expires: number }>();
   private readonly limitMap = new Map<string, number>();
 
@@ -32,7 +33,14 @@ export class SmsService {
     // 发送短信
     const accessKeyId = this.config.get<string>('sms.accessKeyId');
     if (accessKeyId) {
-      await this.sendViaAlibaba(phone, code);
+      try {
+        await this.sendViaAlibaba(phone, code);
+      } catch (error) {
+        this.codeMap.delete(phone);
+        this.limitMap.delete(phone);
+        this.logger.error(`SMS send failed for ${phone}`, error instanceof Error ? error.stack : undefined);
+        throw new HttpException({ code: 10012, message: '短信发送失败，请稍后重试' }, HttpStatus.BAD_GATEWAY);
+      }
     } else {
       // Dev: 控制台打印
       console.log(`\n[DEV SMS] 验证码 ${code} → ${phone}\n`);
@@ -58,40 +66,36 @@ export class SmsService {
   }
 
   private async sendViaAlibaba(phone: string, code: string): Promise<void> {
-    try {
-      const crypto = await import('crypto');
-      const axios = (await import('axios')).default;
+    const crypto = await import('crypto');
+    const axios = (await import('axios')).default;
 
-      const accessKeyId = this.config.get<string>('sms.accessKeyId')!;
-      const accessKeySecret = this.config.get<string>('sms.accessKeySecret')!;
+    const accessKeyId = this.config.get<string>('sms.accessKeyId')!;
+    const accessKeySecret = this.config.get<string>('sms.accessKeySecret')!;
 
-      const params: Record<string, string> = {
-        AccessKeyId: accessKeyId,
-        Action: 'SendSms',
-        Format: 'JSON',
-        PhoneNumbers: phone,
-        SignName: this.config.get<string>('sms.signName')!,
-        TemplateCode: this.config.get<string>('sms.templateCode')!,
-        TemplateParam: JSON.stringify({ code }),
-        SignatureMethod: 'HMAC-SHA1',
-        SignatureVersion: '1.0',
-        SignatureNonce: Math.random().toString(36).substring(2),
-        Timestamp: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
-        Version: '2017-05-25',
-      };
+    const params: Record<string, string> = {
+      AccessKeyId: accessKeyId,
+      Action: 'SendSms',
+      Format: 'JSON',
+      PhoneNumbers: phone,
+      SignName: this.config.get<string>('sms.signName')!,
+      TemplateCode: this.config.get<string>('sms.templateCode')!,
+      TemplateParam: JSON.stringify({ code }),
+      SignatureMethod: 'HMAC-SHA1',
+      SignatureVersion: '1.0',
+      SignatureNonce: Math.random().toString(36).substring(2),
+      Timestamp: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+      Version: '2017-05-25',
+    };
 
-      const sortedKeys = Object.keys(params).sort();
-      const canonicalized = sortedKeys.map(k => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`).join('&');
-      const stringToSign = `POST&${encodeURIComponent('/')}&${encodeURIComponent(canonicalized)}`;
-      const signature = crypto.createHmac('sha1', `${accessKeySecret}&`).update(stringToSign).digest('base64');
-      params.Signature = signature;
+    const sortedKeys = Object.keys(params).sort();
+    const canonicalized = sortedKeys.map(k => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`).join('&');
+    const stringToSign = `POST&${encodeURIComponent('/')}&${encodeURIComponent(canonicalized)}`;
+    const signature = crypto.createHmac('sha1', `${accessKeySecret}&`).update(stringToSign).digest('base64');
+    params.Signature = signature;
 
-      await axios.post('https://dysmsapi.aliyuncs.com/', new URLSearchParams(params).toString(), {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        timeout: 10000,
-      });
-    } catch {
-      // fall back to console log (already done above)
-    }
+    await axios.post('https://dysmsapi.aliyuncs.com/', new URLSearchParams(params).toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      timeout: 10000,
+    });
   }
 }
