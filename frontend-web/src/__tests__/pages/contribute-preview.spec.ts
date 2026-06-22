@@ -4,6 +4,10 @@ import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ContributePreviewPage from '@/pages/contribute/preview/index.vue'
 
+type ContributePreviewPageVm = {
+  submit: () => Promise<void>
+}
+
 const routerReplace = vi.fn()
 const routeState = vi.hoisted(() => ({
   query: { id: 'contribution-1' },
@@ -49,6 +53,10 @@ describe('Contribute preview page', () => {
     vi.mocked(ElMessage.error).mockReset()
   })
 
+  function getVm(wrapper: ReturnType<typeof mountPage>) {
+    return wrapper.vm as ContributePreviewPageVm
+  }
+
   it('loads parsed questions on mount', async () => {
     contributionApiMocks.getContributionQuestions.mockResolvedValue([
       { type: '选择题', content: '1 + 1 = ?', options: ['1', '2'] },
@@ -69,7 +77,7 @@ describe('Contribute preview page', () => {
     const wrapper = mountPage()
     await nextTick()
 
-    await (wrapper.vm as any).submit()
+    await getVm(wrapper).submit()
 
     expect(contributionApiMocks.submitContribution).toHaveBeenCalledWith('contribution-1')
     expect(ElMessage.success).toHaveBeenCalledWith('已提交审核')
@@ -83,8 +91,17 @@ describe('Contribute preview page', () => {
     const wrapper = mountPage()
     await nextTick()
 
-    await (wrapper.vm as any).submit()
+    await getVm(wrapper).submit()
 
     expect(ElMessage.error).toHaveBeenCalledWith('提交服务异常')
+  })
+  it('shows error when loading preview questions fails', async () => {
+    contributionApiMocks.getContributionQuestions.mockRejectedValue(new Error('题库预览服务异常'))
+
+    mountPage()
+    await nextTick()
+    await nextTick()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('题库预览服务异常')
   })
 })

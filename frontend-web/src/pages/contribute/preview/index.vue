@@ -12,16 +12,17 @@ const questions = ref<ContributionQuestion[]>([])
 const loading = ref(true)
 const submitting = ref(false)
 
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : '提交失败'
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
 }
 
 onMounted(async () => {
   try {
     questions.value = await getContributionQuestions(String(route.query.id))
   }
-  catch {
+  catch (error: unknown) {
     questions.value = []
+    ElMessage.error(getErrorMessage(error, '题库预览加载失败'))
   }
   finally {
     loading.value = false
@@ -37,7 +38,7 @@ async function submit() {
     router.replace('/contribute')
   }
   catch (error: unknown) {
-    ElMessage.error(getErrorMessage(error))
+    ElMessage.error(getErrorMessage(error, '提交失败'))
   }
   finally {
     submitting.value = false

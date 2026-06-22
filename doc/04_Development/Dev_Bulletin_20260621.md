@@ -452,6 +452,13 @@
 - 在删除分支中区分确认框取消与真实接口失败，避免把删除失败误当成用户取消
 - 为 `src/__tests__/pages/contribute-exercise-detail.spec.ts` 提取带类型的页面 VM 访问辅助，移除删除流程中的弱类型断言，并补充加载失败与删除失败回归测试
 
+### 65. 题库贡献预览页加载静默失败收口
+
+- 新增 [Issue_20260622_Contribute_Preview_Load_Silent_Error_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Contribute_Preview_Load_Silent_Error_Gap.md)，记录题库贡献预览页加载失败仍会静默吞错的问题
+- 为 `src/pages/contribute/preview/index.vue` 补充统一错误消息提取逻辑，保证预览加载失败和提交失败都能给出明确提示
+- 在预览加载失败时清空当前题目列表，避免旧态残留
+- 为 `src/__tests__/pages/contribute-preview.spec.ts` 提取带类型的页面 VM 访问辅助，移除提交流程中的弱类型断言，并补充预览加载失败回归测试
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -496,12 +503,14 @@
 - 定向测试：`src/__tests__/pages/contribute-index.spec.ts` 通过（5 个用例）
 - 定向测试：`src/__tests__/pages/contribute-detail.spec.ts` 在沙箱路径下触发 Vitest `setup.ts` 绝对路径解析异常，代码改动已通过全量回归验证
 - 定向测试：`src/__tests__/pages/contribute-exercise-detail.spec.ts` 通过（5 个用例）
+- 定向测试：`src/__tests__/pages/contribute-preview.spec.ts` 通过（4 个用例）
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm.cmd test`：48 个测试文件、222 个用例通过
 - `cd frontend-web && npm.cmd test`：48 个测试文件、223 个用例通过
 - `cd frontend-web && npm.cmd test`：48 个测试文件、225 个用例通过
 - `cd frontend-web && npm.cmd test`：48 个测试文件、226 个用例通过
 - `cd frontend-web && npm.cmd test`：48 个测试文件、228 个用例通过
+- `cd frontend-web && npm.cmd test`：48 个测试文件、229 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
