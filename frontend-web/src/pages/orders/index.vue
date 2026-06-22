@@ -4,10 +4,11 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getOrderDownload, type OrderType } from '@/api/modules/order'
 import { useOrderStore } from '@/stores/order'
+import type { OrderItem } from '@/types'
 
 const router = useRouter()
 const store = useOrderStore()
-const activeTab = ref<'download' | 'print'>('download')
+const activeTab = ref<OrderType>('download')
 const labels: Record<string, string> = {
   null: '待处理',
   printing: '打印中',
@@ -22,9 +23,13 @@ async function fetchByTab() {
   await store.fetchOrders(1, activeTab.value)
 }
 
-function switchTab(tab: string) {
-  activeTab.value = tab as 'download' | 'print'
+function switchTab(tab: OrderType) {
+  activeTab.value = tab
   fetchByTab()
+}
+
+function handleRowClick(row: OrderItem) {
+  goDetail(row.orderId)
 }
 
 function goDetail(id: string) {
@@ -65,7 +70,7 @@ async function handleDownload(orderId: string, event: Event) {
       <el-empty v-if="store.orders.length === 0" description="还没有下载订单，去组一份试卷吧">
         <el-button type="primary" @click="router.push('/paper/config')">去组卷</el-button>
       </el-empty>
-      <el-table v-else :data="store.orders" class="page-card" stripe @row-click="(row: any) => goDetail(row.orderId)">
+      <el-table v-else :data="store.orders" class="page-card" stripe @row-click="handleRowClick">
         <el-table-column label="类型" width="80">
           <template #default>
             <el-tag size="small" type="primary">📥 下载</el-tag>
@@ -102,7 +107,7 @@ async function handleDownload(orderId: string, event: Event) {
 
     <div v-if="activeTab === 'print'">
       <el-empty v-if="store.orders.length === 0" description="暂无打印订单" />
-      <el-table v-else :data="store.orders" class="page-card" stripe @row-click="(row: any) => goDetail(row.orderId)">
+      <el-table v-else :data="store.orders" class="page-card" stripe @row-click="handleRowClick">
         <el-table-column label="类型" width="80">
           <template #default>
             <el-tag size="small" type="warning">🖨️ 打印</el-tag>

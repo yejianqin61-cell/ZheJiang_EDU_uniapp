@@ -187,6 +187,12 @@
 - 提现页改为收口异常消息解析，移除 `error: any` 和直接可选链取 message 的弱类型写法
 - 同时将余额支付可用性判断与订单类型标签函数补成显式类型，避免页面局部推断继续变宽
 
+### 27. 订单列表行事件类型收口
+
+- 新增 [Issue_20260622_Order_Row_Type_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Order_Row_Type_Gap.md)，记录订单列表页模板事件仍依赖弱类型行对象的问题
+- 订单列表页将下载/打印表格的 `row-click` 事件收口为脚本内显式 typed handler，移除模板里的 `row: any`
+- 标签页当前值与切换函数改为直接复用共享 `OrderType`，避免页面局部断言继续变宽
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -199,6 +205,7 @@
 - 定向测试：`backend/src/modules/admin/services/dashboard.service.spec.ts` 与 `frontend-web/src/__tests__/pages/admin-dashboard.spec.ts` 通过
 - 定向测试：`src/__tests__/api/exercise.spec.ts` 与 `src/__tests__/pages/admin-exercise-contributions.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/payment.spec.ts` 与 `src/__tests__/pages/profile-withdraw.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/orders-index.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm test`：48 个测试文件、181 个用例通过
 - `cd frontend-web && npm run build`：通过
