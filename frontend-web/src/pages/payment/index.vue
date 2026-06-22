@@ -20,11 +20,18 @@ function hasResponse(error: unknown): error is { response: unknown } {
   return typeof error === 'object' && error !== null && 'response' in error
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
 onMounted(async () => {
   try {
     const data = await getMyBalance()
     userBalance.value = data?.balance ?? 0
-  } catch {}
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '余额加载失败'))
+  }
 
   balanceLoaded.value = true
 

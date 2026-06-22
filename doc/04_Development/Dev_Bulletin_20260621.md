@@ -321,6 +321,13 @@
 - 保持现有提现校验、提交流程和默认值兜底不变，避免渲染中断
 - 补充页面回归测试，覆盖余额加载失败时的提示行为
 
+### 47. 支付页余额加载静默失败收口
+
+- 新增 [Issue_20260622_Payment_Balance_Load_Silent_Error_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Payment_Balance_Load_Silent_Error_Gap.md)，记录支付页余额加载链路仍存在静默失败的问题
+- 为支付页初始化余额加载失败补充明确提示，避免用户把接口异常误判成余额不足
+- 保持原有订单创建、支付流程和默认值兜底不变，避免页面渲染中断
+- 补充页面回归测试，覆盖余额加载失败时的提示行为
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -353,8 +360,9 @@
 - 定向测试：`src/__tests__/pages/profile-index.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/profile-balance.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/profile-withdraw.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/payment.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm.cmd test`：48 个测试文件、200 个用例通过
+- `cd frontend-web && npm.cmd test`：48 个测试文件、201 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交

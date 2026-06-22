@@ -1,9 +1,11 @@
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { ElMessage } from 'element-plus'
+import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useOrderStore } from '@/stores/order'
 import PaymentPage from '@/pages/payment/index.vue'
+import type { Order, PaymentProvider } from '@/types'
 
 const routerBack = vi.fn()
 const routerReplace = vi.fn()
@@ -52,6 +54,25 @@ const mountPage = (pinia = createPinia()) =>
     },
   })
 
+type PaymentPageVm = {
+  canBalancePay: boolean
+  handleBalancePay: () => Promise<void>
+  handleAlipay: () => Promise<void>
+}
+
+function createOrder(overrides: Partial<Order> = {}): Order {
+  return {
+    orderId: 'order-1',
+    orderNo: 'NO001',
+    amount: 1200,
+    type: 'download',
+    status: 'pending',
+    createdAt: '2026-06-22T00:00:00.000Z',
+    updatedAt: '2026-06-22T00:00:00.000Z',
+    ...overrides,
+  }
+}
+
 describe('Payment page', () => {
   beforeEach(() => {
     vi.useFakeTimers()
@@ -75,12 +96,7 @@ describe('Payment page', () => {
     setActivePinia(pinia)
     const orderStore = useOrderStore()
     const createSpy = vi.spyOn(orderStore, 'create').mockImplementation(async () => {
-      const result = {
-        orderId: 'order-1',
-        orderNo: 'NO001',
-        amount: 1200,
-        type: 'download',
-      } as any
+      const result = createOrder()
       orderStore.currentOrder = result
       return result
     })
@@ -90,7 +106,18 @@ describe('Payment page', () => {
     await Promise.resolve()
 
     expect(createSpy).toHaveBeenCalledWith('paper-1', 'download')
-    expect((wrapper.vm as any).canBalancePay).toBe(true)
+    expect((wrapper.vm as PaymentPageVm).canBalancePay).toBe(true)
+  })
+
+  it('shows error when balance load fails', async () => {
+    authApiMocks.getMyBalance.mockRejectedValue(new Error('余额接口加载失败'))
+
+    mountPage()
+    await nextTick()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('余额接口加载失败')
   })
 
   it('redirects to paper config when both paper id and current order are missing', async () => {
@@ -114,15 +141,13 @@ describe('Payment page', () => {
     setActivePinia(pinia)
     const wrapper = mountPage(pinia)
     const orderStore = useOrderStore()
-    orderStore.currentOrder = {
+    orderStore.currentOrder = createOrder({
       orderId: 'order-9',
       orderNo: 'NO009',
-      amount: 1200,
-      type: 'download',
-    } as any
+    })
     await Promise.resolve()
 
-    await (wrapper.vm as any).handleBalancePay()
+    await (wrapper.vm as PaymentPageVm).handleBalancePay()
     await vi.runAllTimersAsync()
 
     expect(authApiMocks.payByBalance).toHaveBeenCalledWith('order-9')
@@ -141,21 +166,20 @@ describe('Payment page', () => {
     setActivePinia(pinia)
     const wrapper = mountPage(pinia)
     const orderStore = useOrderStore()
-    orderStore.currentOrder = {
+    orderStore.currentOrder = createOrder({
       orderId: 'order-10',
       orderNo: 'NO010',
       amount: 1600,
-      type: 'download',
       payment: null,
-    } as any
+    })
     await Promise.resolve()
 
-    await (wrapper.vm as any).handleAlipay()
+    await (wrapper.vm as PaymentPageVm).handleAlipay()
 
     expect(paymentApiMocks.payAlipay).toHaveBeenCalledWith('order-10')
     expect(appendChild).toHaveBeenCalledTimes(1)
     expect(submit).toHaveBeenCalledTimes(1)
-    expect((orderStore.currentOrder as any).payment?.provider).toBe('alipay')
+    expect(orderStore.currentOrder?.payment?.provider).toBe('alipay' satisfies PaymentProvider)
 
     querySelector.mockRestore()
     appendChild.mockRestore()
