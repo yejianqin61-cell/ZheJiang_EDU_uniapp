@@ -7,11 +7,23 @@ export interface LoginResponse {
   email?: string
 }
 
+export interface AuthUserSummary {
+  id?: string
+  role: 'teacher' | 'admin'
+  nickname?: string | null
+  avatarUrl?: string | null
+}
+
+export interface CodeLoginResponse extends LoginResponse {
+  user: AuthUserSummary
+}
+
 export interface UserProfile {
   id: string
-  phone?: string
+  phone?: string | null
   role: 'teacher' | 'admin'
-  createdAt: string
+  nickname?: string | null
+  avatarUrl?: string | null
 }
 
 export interface UserStats {
@@ -44,7 +56,7 @@ export function loginByPassword(email: string, password: string): Promise<LoginR
   return api.post('/auth/login-by-password', { email, password })
 }
 
-export function devLogin(code: string): Promise<LoginResponse> {
+export function devLogin(code: string): Promise<CodeLoginResponse> {
   return api.post('/auth/login', { code })
 }
 

@@ -127,12 +127,20 @@
 - 个人中心页统计展示改为“已生成试卷 / 已支付订单 / 账户余额”，去除错误的“贡献题目”展示语义
 - 更新 `profile` 页面测试与 `auth` API 测试，按真实接口契约回归断言
 
+### 19. 鉴权资料契约与 Store 类型收口
+
+- 新增 [Issue_20260622_Auth_Profile_Contract_Mismatch.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Auth_Profile_Contract_Mismatch.md)，记录 `UserProfile` 与 code 登录返回结构的前后端契约漂移
+- 将前端 `auth` API 模块中的 `UserProfile` 对齐为后端 `/users/me` 真实返回字段，并为 code / Dev 登录补齐显式 `CodeLoginResponse`
+- 移除 `auth` store 中 Dev 登录对 `(res as any).user` 的弱类型依赖，改为直接消费显式类型契约
+- 重写 `auth` store 回归测试，覆盖 token 恢复、Dev 登录、资料回填、失败回退和退出登录链路
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
 - 定向测试：2 个测试文件、12 个用例通过
+- 定向测试：3 个测试文件、22 个用例通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm test`：47 个测试文件、170 个用例通过
+- `cd frontend-web && npm test`：47 个测试文件、172 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交

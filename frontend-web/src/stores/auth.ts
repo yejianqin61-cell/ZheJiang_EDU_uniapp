@@ -1,10 +1,15 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { sendSms, login, devLogin, getProfile, type LoginResponse } from '@/api/modules/auth'
+import { sendSms, login, devLogin, getProfile, type CodeLoginResponse, type LoginResponse } from '@/api/modules/auth'
+
+type AuthStoreUser = {
+  phone?: string | null
+  role: 'teacher' | 'admin'
+}
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('accessToken') || '')
-  const user = ref<{ phone?: string; role: string } | null>(null)
+  const user = ref<AuthStoreUser | null>(null)
   const loading = ref(false)
 
   const isLoggedIn = computed(() => !!token.value)
@@ -20,7 +25,7 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return
     try {
       const payload = JSON.parse(atob(token.value.split('.')[1]))
-      user.value = { phone: payload.phone, role: payload.role }
+      user.value = { phone: payload.phone ?? null, role: payload.role }
     } catch {
       // token 无效，清除
       token.value = ''
@@ -53,17 +58,16 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // Dev 快捷登录
-  async function devLoginWithCode(code: string): Promise<LoginResponse> {
+  async function devLoginWithCode(code: string): Promise<CodeLoginResponse> {
     loading.value = true
     try {
       const res = await devLogin(code)
       token.value = res.accessToken
       localStorage.setItem('accessToken', res.accessToken)
       // Dev 登录返回的是 user 对象（微信兼容）
-      const userData = (res as any).user
       user.value = {
         phone: res.phone,
-        role: userData?.role || res.role || 'admin',
+        role: res.user.role,
       }
       return res
     } finally {

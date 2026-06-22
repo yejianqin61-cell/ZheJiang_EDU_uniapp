@@ -70,21 +70,23 @@ describe('Auth API', () => {
 
   it('devLogin -> POST /auth/login with code', async () => {
     const { devLogin } = await import('@/api/modules/auth')
-    mockPost.mockResolvedValue({ accessToken: 'token', role: 'admin' })
+    mockPost.mockResolvedValue({ accessToken: 'token', user: { id: 'u1', role: 'admin', nickname: 'Dev Admin', avatarUrl: null } })
 
-    await devLogin('admin_test')
+    const response = await devLogin('admin_test')
 
     expect(mockPost).toHaveBeenCalledWith('/auth/login', { code: 'admin_test' })
+    expect(response.user.role).toBe('admin')
   })
 
   it('getProfile -> GET /users/me', async () => {
     const { getProfile } = await import('@/api/modules/auth')
-    mockGet.mockResolvedValue({ id: '1', role: 'admin' })
+    mockGet.mockResolvedValue({ id: '1', role: 'admin', nickname: '张老师', avatarUrl: null, phone: '138****8000' })
 
     const response = await getProfile()
 
     expect(mockGet).toHaveBeenCalledWith('/users/me')
     expect(response.role).toBe('admin')
+    expect(response.nickname).toBe('张老师')
   })
 
   it('getUserStats -> GET /users/me/stats', async () => {
