@@ -160,22 +160,17 @@ describe('Print checkout page', () => {
   })
 
   it('creates print order and navigates to payment page', async () => {
-    pricingApiMocks.getPublicPricing.mockResolvedValue({ print: [{ minQuantity: 1, maxQuantity: null, unitPrice: 200 }] })
-    addressApiMocks.listAddresses.mockResolvedValue([{ id: 'addr-1', receiverName: '张三', phone: '13800000000', province: '浙', city: '杭', district: '西湖', detail: '1号' }])
-    orderApiMocks.createOrder.mockResolvedValue({
-      orderId: 'order-1',
-      orderNo: 'NO001',
-      amount: 2000,
-      type: 'print',
-    })
+    pricingApiMocks.getPublicPricing.mockResolvedValue(createPricing([{ tier: 1, minQuantity: 1, maxQuantity: null, unitPrice: 200 }]))
+    addressApiMocks.listAddresses.mockResolvedValue([createAddress()])
+    orderApiMocks.createOrder.mockResolvedValue(createOrderResult())
 
     const wrapper = mountPage()
     const orderStore = useOrderStore()
     await Promise.resolve()
     await Promise.resolve()
 
-    ;(wrapper.vm as any).selectedAddr = 'addr-1'
-    await (wrapper.vm as any).handleSubmit()
+    ;(wrapper.vm as PrintCheckoutPageVm).selectedAddr = 'addr-1'
+    await (wrapper.vm as PrintCheckoutPageVm).handleSubmit()
 
     expect(orderApiMocks.createOrder).toHaveBeenCalledWith({
       paperId: 'paper-1',
@@ -189,17 +184,32 @@ describe('Print checkout page', () => {
   })
 
   it('shows backend error message when create order fails with response', async () => {
-    pricingApiMocks.getPublicPricing.mockResolvedValue({ print: [{ minQuantity: 1, maxQuantity: null, unitPrice: 200 }] })
-    addressApiMocks.listAddresses.mockResolvedValue([{ id: 'addr-1', receiverName: '张三', phone: '13800000000', province: '浙', city: '杭', district: '西湖', detail: '1号' }])
+    pricingApiMocks.getPublicPricing.mockResolvedValue(createPricing([{ tier: 1, minQuantity: 1, maxQuantity: null, unitPrice: 200 }]))
+    addressApiMocks.listAddresses.mockResolvedValue([createAddress()])
     orderApiMocks.createOrder.mockRejectedValue(Object.assign(new Error('库存不足'), { response: { status: 400 } }))
 
     const wrapper = mountPage()
     await Promise.resolve()
     await Promise.resolve()
 
-    ;(wrapper.vm as any).selectedAddr = 'addr-1'
-    await (wrapper.vm as any).handleSubmit()
+    ;(wrapper.vm as PrintCheckoutPageVm).selectedAddr = 'addr-1'
+    await (wrapper.vm as PrintCheckoutPageVm).handleSubmit()
 
     expect(ElMessage.error).toHaveBeenCalledWith('库存不足')
+  })
+
+  it('shows fallback error when create order response has no message', async () => {
+    pricingApiMocks.getPublicPricing.mockResolvedValue(createPricing([{ tier: 1, minQuantity: 1, maxQuantity: null, unitPrice: 200 }]))
+    addressApiMocks.listAddresses.mockResolvedValue([createAddress()])
+    orderApiMocks.createOrder.mockRejectedValue({ response: { status: 500 } })
+
+    const wrapper = mountPage()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    ;(wrapper.vm as PrintCheckoutPageVm).selectedAddr = 'addr-1'
+    await (wrapper.vm as PrintCheckoutPageVm).handleSubmit()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('创建订单失败')
   })
 })

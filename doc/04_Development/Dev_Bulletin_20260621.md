@@ -348,12 +348,25 @@
 - 为保存操作区分弹窗取消与真实接口失败，对真实失败补充明确提示
 - 补充页面回归测试，覆盖加载失败和保存失败时的提示行为
 
+### 51. 打印下单页静默失败收口
+
+- 新增 [Issue_20260622_Print_Checkout_Silent_Error_Handling_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Print_Checkout_Silent_Error_Handling_Gap.md)，记录打印下单页仍存在静默失败分支的问题
+- 为打印定价和收货地址加载失败补充明确提示，避免用户把接口异常误判成无价格或无地址
+- 保持页面默认值兜底与下单流程不变，并统一创建订单失败的兜底错误提示
+- 补充页面回归测试，覆盖加载失败和订单创建失败时的提示行为
+
 ### 51. 打印下单页初始化静默失败收口
 
 - 新增 [Issue_20260622_Print_Checkout_Load_Silent_Error_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Print_Checkout_Load_Silent_Error_Gap.md)，记录打印下单页初始化加载链路仍存在静默失败的问题
 - 为打印定价和地址列表加载失败补充明确提示，避免用户把接口异常误判成无可用数据
 - 保持页面当前兜底展示和提交流程不变，避免初始化异常导致渲染中断
 - 补充页面回归测试，覆盖两个初始化请求失败时的提示行为
+
+### 52. 打印下单测试夹具与兜底分支收口
+
+- 为 `src/__tests__/pages/print-checkout.spec.ts` 提取带类型的定价、地址和订单夹具
+- 去掉提交流程测试中的弱类型断言，降低打印下单页测试维护成本
+- 补充“后端响应存在但缺少 message”时的兜底错误提示回归测试
 
 ## 验证结果
 
