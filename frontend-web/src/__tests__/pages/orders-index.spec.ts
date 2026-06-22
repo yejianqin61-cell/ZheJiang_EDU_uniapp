@@ -5,6 +5,7 @@ import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useOrderStore } from '@/stores/order'
 import OrdersIndexPage from '@/pages/orders/index.vue'
+import type { OrderItem } from '@/types'
 
 const routerPush = vi.fn()
 const orderApiMocks = vi.hoisted(() => ({
@@ -41,6 +42,23 @@ const mountPage = (pinia = createPinia()) =>
     },
   })
 
+type OrdersIndexPageVm = {
+  switchTab: (tab: 'download' | 'print' | 'exercise') => Promise<void> | void
+  handleDownload: (orderId: string, event: Pick<Event, 'stopPropagation'>) => Promise<void>
+}
+
+function createOrderItem(overrides: Partial<OrderItem> = {}): OrderItem {
+  return {
+    orderId: 'order-1',
+    orderNo: 'NO001',
+    paperTitle: '数学卷',
+    amount: 1200,
+    status: 'paid',
+    createdAt: '2026-06-21',
+    ...overrides,
+  }
+}
+
 describe('Orders index page', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -74,7 +92,7 @@ describe('Orders index page', () => {
     const wrapper = mountPage(pinia)
     await nextTick()
 
-    await (wrapper.vm as any).switchTab('print')
+    await (wrapper.vm as OrdersIndexPageVm).switchTab('print')
 
     expect(orderStore.activeTab).toBe('print')
     expect(orderStore.fetchOrders).toHaveBeenNthCalledWith(2, 1, 'print')
@@ -84,16 +102,32 @@ describe('Orders index page', () => {
     const pinia = createPinia()
     setActivePinia(pinia)
     const orderStore = useOrderStore()
-    orderStore.orders = [{ orderId: 'order-1', orderNo: 'NO001', paperTitle: '数学卷', amount: 1200, status: 'paid', createdAt: '2026-06-21' }] as any
+    orderStore.orders = [createOrderItem()]
     vi.spyOn(orderStore, 'fetchOrders').mockResolvedValue()
     orderApiMocks.getOrderDownload.mockResolvedValue({ docxUrl: 'https://example.com/order-1.docx' })
 
     const wrapper = mountPage(pinia)
     await nextTick()
 
-    await (wrapper.vm as any).handleDownload('order-1', { stopPropagation: vi.fn() })
+    await (wrapper.vm as OrdersIndexPageVm).handleDownload('order-1', { stopPropagation: vi.fn() })
 
     expect(orderApiMocks.getOrderDownload).toHaveBeenCalledWith('order-1')
     expect(window.open).toHaveBeenCalledWith('https://example.com/order-1.docx', '_blank')
+  })
+
+  it('shows fallback error when download request fails without message', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const orderStore = useOrderStore()
+    orderStore.orders = [createOrderItem()]
+    vi.spyOn(orderStore, 'fetchOrders').mockResolvedValue()
+    orderApiMocks.getOrderDownload.mockRejectedValue({ code: 500 })
+
+    const wrapper = mountPage(pinia)
+    await nextTick()
+
+    await (wrapper.vm as OrdersIndexPageVm).handleDownload('order-1', { stopPropagation: vi.fn() })
+
+    expect(ElMessage.error).toHaveBeenCalledWith('获取下载链接失败')
   })
 })

@@ -16,6 +16,18 @@ const labels: Record<string, string> = {
   delivered: '已签收',
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message
+  }
+
+  return fallback
+}
+
 onMounted(() => fetchByTab())
 
 async function fetchByTab() {
@@ -50,8 +62,8 @@ async function handleDownload(orderId: string, event: Event) {
 
     window.open(url, '_blank')
   }
-  catch {
-    ElMessage.error('获取下载链接失败')
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '获取下载链接失败'))
   }
 }
 </script>

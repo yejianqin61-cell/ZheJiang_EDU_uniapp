@@ -24,6 +24,18 @@ const stLabels: Record<string, string> = {
   cancelled: '已取消',
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message
+  }
+
+  return fallback
+}
+
 onMounted(async () => {
   const id = route.params.id as string | undefined
   if (!id) {
@@ -34,8 +46,8 @@ onMounted(async () => {
   try {
     order.value = await getOrder(id)
   }
-  catch {
-    ElMessage.error('订单加载失败')
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '订单加载失败'))
   }
   finally {
     loading.value = false
@@ -73,8 +85,8 @@ async function handleExport() {
       window.open(downloadUrl, '_blank')
     }
   }
-  catch {
-    ElMessage.error('导出失败')
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '导出失败'))
   }
   finally {
     exporting.value = false

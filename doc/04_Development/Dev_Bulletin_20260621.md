@@ -396,6 +396,20 @@
 - 保持现有加载失败后返回上一页的行为不变
 - 补充页面回归测试，覆盖加载失败分支，并顺手收口测试中的弱类型断言
 
+### 57. 订单列表页下载失败兜底收口
+
+- 新增 [Issue_20260622_Orders_Index_Download_Error_Fallback_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Orders_Index_Download_Error_Fallback_Gap.md)，记录订单列表页下载失败兜底提示仍不稳定的问题
+- 为获取下载链接失败补充统一错误消息提取逻辑，保证无 message 时仍能给出明确提示
+- 保持订单列表切换、跳转与下载成功行为不变
+- 补充页面回归测试，覆盖下载失败兜底分支，并顺手收口测试中的弱类型断言
+
+### 58. 订单详情页失败兜底收口
+
+- 新增 [Issue_20260622_Order_Detail_Error_Fallback_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Order_Detail_Error_Fallback_Gap.md)，记录订单详情页加载与导出失败兜底提示仍不稳定的问题
+- 为订单加载失败和导出失败补充统一错误消息提取逻辑，保证无 message 时仍能给出明确提示
+- 保持详情页展示、下载与导出成功行为不变
+- 补充页面回归测试，覆盖加载失败与导出失败兜底分支，并顺手收口测试中的弱类型断言
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -435,7 +449,7 @@
 - 定向测试：`src/__tests__/pages/exercise-upload.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-review.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm.cmd test`：48 个测试文件、218 个用例通过
+- `cd frontend-web && npm.cmd test`：48 个测试文件、221 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -470,3 +484,4 @@
 - 本批提交：管理端入库审核批量静默失败收口
 - 本批提交：组卷知识点 store 静默失败收口
 - 本批提交：地址编辑页加载静默跳回收口
+- 本批提交：订单链路失败兜底收口

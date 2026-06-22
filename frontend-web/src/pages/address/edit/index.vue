@@ -24,7 +24,15 @@ const id = route.params.id as string | undefined
 const isEdit = !!id
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : '保存失败'
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message
+  }
+
+  return '保存失败'
 }
 
 onMounted(async () => {
@@ -35,7 +43,8 @@ onMounted(async () => {
   try {
     form.value = await getAddress(id!)
   }
-  catch {
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error))
     router.back()
   }
 })
