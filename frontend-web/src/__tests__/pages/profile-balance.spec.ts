@@ -1,14 +1,14 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ProfileBalancePage from '@/pages/profile/balance/index.vue'
 
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
+const authApiMocks = vi.hoisted(() => ({
+  getMyBalance: vi.fn(),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/auth', () => ({
+  getMyBalance: authApiMocks.getMyBalance,
 }))
 
 const mountPage = () =>
@@ -22,17 +22,17 @@ const mountPage = () =>
 
 describe('Profile balance page', () => {
   beforeEach(() => {
-    apiMocks.get.mockReset()
+    authApiMocks.getMyBalance.mockReset()
   })
 
   it('loads user balance on mount', async () => {
-    apiMocks.get.mockResolvedValue({ balance: 12345 })
+    authApiMocks.getMyBalance.mockResolvedValue({ balance: 12345 })
 
     const wrapper = mountPage()
     await nextTick()
-    await nextTick()
+    await flushPromises()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/users/me/balance')
+    expect(authApiMocks.getMyBalance).toHaveBeenCalledTimes(1)
     expect(wrapper.text()).toContain('¥123.45')
   })
 })

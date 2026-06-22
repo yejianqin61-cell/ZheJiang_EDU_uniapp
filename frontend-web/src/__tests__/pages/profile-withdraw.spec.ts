@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { ElMessage } from 'element-plus'
 import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -6,9 +6,9 @@ import ProfileWithdrawPage from '@/pages/profile/withdraw/index.vue'
 import { elInputStub } from '@/__tests__/utils/element-plus-stubs'
 
 const routerBack = vi.fn()
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  post: vi.fn(),
+const authApiMocks = vi.hoisted(() => ({
+  getMyBalance: vi.fn(),
+  withdraw: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -17,8 +17,9 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/auth', () => ({
+  getMyBalance: authApiMocks.getMyBalance,
+  withdraw: authApiMocks.withdraw,
 }))
 
 const mountPage = () =>
@@ -35,57 +36,60 @@ const mountPage = () =>
 describe('Profile withdraw page', () => {
   beforeEach(() => {
     routerBack.mockReset()
-    apiMocks.get.mockReset()
-    apiMocks.post.mockReset()
+    authApiMocks.getMyBalance.mockReset()
+    authApiMocks.withdraw.mockReset()
     vi.mocked(ElMessage.warning).mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.error).mockReset()
   })
 
   it('loads balance on mount', async () => {
-    apiMocks.get.mockResolvedValue({ balance: 5000 })
+    authApiMocks.getMyBalance.mockResolvedValue({ balance: 5000 })
 
     const wrapper = mountPage()
     await nextTick()
-    await nextTick()
+    await flushPromises()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/users/me/balance')
+    expect(authApiMocks.getMyBalance).toHaveBeenCalledTimes(1)
     expect(wrapper.text()).toContain('¥50.00')
   })
 
   it('warns when withdraw amount is missing', async () => {
-    apiMocks.get.mockResolvedValue({ balance: 5000 })
+    authApiMocks.getMyBalance.mockResolvedValue({ balance: 5000 })
     const wrapper = mountPage()
     await nextTick()
+    await flushPromises()
 
     await (wrapper.vm as any).submit()
 
     expect(ElMessage.warning).toHaveBeenCalledWith('请输入金额')
-    expect(apiMocks.post).not.toHaveBeenCalled()
+    expect(authApiMocks.withdraw).not.toHaveBeenCalled()
   })
 
   it('warns when balance is insufficient', async () => {
-    apiMocks.get.mockResolvedValue({ balance: 5000 })
+    authApiMocks.getMyBalance.mockResolvedValue({ balance: 5000 })
     const wrapper = mountPage()
     await nextTick()
+    await flushPromises()
     ;(wrapper.vm as any).amount = 60
 
     await (wrapper.vm as any).submit()
 
     expect(ElMessage.warning).toHaveBeenCalledWith('余额不足')
-    expect(apiMocks.post).not.toHaveBeenCalled()
+    expect(authApiMocks.withdraw).not.toHaveBeenCalled()
   })
 
   it('submits withdraw request and returns on success', async () => {
-    apiMocks.get.mockResolvedValue({ balance: 5000 })
-    apiMocks.post.mockResolvedValue({ ok: true })
+    authApiMocks.getMyBalance.mockResolvedValue({ balance: 5000 })
+    authApiMocks.withdraw.mockResolvedValue({ ok: true })
     const wrapper = mountPage()
     await nextTick()
+    await flushPromises()
     ;(wrapper.vm as any).amount = 20
 
     await (wrapper.vm as any).submit()
 
-    expect(apiMocks.post).toHaveBeenCalledWith('/withdrawals', { amount: 2000 })
+    expect(authApiMocks.withdraw).toHaveBeenCalledWith(2000)
     expect(ElMessage.success).toHaveBeenCalledWith('提现申请已提交')
     expect(routerBack).toHaveBeenCalled()
   })

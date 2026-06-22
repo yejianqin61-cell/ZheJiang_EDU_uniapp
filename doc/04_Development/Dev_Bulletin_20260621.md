@@ -79,10 +79,17 @@
 - 在地址列表 API 层补充数组响应与 `{ list }` 包装响应的统一归一化，避免页面重复兼容后端返回结构
 - 补充 API 层与页面层回归测试，覆盖地址列表加载、空态展示、删除刷新、编辑回填、新增提交与更新提交流程
 
+### 12. 个人中心账户链路 API 收口
+
+- 个人中心页、余额页、提现页改为复用共享 `auth` API 模块中的 `getUserStats()`、`getMyBalance()`、`withdraw()`，移除页面层对底层 `api` 的直接依赖
+- 为 `auth` API 模块补齐 `UserProfile`、`UserStats`、`BalanceSummary` 类型约束，减少账户链路中的 `any` 透传
+- 修复个人中心页账户菜单余额文案在异步余额回写后不刷新的问题，将菜单项改为基于响应式余额的 `computed` 派生
+- 补充 API 层与页面层回归测试，覆盖用户统计读取、余额读取、提现校验、提现提交与管理员入口展示链路
+
 ## 验证结果
 
-- 定向测试：3 个测试文件、13 个用例通过
-- `cd frontend-web && npm test`：44 个测试文件、150 个用例通过
+- 定向测试：4 个测试文件、14 个用例通过
+- `cd frontend-web && npm test`：44 个测试文件、153 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -99,4 +106,5 @@
 - `f63e165` `refactor: align admin pricing page with api module`
 - `d812823` `refactor: type admin knowledge and pricing apis`
 - `77dd650` `refactor: align admin upload pages with api modules`
-- 本批提交：收货地址页 API 收口
+- `0b580e7` `refactor: align address pages with api module`
+- 本批提交：个人中心账户链路 API 收口

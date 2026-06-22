@@ -1,30 +1,60 @@
 import api from '../index'
 
-export interface LoginResponse { accessToken: string; role: 'teacher' | 'admin'; phone?: string }
+export interface LoginResponse {
+  accessToken: string
+  role: 'teacher' | 'admin'
+  phone?: string
+}
 
-/** 发送短信验证码 */
-export function sendSms(phone: string): Promise<void> { return api.post('/auth/send-sms', { phone }) }
+export interface UserProfile {
+  id: string
+  phone?: string
+  role: 'teacher' | 'admin'
+  createdAt: string
+}
 
-/** 短信验证码登录 */
-export function login(phone: string, smsCode: string): Promise<LoginResponse> { return api.post('/auth/login', { phone, smsCode }) }
+export interface UserStats {
+  orderCount: number
+  balance: number
+  contributionCount: number
+}
 
-/** Dev 快捷登录（微信兼容接口） */
-export function devLogin(code: string): Promise<LoginResponse> { return api.post('/auth/login', { code }) }
+export interface BalanceSummary {
+  balance: number
+}
 
-/** 获取当前用户信息 */
-export function getProfile(): Promise<{ id: string; phone?: string; role: string; createdAt: string }> { return api.get('/users/me') }
+export function sendSms(phone: string): Promise<void> {
+  return api.post('/auth/send-sms', { phone })
+}
 
-/** 获取用户统计 */
-export function getUserStats(): Promise<any> { return api.get('/users/me/stats') }
+export function login(phone: string, smsCode: string): Promise<LoginResponse> {
+  return api.post('/auth/login', { phone, smsCode })
+}
 
-/** 获取用户余额 */
-export function getMyBalance(): Promise<{ balance: number }> { return api.get('/users/me/balance') }
+export function devLogin(code: string): Promise<LoginResponse> {
+  return api.post('/auth/login', { code })
+}
 
-/** 余额支付 */
-export function payByBalance(orderId: string): Promise<void> { return api.post(`/orders/${orderId}/balance-pay`) }
+export function getProfile(): Promise<UserProfile> {
+  return api.get('/users/me')
+}
 
-/** 获取余额日志 */
-export function getBalanceLog(): Promise<any> { return api.get('/users/me/balance-log') }
+export function getUserStats(): Promise<UserStats> {
+  return api.get('/users/me/stats')
+}
 
-/** 提现 */
-export function withdraw(amount: number): Promise<void> { return api.post('/withdrawals', { amount }) }
+export function getMyBalance(): Promise<BalanceSummary> {
+  return api.get('/users/me/balance')
+}
+
+export function payByBalance(orderId: string): Promise<void> {
+  return api.post(`/orders/${orderId}/balance-pay`)
+}
+
+export function getBalanceLog(): Promise<any> {
+  return api.get('/users/me/balance-log')
+}
+
+export function withdraw(amount: number): Promise<void> {
+  return api.post('/withdrawals', { amount })
+}
