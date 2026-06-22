@@ -26,6 +26,18 @@ const generating = ref(false)
 const genProgress = ref(0)
 let progressTimer: ReturnType<typeof setInterval> | null = null
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message
+  }
+
+  return fallback
+}
+
 function selectStage(stage: string) { selectedStage.value = stage }
 function selectGrade(grade: string) {
   paper.condition.grade = grade
@@ -60,7 +72,9 @@ async function handleGenerate() {
     await paper.generate()
     genProgress.value = 100
     await new Promise(r => setTimeout(r, 300))
-  } catch { /* stay */ }
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '组卷失败'))
+  }
   finally {
     if (progressTimer) clearInterval(progressTimer)
     generating.value = false

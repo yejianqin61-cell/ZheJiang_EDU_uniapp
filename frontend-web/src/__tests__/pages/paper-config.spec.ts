@@ -1,10 +1,11 @@
-import { mount } from '@vue/test-utils'
+import { mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { ElMessage } from 'element-plus'
-import { nextTick } from 'vue'
+import { nextTick, type ComponentPublicInstance } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { usePaperStore } from '@/stores/paper'
 import PaperConfigPage from '@/pages/paper/config/index.vue'
+import type { PaperResult } from '@/types'
 
 const routerPush = vi.fn()
 
@@ -30,17 +31,37 @@ const mountPage = (pinia = createPinia()) =>
     },
   })
 
+type PaperConfigPageVm = ComponentPublicInstance & {
+  generating: boolean
+  handleGenerate(): Promise<void>
+  selectGrade(grade: string): void
+  selectSubject(subject: string): void
+  paper: ReturnType<typeof usePaperStore>
+}
+
+const getPageVm = (wrapper: VueWrapper<ComponentPublicInstance>) => wrapper.vm as PaperConfigPageVm
+
+function buildPaperResult(): PaperResult {
+  return {
+    paperId: 'paper-1',
+    title: '测试卷',
+    questions: [],
+    generateTime: 1,
+  }
+}
+
 describe('Paper config page', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     routerPush.mockReset()
     vi.mocked(ElMessage.warning).mockReset()
+    vi.mocked(ElMessage.error).mockReset()
   })
 
   it('warns when subject is missing before generate', async () => {
     const wrapper = mountPage()
 
-    await (wrapper.vm as any).handleGenerate()
+    await getPageVm(wrapper).handleGenerate()
 
     expect(ElMessage.warning).toHaveBeenCalledWith('请选择科目')
     expect(routerPush).not.toHaveBeenCalled()
@@ -53,14 +74,15 @@ describe('Paper config page', () => {
     const fetchKnowledgePoints = vi.spyOn(paperStore, 'fetchKnowledgePoints').mockResolvedValue(undefined)
 
     const wrapper = mountPage(pinia)
-    ;(wrapper.vm as any).selectSubject('数学')
-    ;(wrapper.vm as any).paper.condition.knowledgePointIds = ['kp-old']
+    const vm = getPageVm(wrapper)
+    vm.selectSubject('数学')
+    vm.paper.condition.knowledgePointIds = ['kp-old']
 
-    ;(wrapper.vm as any).selectGrade('五年级')
+    vm.selectGrade('五年级')
     await nextTick()
 
-    expect((wrapper.vm as any).paper.condition.grade).toBe('五年级')
-    expect((wrapper.vm as any).paper.condition.knowledgePointIds).toEqual([])
+    expect(vm.paper.condition.grade).toBe('五年级')
+    expect(vm.paper.condition.knowledgePointIds).toEqual([])
     expect(fetchKnowledgePoints).toHaveBeenCalledTimes(1)
   })
 
@@ -71,29 +93,40 @@ describe('Paper config page', () => {
     const paperStore = usePaperStore()
     paperStore.condition.subject = '数学'
     paperStore.condition.grade = '五年级'
-    paperStore.currentPaper = {
-      paperId: 'paper-1',
-      title: '测试卷',
-      questions: [],
-      generateTime: 1,
-    } as any
+    paperStore.currentPaper = buildPaperResult()
     vi.spyOn(paperStore, 'generate').mockImplementation(async () => {
-      paperStore.currentPaper = {
-        paperId: 'paper-1',
-        title: '测试卷',
-        questions: [],
-        generateTime: 1,
-      } as any
+      paperStore.currentPaper = buildPaperResult()
     })
 
     const wrapper = mountPage(pinia)
+    const vm = getPageVm(wrapper)
 
-    const promise = (wrapper.vm as any).handleGenerate()
+    const promise = vm.handleGenerate()
     await vi.advanceTimersByTimeAsync(400)
     await promise
 
-    expect((wrapper.vm as any).generating).toBe(false)
+    expect(vm.generating).toBe(false)
     expect(routerPush).toHaveBeenCalledWith('/paper/preview')
+    vi.useRealTimers()
+  })
+
+  it('shows error when generate fails and stays on config page', async () => {
+    vi.useFakeTimers()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const paperStore = usePaperStore()
+    paperStore.condition.subject = '数学'
+    paperStore.condition.grade = '五年级'
+    vi.spyOn(paperStore, 'generate').mockRejectedValue(new Error('组卷服务异常'))
+
+    const wrapper = mountPage(pinia)
+    const vm = getPageVm(wrapper)
+
+    await vm.handleGenerate()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('组卷服务异常')
+    expect(vm.generating).toBe(false)
+    expect(routerPush).not.toHaveBeenCalled()
     vi.useRealTimers()
   })
 })

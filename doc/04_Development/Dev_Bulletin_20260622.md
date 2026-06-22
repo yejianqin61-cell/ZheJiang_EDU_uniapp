@@ -57,6 +57,17 @@
   - 移除支付宝表单提交桩中的 `as any`
   - 补充“支付宝拉单失败会提示真实错误信息”的回归用例
 
+### 6. 组卷配置页生成失败静默收口
+
+- 对应 Issue：
+  - [Issue_20260622_Paper_Config_Generate_Silent_Error_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Paper_Config_Generate_Silent_Error_Gap.md)
+- `frontend-web/src/pages/paper/config/index.vue`
+  - 组卷失败时不再静默停留，改为提示明确错误信息
+  - 保持失败后关闭生成弹窗、留在当前配置页的原有行为不变
+- `frontend-web/src/__tests__/pages/paper-config.spec.ts`
+  - 重写页面 VM 访问为显式类型辅助，移除该文件中的 `as any`
+  - 补充“组卷失败会提示错误并留在配置页”的回归用例
+
 ## 验证结果
 
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-withdrawals.spec.ts`：1 个测试文件、5 个用例通过
@@ -64,3 +75,4 @@
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-upload.spec.ts src/__tests__/pages/admin-review-detail.spec.ts`：2 个测试文件、6 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-exercise-contributions.spec.ts`：1 个测试文件、6 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/payment.spec.ts`：1 个测试文件、6 个用例通过
+- `cd frontend-web && npm.cmd test -- src/__tests__/pages/paper-config.spec.ts`：1 个测试文件、4 个用例通过
