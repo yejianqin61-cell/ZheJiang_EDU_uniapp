@@ -1,7 +1,12 @@
 import { mount } from '@vue/test-utils'
+import { ElMessage } from 'element-plus'
 import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ExercisePapersPage from '@/pages/exercises/papers/index.vue'
+
+type ExercisePapersPageVm = {
+  goDetail: (id: string) => void
+}
 
 const routerPush = vi.fn()
 const routeState = vi.hoisted(() => ({
@@ -47,7 +52,12 @@ describe('Exercise papers page', () => {
     routeState.query.nodeName = '第一单元'
     exerciseApiMocks.getPapersByCategory.mockReset()
     exerciseApiMocks.getPapersByLesson.mockReset()
+    vi.mocked(ElMessage.error).mockReset()
   })
+
+  function getVm(wrapper: ReturnType<typeof mountPage>) {
+    return wrapper.vm as ExercisePapersPageVm
+  }
 
   it('loads papers by category on mount', async () => {
     exerciseApiMocks.getPapersByCategory.mockResolvedValue([
@@ -88,8 +98,17 @@ describe('Exercise papers page', () => {
     exerciseApiMocks.getPapersByCategory.mockResolvedValue([])
     const wrapper = mountPage()
 
-    await (wrapper.vm as any).goDetail('paper-9')
+    getVm(wrapper).goDetail('paper-9')
 
     expect(routerPush).toHaveBeenCalledWith('/exercises/papers/paper-9')
+  })
+  it('shows error when loading papers fails', async () => {
+    exerciseApiMocks.getPapersByCategory.mockRejectedValue(new Error('练习试卷服务异常'))
+
+    mountPage()
+    await nextTick()
+    await nextTick()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('练习试卷服务异常')
   })
 })

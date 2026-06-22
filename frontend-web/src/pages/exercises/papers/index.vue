@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { getPapersByCategory, getPapersByLesson } from '@/api/modules/exercise'
 import type { ExercisePaper } from '@/types'
 
@@ -11,6 +12,10 @@ const lessonId = ref((route.query.lessonId as string) || '')
 const nodeName = ref((route.query.nodeName as string) || '')
 const papers = ref<ExercisePaper[]>([])
 const loading = ref(true)
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
 
 onMounted(async () => {
   try {
@@ -26,8 +31,9 @@ onMounted(async () => {
       papers.value = []
     }
   }
-  catch {
+  catch (error: unknown) {
     papers.value = []
+    ElMessage.error(getErrorMessage(error, '练习试卷列表加载失败'))
   }
   finally {
     loading.value = false
