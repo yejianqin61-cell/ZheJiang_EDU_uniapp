@@ -389,6 +389,13 @@
 - 保持现有组卷条件、试卷生成与 store 结构不变
 - 补充 store 回归测试，覆盖知识点加载失败分支
 
+### 56. 地址编辑页加载静默跳回收口
+
+- 新增 [Issue_20260622_Address_Edit_Load_Silent_Error_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Address_Edit_Load_Silent_Error_Gap.md)，记录地址编辑页仍存在加载失败静默跳回的问题
+- 为编辑模式地址详情加载失败补充明确提示，避免用户只感知跳转却没有反馈
+- 保持现有加载失败后返回上一页的行为不变
+- 补充页面回归测试，覆盖加载失败分支，并顺手收口测试中的弱类型断言
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -428,7 +435,7 @@
 - 定向测试：`src/__tests__/pages/exercise-upload.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-review.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm.cmd test`：48 个测试文件、217 个用例通过
+- `cd frontend-web && npm.cmd test`：48 个测试文件、218 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -462,3 +469,4 @@
 - 本批提交：练习试卷上传页静默失败收口
 - 本批提交：管理端入库审核批量静默失败收口
 - 本批提交：组卷知识点 store 静默失败收口
+- 本批提交：地址编辑页加载静默跳回收口
