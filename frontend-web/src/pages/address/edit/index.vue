@@ -23,6 +23,10 @@ const form = ref<ShippingAddressPayload>({
 const id = route.params.id as string | undefined
 const isEdit = !!id
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : '保存失败'
+}
+
 onMounted(async () => {
   if (!isEdit) {
     return
@@ -53,8 +57,8 @@ async function submit() {
     ElMessage.success(isEdit ? '已更新' : '已添加')
     router.back()
   }
-  catch (error: any) {
-    ElMessage.error(error?.message ?? '保存失败')
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error))
   }
 }
 </script>

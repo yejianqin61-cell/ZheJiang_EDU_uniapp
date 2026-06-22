@@ -218,6 +218,12 @@
 - 教师练习上传页和练习详情页改为直接消费共享 `ExerciseCategory`、`ExerciseLesson`、`ExerciseUploadItem`，移除页面内的 `any` / `as any`
 - 保持现有上传、分类联动、课时联动和详情展示行为不变
 
+### 32. 地址编辑页错误类型收口
+
+- 新增 [Issue_20260622_Address_Edit_Error_Type_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Address_Edit_Error_Type_Gap.md)，记录地址编辑页保存异常仍在使用弱错误类型的问题
+- 地址编辑页改为使用 `unknown` 接住保存异常，并在页面内收口最小错误消息提取逻辑
+- 保持原有表单校验、保存成功提示、保存失败提示与返回行为不变
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -235,6 +241,7 @@
 - 定向测试：`src/__tests__/pages/admin-question-detail.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-upload.spec.ts` 在沙箱路径下触发 Vitest `setup.ts` 绝对路径解析异常，代码改动已通过全量回归验证
 - 定向测试：`src/__tests__/pages/exercise-upload.spec.ts` 与 `src/__tests__/pages/contribute-exercise-detail.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/address-edit.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm test`：48 个测试文件、181 个用例通过
 - `cd frontend-web && npm run build`：通过
