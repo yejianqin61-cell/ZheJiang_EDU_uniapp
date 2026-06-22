@@ -1,5 +1,6 @@
-import { mount } from '@vue/test-utils'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { mount, type VueWrapper } from '@vue/test-utils'
+import { ElMessage, ElMessageBox, type MessageBoxData } from 'element-plus'
+import type { ComponentPublicInstance } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminExerciseContributionsPage from '@/pages/admin/exercise-contributions/index.vue'
 
@@ -35,6 +36,19 @@ const mountPage = () =>
     },
   })
 
+type AdminExerciseContributionsVm = ComponentPublicInstance & {
+  selected: string[]
+  approveOne(id: string): Promise<void>
+  batchAction(action: 'approve' | 'reject'): Promise<void>
+}
+
+const getPageVm = (wrapper: VueWrapper<ComponentPublicInstance>) => wrapper.vm as AdminExerciseContributionsVm
+
+const buildPromptResult = (value: string): MessageBoxData => ({
+  value,
+  action: 'confirm',
+})
+
 describe('Admin exercise contributions page', () => {
   beforeEach(() => {
     exerciseAdminMocks.adminListExerciseUploads.mockReset()
@@ -68,7 +82,7 @@ describe('Admin exercise contributions page', () => {
 
     const wrapper = mountPage()
 
-    await (wrapper.vm as any).approveOne('upload-1')
+    await getPageVm(wrapper).approveOne('upload-1')
 
     expect(exerciseAdminMocks.adminApproveExerciseUpload).toHaveBeenCalledWith('upload-1')
     expect(ElMessage.success).toHaveBeenCalledWith('已通过')
@@ -84,7 +98,7 @@ describe('Admin exercise contributions page', () => {
 
     const wrapper = mountPage()
 
-    await (wrapper.vm as any).approveOne('upload-1')
+    await getPageVm(wrapper).approveOne('upload-1')
 
     expect(ElMessage.error).toHaveBeenCalledWith('审核失败')
   })
@@ -97,7 +111,7 @@ describe('Admin exercise contributions page', () => {
 
     const wrapper = mountPage()
 
-    await (wrapper.vm as any).batchAction('approve')
+    await getPageVm(wrapper).batchAction('approve')
 
     expect(ElMessage.warning).toHaveBeenCalledWith('请先选择')
     expect(exerciseAdminMocks.adminBatchExerciseUploads).not.toHaveBeenCalled()
@@ -109,13 +123,13 @@ describe('Admin exercise contributions page', () => {
       pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
     })
     exerciseAdminMocks.adminBatchExerciseUploads.mockRejectedValue(new Error('批量审核失败'))
-    vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm' as any)
-    vi.mocked(ElMessageBox.prompt).mockResolvedValue({ value: '内容不合规' } as any)
+    vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm')
+    vi.mocked(ElMessageBox.prompt).mockResolvedValue(buildPromptResult('内容不合规'))
 
     const wrapper = mountPage()
-    ;(wrapper.vm as any).selected = ['u1', 'u2']
+    getPageVm(wrapper).selected = ['u1', 'u2']
 
-    await (wrapper.vm as any).batchAction('reject')
+    await getPageVm(wrapper).batchAction('reject')
 
     expect(ElMessage.error).toHaveBeenCalledWith('批量审核失败')
   })

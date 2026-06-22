@@ -13,7 +13,19 @@
   - 移除拒绝弹窗结果和页面方法调用中的 `as any`
   - 补充“提现列表首次加载失败会提示错误”的回归用例
 
+### 2. 管理端练习模块测试弱类型收口
+
+- 对应 Issue：
+  - [Issue_20260622_Admin_Test_AsAny_Backlog.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Test_AsAny_Backlog.md)
+- `frontend-web/src/__tests__/pages/admin-exercise-contributions.spec.ts`
+  - 为页面 VM 访问补齐显式类型辅助，移除单条审核、批量审核和选中状态断言中的 `as any`
+  - 为批量拒绝弹窗结果补齐 `MessageBoxData` 类型桩
+- `frontend-web/src/__tests__/pages/admin-exercises.spec.ts`
+  - 为年级、学科、分类弹窗表单和上传表单补齐显式测试类型
+  - 移除分类保存、课时创建、分类删除、上传提交流程中的 `as any`
+  - 统一复用带类型的弹窗结果构造辅助，降低后续维护时的弱类型漂移风险
+
 ## 验证结果
 
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-withdrawals.spec.ts`：1 个测试文件、5 个用例通过
-
+- `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-exercise-contributions.spec.ts src/__tests__/pages/admin-exercises.spec.ts`：2 个测试文件、12 个用例通过

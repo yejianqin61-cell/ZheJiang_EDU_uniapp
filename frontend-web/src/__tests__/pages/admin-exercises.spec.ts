@@ -1,9 +1,10 @@
-import { mount } from '@vue/test-utils'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { nextTick } from 'vue'
+import { mount, type VueWrapper } from '@vue/test-utils'
+import { ElMessage, ElMessageBox, type MessageBoxData } from 'element-plus'
+import { nextTick, type ComponentPublicInstance } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminExercisesPage from '@/pages/admin/exercises/index.vue'
 import { elInputStub } from '@/__tests__/utils/element-plus-stubs'
+import type { ExerciseCategoryCreatePayload } from '@/api/modules/exercise'
 
 const exerciseAdminMocks = vi.hoisted(() => ({
   adminListCategories: vi.fn(),
@@ -46,6 +47,50 @@ const mountPage = () =>
     },
   })
 
+type CategoryDialogForm = ExerciseCategoryCreatePayload & { id?: string }
+
+type UploadForm = {
+  title: string
+  categoryId: string
+  lessonId: string
+  file: File | null
+}
+
+type AdminExercisesPageVm = ComponentPublicInstance & {
+  grade: string
+  subject: string
+  dialogForm: CategoryDialogForm
+  uploadForm: UploadForm
+  loadAll(): Promise<void>
+  saveCat(): Promise<void>
+  openNewLesson(unitId: string): Promise<void>
+  delCat(id: string): Promise<void>
+  doUpload(): Promise<void>
+}
+
+const getPageVm = (wrapper: VueWrapper<ComponentPublicInstance>) => wrapper.vm as AdminExercisesPageVm
+
+const buildPromptResult = (value: string): MessageBoxData => ({
+  value,
+  action: 'confirm',
+})
+
+const buildDialogForm = (overrides: Partial<CategoryDialogForm> = {}): CategoryDialogForm => ({
+  type: 'unit',
+  grade: '五年级',
+  subject: '数学',
+  name: '第二单元',
+  ...overrides,
+})
+
+const buildUploadForm = (overrides: Partial<UploadForm> = {}): UploadForm => ({
+  title: '同步练习卷',
+  categoryId: 'cat-1',
+  lessonId: '',
+  file: new File(['demo'], 'exercise.pdf', { type: 'application/pdf' }),
+  ...overrides,
+})
+
 describe('Admin exercises page', () => {
   beforeEach(() => {
     exerciseAdminMocks.adminListCategories.mockReset()
@@ -68,7 +113,7 @@ describe('Admin exercises page', () => {
   it('does not load exercise data when grade or subject is missing', async () => {
     const wrapper = mountPage()
 
-    await (wrapper.vm as any).loadAll()
+    await getPageVm(wrapper).loadAll()
 
     expect(exerciseAdminMocks.adminListCategories).not.toHaveBeenCalled()
   })
@@ -82,10 +127,11 @@ describe('Admin exercises page', () => {
     exerciseAdminMocks.adminListLessons.mockResolvedValue([])
 
     const wrapper = mountPage()
-    ;(wrapper.vm as any).grade = '五年级'
-    ;(wrapper.vm as any).subject = '数学'
+    const vm = getPageVm(wrapper)
+    vm.grade = '五年级'
+    vm.subject = '数学'
 
-    await (wrapper.vm as any).loadAll()
+    await vm.loadAll()
     await nextTick()
 
     expect(exerciseAdminMocks.adminListCategories).toHaveBeenNthCalledWith(1, {
@@ -112,16 +158,12 @@ describe('Admin exercises page', () => {
     exerciseAdminMocks.adminListPapers.mockResolvedValue([])
 
     const wrapper = mountPage()
-    ;(wrapper.vm as any).grade = '五年级'
-    ;(wrapper.vm as any).subject = '数学'
-    ;(wrapper.vm as any).dialogForm = {
-      type: 'unit',
-      grade: '五年级',
-      subject: '数学',
-      name: '第二单元',
-    }
+    const vm = getPageVm(wrapper)
+    vm.grade = '五年级'
+    vm.subject = '数学'
+    vm.dialogForm = buildDialogForm()
 
-    await (wrapper.vm as any).saveCat()
+    await vm.saveCat()
 
     expect(exerciseAdminMocks.adminCreateCategory).toHaveBeenCalledWith({
       type: 'unit',
@@ -133,23 +175,23 @@ describe('Admin exercises page', () => {
   })
 
   it('shows error when creating lesson fails', async () => {
-    vi.mocked(ElMessageBox.prompt).mockResolvedValue({ value: '第一课' } as any)
+    vi.mocked(ElMessageBox.prompt).mockResolvedValue(buildPromptResult('第一课'))
     exerciseAdminMocks.adminCreateLesson.mockRejectedValue(new Error('创建课时失败'))
 
     const wrapper = mountPage()
 
-    await (wrapper.vm as any).openNewLesson('unit-1')
+    await getPageVm(wrapper).openNewLesson('unit-1')
 
     expect(ElMessage.error).toHaveBeenCalledWith('创建课时失败')
   })
 
   it('shows error when deleting category fails', async () => {
-    vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm' as any)
+    vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm')
     exerciseAdminMocks.adminDeleteCategory.mockRejectedValue(new Error('删除分类失败'))
 
     const wrapper = mountPage()
 
-    await (wrapper.vm as any).delCat('cat-1')
+    await getPageVm(wrapper).delCat('cat-1')
 
     expect(ElMessage.error).toHaveBeenCalledWith('删除分类失败')
   })
@@ -157,7 +199,7 @@ describe('Admin exercises page', () => {
   it('warns when upload title or file is missing', async () => {
     const wrapper = mountPage()
 
-    await (wrapper.vm as any).doUpload()
+    await getPageVm(wrapper).doUpload()
 
     expect(ElMessage.warning).toHaveBeenCalledWith('请填写标题并选择文件')
     expect(exerciseAdminMocks.adminCreatePaper).not.toHaveBeenCalled()
@@ -170,16 +212,12 @@ describe('Admin exercises page', () => {
     exerciseAdminMocks.adminListPapers.mockResolvedValue([])
 
     const wrapper = mountPage()
-    ;(wrapper.vm as any).grade = '五年级'
-    ;(wrapper.vm as any).subject = '数学'
-    ;(wrapper.vm as any).uploadForm = {
-      title: '同步练习卷',
-      categoryId: 'cat-1',
-      lessonId: '',
-      file: new File(['demo'], 'exercise.pdf', { type: 'application/pdf' }),
-    }
+    const vm = getPageVm(wrapper)
+    vm.grade = '五年级'
+    vm.subject = '数学'
+    vm.uploadForm = buildUploadForm()
 
-    await (wrapper.vm as any).doUpload()
+    await vm.doUpload()
 
     expect(exerciseAdminMocks.adminCreatePaper).toHaveBeenCalledTimes(1)
     expect(ElMessage.success).toHaveBeenCalledWith('上传成功')
