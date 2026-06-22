@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { PricingConfig } from '@/types'
 
 const mockGet = vi.fn()
 const mockPost = vi.fn()
@@ -85,7 +86,7 @@ describe('Admin API', () => {
 
   it('updatePricing -> PUT /admin/pricing', async () => {
     const { updatePricing } = await import('@/api/modules/admin')
-    const payload = {
+    const payload: PricingConfig = {
       download: { unitPrice: 200, description: '按题计费' },
       print: [{ tier: 1, minQuantity: 1, maxQuantity: 10, unitPrice: 500 }],
       cashback: { unitPrice: 100 },
@@ -94,7 +95,7 @@ describe('Admin API', () => {
     }
     mockPut.mockResolvedValue({ ok: true })
 
-    await updatePricing(payload as any)
+    await updatePricing(payload)
 
     expect(mockPut).toHaveBeenCalledWith('/admin/pricing', payload)
   })

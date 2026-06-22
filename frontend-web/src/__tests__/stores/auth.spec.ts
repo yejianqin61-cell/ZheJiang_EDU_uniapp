@@ -96,7 +96,7 @@ describe('AuthStore', () => {
   it('logout clears token from storage', () => {
     const auth = useAuthStore()
     localStorage.setItem('accessToken', 'test-token')
-    const hrefSpy = vi.spyOn(window, 'location', 'get').mockReturnValue({ href: '' } as any)
+    const hrefSpy = vi.spyOn(window, 'location', 'get').mockReturnValue({ href: '' } as Location)
 
     auth.logout()
 

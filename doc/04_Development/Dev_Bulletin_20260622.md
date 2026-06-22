@@ -108,6 +108,16 @@
   - 为贡献上传页表单状态、页面提交方法和上传进度回调补齐显式类型
   - 移除提交动作、表单赋值和进度事件模拟中的 `as any`
 
+### 11. Store 与 API 测试弱类型尾项收口
+
+- 对应 Issue：
+  - [Issue_20260622_Admin_Test_AsAny_Backlog.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Test_AsAny_Backlog.md)
+- `frontend-web/src/__tests__/stores/auth.spec.ts`
+  - 将 `window.location` getter 桩从 `as any` 收为显式 `Location` 类型断言
+- `frontend-web/src/__tests__/api/admin.spec.ts`
+  - 为 `updatePricing()` 的请求体补齐 `PricingConfig` 显式类型
+  - 移除 API 层测试中的 `payload as any`
+
 ## 验证结果
 
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-withdrawals.spec.ts`：1 个测试文件、5 个用例通过
@@ -120,3 +130,4 @@
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/exercise-category.spec.ts`：1 个测试文件、3 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/home.spec.ts src/__tests__/pages/exercises-index.spec.ts src/__tests__/pages/exercise-draw.spec.ts`：3 个测试文件、9 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/contribute-upload.spec.ts`：1 个测试文件、4 个用例通过
+- `cd frontend-web && npm.cmd test -- src/__tests__/stores/auth.spec.ts src/__tests__/api/admin.spec.ts`：2 个测试文件、21 个用例通过
