@@ -11,7 +11,6 @@ const authStore = useAuthStore()
 
 const activeTab = ref<'email' | 'phone'>('email')
 
-// 手机号登录
 const phone = ref('')
 const smsCode = ref('')
 const smsCountdown = ref(0)
@@ -19,26 +18,55 @@ let smsTimer: ReturnType<typeof setInterval> | null = null
 
 const phoneValid = computed(() => /^1[3-9]\d{9}$/.test(phone.value))
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
 function startSmsCountdown() {
   smsCountdown.value = 60
   smsTimer = setInterval(() => {
     smsCountdown.value--
-    if (smsCountdown.value <= 0) { clearInterval(smsTimer!); smsTimer = null }
+    if (smsCountdown.value <= 0) {
+      clearInterval(smsTimer!)
+      smsTimer = null
+    }
   }, 1000)
 }
 
 async function handleSendSms() {
-  if (!phoneValid.value || smsCountdown.value > 0) return
-  try { await authStore.sendSmsCode(phone.value); ElMessage.success('验证码已发送'); startSmsCountdown() } catch { /* */ }
+  if (!phoneValid.value || smsCountdown.value > 0) {
+    return
+  }
+
+  try {
+    await authStore.sendSmsCode(phone.value)
+    ElMessage.success('验证码已发送')
+    startSmsCountdown()
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '验证码发送失败'))
+  }
 }
 
 async function handlePhoneLogin() {
-  if (!phoneValid.value) { ElMessage.warning('请输入正确的手机号'); return }
-  if (!smsCode.value) { ElMessage.warning('请输入验证码'); return }
-  try { await authStore.loginWithSms(phone.value, smsCode.value); doRedirect() } catch { /* */ }
+  if (!phoneValid.value) {
+    ElMessage.warning('请输入正确的手机号')
+    return
+  }
+  if (!smsCode.value) {
+    ElMessage.warning('请输入验证码')
+    return
+  }
+
+  try {
+    await authStore.loginWithSms(phone.value, smsCode.value)
+    doRedirect()
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '登录失败'))
+  }
 }
 
-// 邮箱注册
 const regEmail = ref('')
 const regCode = ref('')
 const regPassword = ref('')
@@ -51,25 +79,50 @@ function startRegCountdown() {
   regCountdown.value = 60
   regTimer = setInterval(() => {
     regCountdown.value--
-    if (regCountdown.value <= 0) { clearInterval(regTimer!); regTimer = null }
+    if (regCountdown.value <= 0) {
+      clearInterval(regTimer!)
+      regTimer = null
+    }
   }, 1000)
 }
 
 async function handleSendRegCode() {
-  if (!regEmail.value.includes('@')) { ElMessage.warning('请输入正确的邮箱'); return }
-  if (regCountdown.value > 0) return
+  if (!regEmail.value.includes('@')) {
+    ElMessage.warning('请输入正确的邮箱')
+    return
+  }
+  if (regCountdown.value > 0) {
+    return
+  }
+
   try {
     await sendEmailCode(regEmail.value)
     ElMessage.success('验证码已发送，请查看邮箱')
     startRegCountdown()
-  } catch { /* */ }
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '验证码发送失败'))
+  }
 }
 
 async function handleRegister() {
-  if (!regEmail.value.includes('@')) { ElMessage.warning('请输入正确的邮箱'); return }
-  if (!regCode.value) { ElMessage.warning('请输入验证码'); return }
-  if (regPassword.value.length < 6) { ElMessage.warning('密码至少6位'); return }
-  if (regPassword.value !== regPassword2.value) { ElMessage.warning('两次密码不一致'); return }
+  if (!regEmail.value.includes('@')) {
+    ElMessage.warning('请输入正确的邮箱')
+    return
+  }
+  if (!regCode.value) {
+    ElMessage.warning('请输入验证码')
+    return
+  }
+  if (regPassword.value.length < 6) {
+    ElMessage.warning('密码至少6位')
+    return
+  }
+  if (regPassword.value !== regPassword2.value) {
+    ElMessage.warning('两次密码不一致')
+    return
+  }
+
   regSubmitting.value = true
   try {
     const res = await registerByEmail(regEmail.value, regCode.value, regPassword.value)
@@ -77,17 +130,29 @@ async function handleRegister() {
     localStorage.setItem('accessToken', res.accessToken)
     authStore.fetchProfile()
     doRedirect()
-  } catch { /* */ } finally { regSubmitting.value = false }
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '注册失败'))
+  }
+  finally {
+    regSubmitting.value = false
+  }
 }
 
-// 邮箱登录
 const loginEmail = ref('')
 const loginPassword = ref('')
 const loginSubmitting = ref(false)
 
 async function handleEmailLogin() {
-  if (!loginEmail.value.includes('@')) { ElMessage.warning('请输入正确的邮箱'); return }
-  if (!loginPassword.value) { ElMessage.warning('请输入密码'); return }
+  if (!loginEmail.value.includes('@')) {
+    ElMessage.warning('请输入正确的邮箱')
+    return
+  }
+  if (!loginPassword.value) {
+    ElMessage.warning('请输入密码')
+    return
+  }
+
   loginSubmitting.value = true
   try {
     const res = await loginByPassword(loginEmail.value, loginPassword.value)
@@ -95,7 +160,13 @@ async function handleEmailLogin() {
     localStorage.setItem('accessToken', res.accessToken)
     authStore.fetchProfile()
     doRedirect()
-  } catch { /* */ } finally { loginSubmitting.value = false }
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '登录失败'))
+  }
+  finally {
+    loginSubmitting.value = false
+  }
 }
 
 function doRedirect() {
@@ -104,14 +175,16 @@ function doRedirect() {
   router.replace(redirect)
 }
 
-// Dev 快捷登录
 async function devLoginAs(role: 'admin' | 'teacher') {
   try {
     const code = role === 'admin' ? 'admin_test' : 'teacher_test'
     await authStore.devLogin(code)
     ElMessage.success(`Dev ${role} 登录成功`)
     router.replace((route.query.redirect as string) || '/')
-  } catch { /* */ }
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, 'Dev 登录失败'))
+  }
 }
 </script>
 
@@ -119,17 +192,15 @@ async function devLoginAs(role: 'admin' | 'teacher') {
   <div class="login-page">
     <div class="login-card">
       <div class="login-header">
-        <h1>瓯越AI组题网</h1>
+        <h1>端越AI组题网</h1>
         <p>中小学教师专属组题平台</p>
       </div>
 
-      <!-- Tab 切换 -->
       <div class="login-tabs">
         <span :class="{ active: activeTab === 'email' }" @click="activeTab = 'email'">邮箱登录</span>
         <span :class="{ active: activeTab === 'phone' }" @click="activeTab = 'phone'">手机号登录</span>
       </div>
 
-      <!-- 邮箱登录 -->
       <div v-if="activeTab === 'email'" class="login-form">
         <div class="form-item">
           <label>邮箱</label>
@@ -141,7 +212,6 @@ async function devLoginAs(role: 'admin' | 'teacher') {
         </div>
         <el-button type="primary" size="large" class="login-btn" :loading="loginSubmitting" @click="handleEmailLogin">登录</el-button>
 
-        <!-- 注册区 -->
         <div class="register-section">
           <div class="divider"><span>没有账号？快速注册</span></div>
           <div class="form-item">
@@ -167,7 +237,6 @@ async function devLoginAs(role: 'admin' | 'teacher') {
         </div>
       </div>
 
-      <!-- 手机号登录 -->
       <div v-if="activeTab === 'phone'" class="login-form">
         <div class="form-item">
           <label>手机号</label>
@@ -184,7 +253,6 @@ async function devLoginAs(role: 'admin' | 'teacher') {
         <p class="login-tip">首次登录将自动注册账号</p>
       </div>
 
-      <!-- Dev 快捷入口 -->
       <div class="dev-section">
         <div class="dev-login" @click="devLoginAs('admin')">管理员登录</div>
         <div class="dev-login" @click="devLoginAs('teacher')">教师登录</div>
