@@ -13,10 +13,18 @@ const typeLabels: Record<string, string> = { sync: '同步练', unit: '单元练
 const stLabels: Record<string, string> = { pending_review: '待审核', approved: '已通过', rejected: '已拒绝' }
 const stTypes: Record<string, string> = { pending_review: 'warning', approved: 'success', rejected: 'danger' }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
+function isCancelAction(error: unknown) {
+  return error === 'cancel' || error === 'close'
+}
+
 onMounted(async () => {
   const id = route.params.id as string
   if (!id) { router.back(); return }
-  try { item.value = await getMyExerciseUploadDetail(id) } catch { ElMessage.error('加载失败') } finally { loading.value = false }
+  try { item.value = await getMyExerciseUploadDetail(id) } catch (error: unknown) { item.value = null; ElMessage.error(getErrorMessage(error, '练习贡献详情加载失败')) } finally { loading.value = false }
 })
 
 async function handleDelete() {
@@ -26,7 +34,13 @@ async function handleDelete() {
     await deleteMyExerciseUpload(item.value.id)
     ElMessage.success('已删除')
     router.replace('/contribute')
-  } catch { /* cancel or error */ }
+  } catch (error: unknown) {
+    if (isCancelAction(error)) {
+      return
+    }
+
+    ElMessage.error(getErrorMessage(error, '删除练习贡献失败'))
+  }
 }
 </script>
 
