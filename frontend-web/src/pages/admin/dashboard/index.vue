@@ -48,13 +48,17 @@ function renderSubjectChart() {
   if (!subjectChart.value) return
   subjectChartInst?.dispose()
   const chart = init(subjectChart.value)
+  const data = stats.value.bySubject.map((subjectItem) => ({
+    name: subjectItem.subject,
+    value: subjectItem.count,
+  }))
   chart.setOption({
     tooltip: { trigger: 'item' },
     legend: { bottom: 0 },
     series: [{
       type: 'pie', radius: ['45%', '70%'], center: ['50%', '45%'], avoidLabelOverlap: false,
       label: { show: true, formatter: '{b}\n{d}%' },
-      data: (stats.value.bySubject || []).map((s: any) => ({ name: s.subject, value: s.count })),
+      data,
     }],
   })
   subjectChartInst = chart

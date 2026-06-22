@@ -166,6 +166,13 @@
 - 余额页改为同时展示账户余额、累计收入与累计支出，补齐对真实接口字段的消费
 - 更新 `auth` API 测试与余额页页面测试，覆盖余额汇总和余额流水参数提交断言
 
+### 24. Dashboard 统计计数字段归一化
+
+- 新增 [Issue_20260622_Dashboard_Count_Normalization_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Dashboard_Count_Normalization_Gap.md)，记录 dashboard 分布统计长期直接透出 SQL 原始字符串计数的问题
+- 后端 `dashboard` 服务在返回前统一将 `bySubject`、`byGrade` 计数字段归一化为 number，和前端 `DashboardStats` 契约保持一致
+- 强化 `dashboard.service` 单测，对学科和年级分布的返回值增加显式数值断言
+- 管理端 dashboard 页面去掉图表数据映射中的局部 `any`，直接消费共享统计类型
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -175,6 +182,7 @@
 - 定向测试：`src/__tests__/api/admin.spec.ts` 与 `src/__tests__/pages/admin-withdrawals.spec.ts` 在沙箱路径下触发 Vitest `setup.ts` 绝对路径解析异常，代码改动已通过全量回归验证
 - 定向测试：2 个测试文件、18 个用例通过
 - 定向测试：2 个测试文件、12 个用例通过
+- 定向测试：`backend/src/modules/admin/services/dashboard.service.spec.ts` 与 `frontend-web/src/__tests__/pages/admin-dashboard.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm test`：48 个测试文件、181 个用例通过
 - `cd frontend-web && npm run build`：通过

@@ -13,6 +13,12 @@ describe('DashboardService', () => {
   let questionRepo: any;
   let kpRepo: any;
 
+  type DashboardDifficultyItem = {
+    level: number;
+    label: string;
+    count: number;
+  };
+
   beforeEach(async () => {
     questionRepo = mockRepo();
     kpRepo = mockRepo();
@@ -48,6 +54,14 @@ describe('DashboardService', () => {
       expect(result.bySubject).toHaveLength(2);
       expect(result.byGrade).toHaveLength(2);
       expect(result.byDifficulty).toHaveLength(3);
+      expect(result.bySubject).toEqual([
+        { subject: '数学', count: 10 },
+        { subject: '语文', count: 8 },
+      ]);
+      expect(result.byGrade).toEqual([
+        { grade: '五年级', count: 15 },
+        { grade: '三年级', count: 10 },
+      ]);
     });
 
     it('should return zero counts for empty database', async () => {
@@ -77,8 +91,8 @@ describe('DashboardService', () => {
 
       const result = await service.getStats();
 
-      const diff1 = result.byDifficulty.find((d: any) => d.level === 1)!;
-      const diff3 = result.byDifficulty.find((d: any) => d.level === 3)!;
+      const diff1 = result.byDifficulty.find((d: DashboardDifficultyItem) => d.level === 1)!;
+      const diff3 = result.byDifficulty.find((d: DashboardDifficultyItem) => d.level === 3)!;
       expect(diff1.label).toBe('简单');
       expect(diff3.label).toBe('困难');
     });

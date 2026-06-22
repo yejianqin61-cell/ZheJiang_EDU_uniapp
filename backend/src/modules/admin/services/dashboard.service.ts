@@ -85,8 +85,14 @@ export class DashboardService {
 
     return {
       totalQuestions,
-      bySubject,
-      byGrade,
+      bySubject: bySubject.map((item) => ({
+        subject: item.subject,
+        count: Number(item.count),
+      })),
+      byGrade: byGrade.map((item) => ({
+        grade: item.grade,
+        count: Number(item.count),
+      })),
       byDifficulty: byDifficulty.map((d) => ({
         level: Number(d.level),
         label: diffLabels[Number(d.level)] ?? '未知',
