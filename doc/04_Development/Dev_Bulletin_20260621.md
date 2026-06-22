@@ -480,6 +480,15 @@
 - 在列表加载失败时清空当前题目列表，并在删除分支区分确认框取消与真实接口失败
 - 为 `src/__tests__/pages/admin-questions.spec.ts` 提取带类型的页面 VM 访问辅助，移除筛选重置和删除流程中的弱类型断言，并补充列表失败与删除失败回归测试
 
+### 69. 交付收尾事项登记
+
+- 新增 [Issue_20260622_Backend_Silent_Error_Cleanup_Backlog.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Backend_Silent_Error_Cleanup_Backlog.md)，登记后台剩余空 `catch` 与静默失败的后续治理事项
+- 新增 [Issue_20260622_Admin_Test_AsAny_Backlog.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Test_AsAny_Backlog.md)，登记关键管理端测试弱类型断言清理待办
+- 新增 [Issue_20260622_Delivery_Documentation_Backlog.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Delivery_Documentation_Backlog.md)，登记交付文档补齐待办
+- 新增 [Issue_20260622_Manual_Acceptance_Checklist_Backlog.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Manual_Acceptance_Checklist_Backlog.md)，登记真实环境人工验收清单待办
+- 新增 [Issue_20260622_Runtime_Artifacts_Cleanup_Backlog.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Runtime_Artifacts_Cleanup_Backlog.md)，登记本地运行产物与非交付文件清理待办
+- 当前阶段不展开处理以上事项，优先保证甲方核心功能链路可正常使用
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
