@@ -5,9 +5,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AddressListPage from '@/pages/address/list/index.vue'
 
 const routerPush = vi.fn()
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  delete: vi.fn(),
+const addressApiMocks = vi.hoisted(() => ({
+  listAddresses: vi.fn(),
+  deleteAddress: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -16,8 +16,9 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/address', () => ({
+  listAddresses: addressApiMocks.listAddresses,
+  deleteAddress: addressApiMocks.deleteAddress,
 }))
 
 const mountPage = () =>
@@ -34,14 +35,14 @@ const mountPage = () =>
 describe('Address list page', () => {
   beforeEach(() => {
     routerPush.mockReset()
-    apiMocks.get.mockReset()
-    apiMocks.delete.mockReset()
+    addressApiMocks.listAddresses.mockReset()
+    addressApiMocks.deleteAddress.mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessageBox.confirm).mockReset()
   })
 
   it('loads address list on mount', async () => {
-    apiMocks.get.mockResolvedValue([
+    addressApiMocks.listAddresses.mockResolvedValue([
       { id: 'a1', receiverName: '张三', phone: '13800000000', province: '浙江', city: '杭州', district: '西湖', detail: '1号', isDefault: true },
     ])
 
@@ -49,12 +50,12 @@ describe('Address list page', () => {
     await nextTick()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/shipping-addresses')
+    expect(addressApiMocks.listAddresses).toHaveBeenCalledTimes(1)
     expect(wrapper.text()).toContain('张三')
   })
 
   it('shows empty state when no address exists', async () => {
-    apiMocks.get.mockResolvedValue([])
+    addressApiMocks.listAddresses.mockResolvedValue([])
 
     const wrapper = mountPage()
     await nextTick()
@@ -64,10 +65,10 @@ describe('Address list page', () => {
   })
 
   it('deletes address and refreshes list after confirmation', async () => {
-    apiMocks.get
+    addressApiMocks.listAddresses
       .mockResolvedValueOnce([{ id: 'a1', receiverName: '张三', phone: '13800000000', province: '浙江', city: '杭州', district: '西湖', detail: '1号', isDefault: false }])
       .mockResolvedValueOnce([])
-    apiMocks.delete.mockResolvedValue({ ok: true })
+    addressApiMocks.deleteAddress.mockResolvedValue({ ok: true })
     vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm' as any)
 
     const wrapper = mountPage()
@@ -75,8 +76,8 @@ describe('Address list page', () => {
 
     await (wrapper.vm as any).del('a1')
 
-    expect(apiMocks.delete).toHaveBeenCalledWith('/shipping-addresses/a1')
+    expect(addressApiMocks.deleteAddress).toHaveBeenCalledWith('a1')
     expect(ElMessage.success).toHaveBeenCalledWith('已删除')
-    expect(apiMocks.get).toHaveBeenCalledTimes(2)
+    expect(addressApiMocks.listAddresses).toHaveBeenCalledTimes(2)
   })
 })

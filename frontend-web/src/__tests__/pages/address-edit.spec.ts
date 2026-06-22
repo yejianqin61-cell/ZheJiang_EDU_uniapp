@@ -9,10 +9,10 @@ const routerBack = vi.fn()
 const routeState = vi.hoisted(() => ({
   params: { id: undefined as string | undefined },
 }))
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  post: vi.fn(),
-  put: vi.fn(),
+const addressApiMocks = vi.hoisted(() => ({
+  getAddress: vi.fn(),
+  createAddress: vi.fn(),
+  updateAddress: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -22,8 +22,10 @@ vi.mock('vue-router', () => ({
   useRoute: () => routeState,
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/address', () => ({
+  getAddress: addressApiMocks.getAddress,
+  createAddress: addressApiMocks.createAddress,
+  updateAddress: addressApiMocks.updateAddress,
 }))
 
 const mountPage = () =>
@@ -46,9 +48,9 @@ describe('Address edit page', () => {
   beforeEach(() => {
     routeState.params.id = undefined
     routerBack.mockReset()
-    apiMocks.get.mockReset()
-    apiMocks.post.mockReset()
-    apiMocks.put.mockReset()
+    addressApiMocks.getAddress.mockReset()
+    addressApiMocks.createAddress.mockReset()
+    addressApiMocks.updateAddress.mockReset()
     vi.mocked(ElMessage.warning).mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.error).mockReset()
@@ -60,11 +62,11 @@ describe('Address edit page', () => {
     await (wrapper.vm as any).submit()
 
     expect(ElMessage.warning).toHaveBeenCalledWith('请填写完整地址信息')
-    expect(apiMocks.post).not.toHaveBeenCalled()
+    expect(addressApiMocks.createAddress).not.toHaveBeenCalled()
   })
 
   it('creates address and returns on success', async () => {
-    apiMocks.post.mockResolvedValue({ ok: true })
+    addressApiMocks.createAddress.mockResolvedValue({ ok: true })
     const wrapper = mountPage()
     ;(wrapper.vm as any).form = {
       receiverName: '张三',
@@ -78,7 +80,7 @@ describe('Address edit page', () => {
 
     await (wrapper.vm as any).submit()
 
-    expect(apiMocks.post).toHaveBeenCalledWith('/shipping-addresses', {
+    expect(addressApiMocks.createAddress).toHaveBeenCalledWith({
       receiverName: '张三',
       phone: '13800000000',
       province: '浙江',
@@ -93,7 +95,7 @@ describe('Address edit page', () => {
 
   it('loads existing address in edit mode', async () => {
     routeState.params.id = 'addr-1'
-    apiMocks.get.mockResolvedValue({
+    addressApiMocks.getAddress.mockResolvedValue({
       receiverName: '李四',
       phone: '13900000000',
       province: '浙江',
@@ -107,13 +109,13 @@ describe('Address edit page', () => {
     await nextTick()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/shipping-addresses/addr-1')
+    expect(addressApiMocks.getAddress).toHaveBeenCalledWith('addr-1')
     expect((wrapper.vm as any).form.receiverName).toBe('李四')
   })
 
   it('updates address and returns on success', async () => {
     routeState.params.id = 'addr-2'
-    apiMocks.get.mockResolvedValue({
+    addressApiMocks.getAddress.mockResolvedValue({
       receiverName: '王五',
       phone: '13700000000',
       province: '浙江',
@@ -122,7 +124,7 @@ describe('Address edit page', () => {
       detail: '3号',
       isDefault: false,
     })
-    apiMocks.put.mockResolvedValue({ ok: true })
+    addressApiMocks.updateAddress.mockResolvedValue({ ok: true })
 
     const wrapper = mountPage()
     await nextTick()
@@ -131,7 +133,7 @@ describe('Address edit page', () => {
 
     await (wrapper.vm as any).submit()
 
-    expect(apiMocks.put).toHaveBeenCalledWith('/shipping-addresses/addr-2', {
+    expect(addressApiMocks.updateAddress).toHaveBeenCalledWith('addr-2', {
       receiverName: '王五',
       phone: '13700000000',
       province: '浙江',

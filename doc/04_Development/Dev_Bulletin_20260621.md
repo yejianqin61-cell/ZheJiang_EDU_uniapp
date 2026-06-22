@@ -72,10 +72,17 @@
 - 管理端练习试卷上传流程改为复用共享 `adminCreatePaper()` API 封装，收口 `/admin/exercise/papers` 的 multipart 提交逻辑
 - 补充 API 层与页面层回归测试，覆盖文件上传进度回调、练习试卷上传校验与成功提交流程
 
+### 11. 收货地址页 API 收口
+
+- 新增共享 `address` API 模块，集中收口收货地址列表、详情、新增、更新与删除接口
+- 收货地址列表页与编辑页改为复用 `listAddresses()`、`getAddress()`、`createAddress()`、`updateAddress()`、`deleteAddress()`，移除页面层对底层 `api` 的直接依赖
+- 在地址列表 API 层补充数组响应与 `{ list }` 包装响应的统一归一化，避免页面重复兼容后端返回结构
+- 补充 API 层与页面层回归测试，覆盖地址列表加载、空态展示、删除刷新、编辑回填、新增提交与更新提交流程
+
 ## 验证结果
 
-- 定向测试：4 个测试文件、31 个用例通过
-- `cd frontend-web && npm test`：43 个测试文件、144 个用例通过
+- 定向测试：3 个测试文件、13 个用例通过
+- `cd frontend-web && npm test`：44 个测试文件、150 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -91,4 +98,5 @@
 - `a234f64` `docs: record admin review contract fix`
 - `f63e165` `refactor: align admin pricing page with api module`
 - `d812823` `refactor: type admin knowledge and pricing apis`
-- 本批提交：`refactor: align admin upload pages with api modules`
+- `77dd650` `refactor: align admin upload pages with api modules`
+- 本批提交：收货地址页 API 收口
