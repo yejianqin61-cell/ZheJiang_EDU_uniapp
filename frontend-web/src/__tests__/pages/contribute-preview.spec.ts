@@ -75,4 +75,16 @@ describe('Contribute preview page', () => {
     expect(ElMessage.success).toHaveBeenCalledWith('已提交审核')
     expect(routerReplace).toHaveBeenCalledWith('/contribute')
   })
+
+  it('shows error when submit request fails', async () => {
+    contributionApiMocks.getContributionQuestions.mockResolvedValue([])
+    contributionApiMocks.submitContribution.mockRejectedValue(new Error('提交服务异常'))
+
+    const wrapper = mountPage()
+    await nextTick()
+
+    await (wrapper.vm as any).submit()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('提交服务异常')
+  })
 })

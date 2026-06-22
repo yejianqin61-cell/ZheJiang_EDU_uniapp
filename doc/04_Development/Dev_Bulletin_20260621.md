@@ -244,6 +244,13 @@
 - 补充页面回归测试，覆盖上传请求失败时的错误提示行为
 - 保持原有上传进度、成功跳转与失败提示行为不变
 
+### 36. 题库贡献预览页错误类型收口
+
+- 新增 [Issue_20260622_Contribute_Preview_Error_Type_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Contribute_Preview_Error_Type_Gap.md)，记录题库贡献预览页提交异常仍在使用弱错误类型的问题
+- 题库贡献预览页改为使用 `unknown` 接住提审异常，并在页面内收口最小错误消息提取逻辑
+- 补充页面回归测试，覆盖提审请求失败时的错误提示行为
+- 保持原有题目预览、提审成功跳转与失败提示行为不变
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -265,8 +272,9 @@
 - 定向测试：`src/__tests__/pages/admin-orders.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-withdrawals.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/contribute-upload.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/contribute-preview.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm test`：48 个测试文件、183 个用例通过
+- `cd frontend-web && npm test`：48 个测试文件、184 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
