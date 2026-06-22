@@ -89,11 +89,12 @@ describe('Auth API', () => {
 
   it('getUserStats -> GET /users/me/stats', async () => {
     const { getUserStats } = await import('@/api/modules/auth')
-    mockGet.mockResolvedValue({ orderCount: 3, balance: 100, contributionCount: 2 })
+    mockGet.mockResolvedValue({ totalPapers: 3, totalPaid: 2, todayRegenerates: 1 })
 
-    await getUserStats()
+    const response = await getUserStats()
 
     expect(mockGet).toHaveBeenCalledWith('/users/me/stats')
+    expect(response.totalPapers).toBe(3)
   })
 
   it('getMyBalance -> GET /users/me/balance', async () => {

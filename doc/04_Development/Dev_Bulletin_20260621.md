@@ -120,9 +120,17 @@
 - 为 `auth` API 模块补齐 `sendEmailCode()`、`registerByEmail()`、`loginByPassword()`，并扩展登录响应类型以覆盖邮箱链路返回字段
 - 更新登录页页面测试与 `auth` API 模块测试，覆盖邮件验证码发送、邮箱注册跳转、邮箱密码登录跳转三条回归链路
 
+### 18. 个人中心统计契约对齐
+
+- 新增 [Issue_20260622_Profile_Stats_Contract_Mismatch.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Profile_Stats_Contract_Mismatch.md)，记录个人中心统计口径与 `/users/me/stats` 实际契约不一致的问题
+- 将前端 `auth` API 模块中的 `UserStats` 类型回归为后端真实字段：`totalPapers`、`totalPaid`、`todayRegenerates?`
+- 个人中心页统计展示改为“已生成试卷 / 已支付订单 / 账户余额”，去除错误的“贡献题目”展示语义
+- 更新 `profile` 页面测试与 `auth` API 测试，按真实接口契约回归断言
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
+- 定向测试：2 个测试文件、12 个用例通过
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm test`：47 个测试文件、170 个用例通过
 - `cd frontend-web && npm run build`：通过

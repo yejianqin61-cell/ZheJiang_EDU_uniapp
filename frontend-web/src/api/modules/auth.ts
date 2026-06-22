@@ -15,9 +15,9 @@ export interface UserProfile {
 }
 
 export interface UserStats {
-  orderCount: number
-  balance: number
-  contributionCount: number
+  totalPapers: number
+  totalPaid: number
+  todayRegenerates?: number
 }
 
 export interface BalanceSummary {

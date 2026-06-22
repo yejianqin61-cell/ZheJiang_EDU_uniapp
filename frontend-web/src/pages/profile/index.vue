@@ -7,14 +7,16 @@ import { useAuthStore } from '@/stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 const stats = ref({
-  orderCount: 0,
+  totalPapers: 0,
+  totalPaid: 0,
   balance: 0,
-  contributionCount: 0,
 })
 
 onMounted(async () => {
   try {
-    stats.value = await getUserStats()
+    const data = await getUserStats()
+    stats.value.totalPapers = data.totalPapers ?? 0
+    stats.value.totalPaid = data.totalPaid ?? 0
   }
   catch {}
 
@@ -58,12 +60,12 @@ const menuItems = computed(() => {
       </div>
       <div class="profile-hero__stats">
         <div class="hero-stat">
-          <span class="hero-stat__num">{{ stats.orderCount || 0 }}</span>
-          <span class="hero-stat__label">历史订单</span>
+          <span class="hero-stat__num">{{ stats.totalPapers || 0 }}</span>
+          <span class="hero-stat__label">已生成试卷</span>
         </div>
         <div class="hero-stat">
-          <span class="hero-stat__num">{{ stats.contributionCount || 0 }}</span>
-          <span class="hero-stat__label">贡献题目</span>
+          <span class="hero-stat__num">{{ stats.totalPaid || 0 }}</span>
+          <span class="hero-stat__label">已支付订单</span>
         </div>
         <div class="hero-stat">
           <span class="hero-stat__num hero-stat__num--gold">¥{{ (stats.balance / 100).toFixed(0) }}</span>
