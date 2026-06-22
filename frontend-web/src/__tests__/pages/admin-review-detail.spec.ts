@@ -1,6 +1,6 @@
-import { mount } from '@vue/test-utils'
+import { mount, type VueWrapper } from '@vue/test-utils'
 import { ElMessage } from 'element-plus'
-import { nextTick } from 'vue'
+import { nextTick, type ComponentPublicInstance } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminReviewDetailPage from '@/pages/admin/review/detail/index.vue'
 
@@ -41,6 +41,13 @@ const mountPage = () =>
       },
     },
   })
+
+type AdminReviewDetailVm = ComponentPublicInstance & {
+  approve(): Promise<void>
+  reject(): Promise<void>
+}
+
+const getPageVm = (wrapper: VueWrapper<ComponentPublicInstance>) => wrapper.vm as AdminReviewDetailVm
 
 function mockReviewDetail() {
   adminApiMocks.getReviewDetail.mockResolvedValue({
@@ -88,7 +95,7 @@ describe('Admin review detail page', () => {
     const wrapper = mountPage()
     await nextTick()
 
-    await (wrapper.vm as any).approve()
+    await getPageVm(wrapper).approve()
 
     expect(adminApiMocks.approveQuestion).toHaveBeenCalledWith('review-1')
     expect(ElMessage.success).toHaveBeenCalledWith('已通过')
@@ -102,7 +109,7 @@ describe('Admin review detail page', () => {
     const wrapper = mountPage()
     await nextTick()
 
-    await (wrapper.vm as any).reject()
+    await getPageVm(wrapper).reject()
 
     expect(adminApiMocks.rejectQuestion).toHaveBeenCalledWith('review-1')
     expect(ElMessage.success).toHaveBeenCalledWith('已拒绝')

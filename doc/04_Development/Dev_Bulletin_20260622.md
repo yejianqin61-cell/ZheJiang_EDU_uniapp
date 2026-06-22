@@ -25,7 +25,19 @@
   - 移除分类保存、课时创建、分类删除、上传提交流程中的 `as any`
   - 统一复用带类型的弹窗结果构造辅助，降低后续维护时的弱类型漂移风险
 
+### 3. 管理端上传与审核详情测试弱类型收口
+
+- 对应 Issue：
+  - [Issue_20260622_Admin_Test_AsAny_Backlog.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Test_AsAny_Backlog.md)
+- `frontend-web/src/__tests__/pages/admin-upload.spec.ts`
+  - 为页面 VM、上传表单和文件状态补齐显式测试类型
+  - 为 `onUploadProgress` 回调桩补齐 `AxiosProgressEvent` 类型，移除上传进度模拟中的 `as any`
+- `frontend-web/src/__tests__/pages/admin-review-detail.spec.ts`
+  - 为审核详情页的通过/拒绝动作补齐显式页面方法类型辅助
+  - 移除页面方法调用中的 `as any`
+
 ## 验证结果
 
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-withdrawals.spec.ts`：1 个测试文件、5 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-exercise-contributions.spec.ts src/__tests__/pages/admin-exercises.spec.ts`：2 个测试文件、12 个用例通过
+- `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-upload.spec.ts src/__tests__/pages/admin-review-detail.spec.ts`：2 个测试文件、6 个用例通过
