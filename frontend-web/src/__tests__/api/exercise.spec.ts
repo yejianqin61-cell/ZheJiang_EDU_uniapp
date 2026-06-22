@@ -108,6 +108,44 @@ describe('Exercise API', () => {
     })
   })
 
+  it('adminCreateCategory -> POST /admin/exercise/categories with typed payload', async () => {
+    const { adminCreateCategory } = await import('@/api/modules/exercise')
+    mockPost.mockResolvedValue({ id: 'cat-1' })
+
+    await adminCreateCategory({ type: 'unit', grade: '五年级', subject: '数学', name: '第一单元' })
+
+    expect(mockPost).toHaveBeenCalledWith('/admin/exercise/categories', {
+      type: 'unit',
+      grade: '五年级',
+      subject: '数学',
+      name: '第一单元',
+    })
+  })
+
+  it('adminUpdateCategory -> PUT /admin/exercise/categories/:id with update payload', async () => {
+    const { adminUpdateCategory } = await import('@/api/modules/exercise')
+    mockPut.mockResolvedValue({ id: 'cat-1' })
+
+    await adminUpdateCategory('cat-1', { name: '第二单元', sortOrder: 2 })
+
+    expect(mockPut).toHaveBeenCalledWith('/admin/exercise/categories/cat-1', {
+      name: '第二单元',
+      sortOrder: 2,
+    })
+  })
+
+  it('adminCreateLesson -> POST /admin/exercise/lessons with typed payload', async () => {
+    const { adminCreateLesson } = await import('@/api/modules/exercise')
+    mockPost.mockResolvedValue({ id: 'lesson-1' })
+
+    await adminCreateLesson({ unitId: 'unit-1', name: '第一课时' })
+
+    expect(mockPost).toHaveBeenCalledWith('/admin/exercise/lessons', {
+      unitId: 'unit-1',
+      name: '第一课时',
+    })
+  })
+
   it('adminRejectExerciseUpload -> POST /exercise-contributions/admin/:id/reject', async () => {
     const { adminRejectExerciseUpload } = await import('@/api/modules/exercise')
     mockPost.mockResolvedValue({ status: 'rejected' })

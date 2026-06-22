@@ -150,6 +150,14 @@
 - 修复管理端提现页用户字段，从错误的 `userPhone` 对齐为后端实际返回的 `userName`
 - 移除 `admin.ts` 中重复的地址接口声明，统一收口到共享 `address.ts` 模块
 
+### 22. 练习管理 admin API 类型收口
+
+- 新增 [Issue_20260622_Exercise_Admin_Dto_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Exercise_Admin_Dto_Gap.md)，记录后端练习管理分类/课时 CRUD 仍缺少显式 DTO 的问题
+- 为前端 `exercise` API 模块补齐 `ExerciseCategory`、`ExerciseLesson`、分类/课时创建与更新 payload 类型，移除 admin CRUD 中的 `any`
+- 重写 `admin/exercises` 页面脚本的本地状态类型，收紧分类、课时、试卷和对话框表单的结构约束
+- 将分类编辑提交改为区分 create/update payload，避免把页面临时字段直接透传到更新接口
+- 补充 `exercise` API 测试，覆盖后台分类/课时 CRUD 的 typed payload 提交
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -157,8 +165,9 @@
 - 定向测试：3 个测试文件、22 个用例通过
 - 定向测试：2 个测试文件、7 个用例通过
 - 定向测试：`src/__tests__/api/admin.spec.ts` 与 `src/__tests__/pages/admin-withdrawals.spec.ts` 在沙箱路径下触发 Vitest `setup.ts` 绝对路径解析异常，代码改动已通过全量回归验证
+- 定向测试：2 个测试文件、18 个用例通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm test`：48 个测试文件、177 个用例通过
+- `cd frontend-web && npm test`：48 个测试文件、180 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交

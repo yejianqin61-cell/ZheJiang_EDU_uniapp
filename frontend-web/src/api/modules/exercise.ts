@@ -1,6 +1,56 @@
 import api from '../index'
 import type { ExercisePaper } from '@/types'
 
+export type ExerciseCategoryType = 'unit' | 'topic' | 'exam'
+
+export interface ExerciseCategory {
+  id: string
+  type: ExerciseCategoryType
+  grade: string
+  subject: string
+  name: string
+  term?: string | null
+  examType?: string | null
+  sortOrder?: number | null
+  createdBy?: string | null
+  createdAt?: string
+}
+
+export interface ExerciseLesson {
+  id: string
+  unitId: string
+  name: string
+  sortOrder?: number | null
+  createdBy?: string | null
+  createdAt?: string
+}
+
+export interface ExerciseCategoryCreatePayload {
+  type: ExerciseCategoryType
+  grade: string
+  subject: string
+  name: string
+  term?: string
+  examType?: string
+}
+
+export interface ExerciseCategoryUpdatePayload {
+  name?: string
+  term?: string
+  examType?: string
+  sortOrder?: number
+}
+
+export interface ExerciseLessonCreatePayload {
+  unitId: string
+  name: string
+}
+
+export interface ExerciseLessonUpdatePayload {
+  name?: string
+  sortOrder?: number
+}
+
 interface ExercisePaperListResponse {
   list: ExercisePaper[]
 }
@@ -32,31 +82,31 @@ export function getExercisePaper(id: string) {
 }
 
 export function adminListCategories(params: { type?: string; grade?: string; subject?: string }) {
-  return api.get('/admin/exercise/categories', { params })
+  return api.get<ExerciseCategory[]>('/admin/exercise/categories', { params })
 }
-export function adminCreateCategory(data: any) {
+export function adminCreateCategory(data: ExerciseCategoryCreatePayload) {
   return api.post('/admin/exercise/categories', data)
 }
-export function adminUpdateCategory(id: string, data: any) {
+export function adminUpdateCategory(id: string, data: ExerciseCategoryUpdatePayload) {
   return api.put(`/admin/exercise/categories/${id}`, data)
 }
 export function adminDeleteCategory(id: string) {
   return api.delete(`/admin/exercise/categories/${id}`)
 }
 export function adminListLessons(unitId: string) {
-  return api.get('/admin/exercise/lessons', { params: { unitId } })
+  return api.get<ExerciseLesson[]>('/admin/exercise/lessons', { params: { unitId } })
 }
-export function adminCreateLesson(data: any) {
+export function adminCreateLesson(data: ExerciseLessonCreatePayload) {
   return api.post('/admin/exercise/lessons', data)
 }
-export function adminUpdateLesson(id: string, data: any) {
+export function adminUpdateLesson(id: string, data: ExerciseLessonUpdatePayload) {
   return api.put(`/admin/exercise/lessons/${id}`, data)
 }
 export function adminDeleteLesson(id: string) {
   return api.delete(`/admin/exercise/lessons/${id}`)
 }
 export function adminListPapers(categoryId?: string, lessonId?: string) {
-  return api.get('/admin/exercise/papers', { params: { categoryId, lessonId } })
+  return api.get<ExercisePaper[]>('/admin/exercise/papers', { params: { categoryId, lessonId } })
 }
 export function adminCreatePaper(formData: FormData) {
   return api.post('/admin/exercise/papers', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
