@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getMyBalance, payByBalance } from '@/api/modules/auth'
-import { payAlipay, payMock } from '@/api/modules/payment'
+import { payAlipay } from '@/api/modules/payment'
 import { useOrderStore } from '@/stores/order'
 
 const router = useRouter()
@@ -87,26 +87,6 @@ function tagLabel(type: 'download' | 'print' | 'exercise') {
   return type === 'print' ? '🖨️ 打印服务' : type === 'exercise' ? '📚 练习服务' : '📥 下载服务'
 }
 
-async function handleMockPay() {
-  if (!order.currentOrder) {
-    return
-  }
-
-  paying.value = true
-
-  try {
-    await payMock(order.currentOrder.orderId)
-    ElMessage.success('Mock 支付成功（开发模式）')
-    setTimeout(() => router.replace(`/orders/${order.currentOrder!.orderId}`), 800)
-  } catch (error: unknown) {
-    if (!hasResponse(error)) {
-      ElMessage.error('Mock支付失败')
-    }
-  } finally {
-    paying.value = false
-  }
-}
-
 async function handleAlipay() {
   if (!order.currentOrder) {
     return
@@ -171,11 +151,6 @@ async function handleAlipay() {
           <h3>支付宝支付</h3>
           <p class="text-secondary mb-sm">支持支付宝扫码或登录支付</p>
           <el-button type="primary" size="large" :loading="paying" class="full-width" @click="handleAlipay">支付宝支付</el-button>
-        </div>
-        <div class="page-card mt-md mock-card">
-          <h3>开发测试</h3>
-          <p class="text-secondary mb-sm">跳过真实支付，直接标记已支付（仅开发环境）</p>
-          <el-button type="success" size="large" :loading="paying" class="full-width" @click="handleMockPay">Mock 支付（测试用）</el-button>
         </div>
       </div>
     </div>

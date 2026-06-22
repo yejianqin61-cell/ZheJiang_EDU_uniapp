@@ -253,7 +253,7 @@ async function devLoginAs(role: 'admin' | 'teacher') {
         <p class="login-tip">首次登录将自动注册账号</p>
       </div>
 
-      <div class="dev-section">
+      <div v-if="false" class="dev-section">
         <div class="dev-login" @click="devLoginAs('admin')">管理员登录</div>
         <div class="dev-login" @click="devLoginAs('teacher')">教师登录</div>
       </div>
