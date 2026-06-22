@@ -259,6 +259,13 @@
 - 补充页面回归测试，覆盖下单请求返回服务端错误消息时的提示行为
 - 保持原有价格展示、地址选择、下单成功跳转行为不变
 
+### 38. 练习首页标签类型收口
+
+- 新增 [Issue_20260622_Exercises_Index_Tab_Type_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Exercises_Index_Tab_Type_Gap.md)，记录练习首页标签切换仍在使用弱类型断言的问题
+- 练习首页为入口标签补齐显式联合类型和选项结构类型
+- 模板标签切换改为使用 typed handler，移除 `as any`
+- 同时整理页面脚本与模板命名，保持原有入口展示和跳转行为不变
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -282,6 +289,7 @@
 - 定向测试：`src/__tests__/pages/contribute-upload.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/contribute-preview.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/print-checkout.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/exercises-index.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm test`：48 个测试文件、185 个用例通过
 - `cd frontend-web && npm run build`：通过
