@@ -78,6 +78,16 @@
 - `frontend-web/src/__tests__/pages/admin-dashboard.spec.ts`
   - 补充“仪表盘首屏加载失败会提示错误”的回归用例
 
+### 8. 练习类目页加载失败与弱类型收口
+
+- 对应 Issue：
+  - [Issue_20260622_Exercise_Category_Silent_Error_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Exercise_Category_Silent_Error_Gap.md)
+- `frontend-web/src/pages/exercises/category.vue`
+  - 重写压缩脚本为可维护结构，并将类目、课时状态收为显式类型
+  - 为类目加载失败和同步课时加载失败统一补充错误消息提取与状态清理
+- `frontend-web/src/__tests__/pages/exercise-category.spec.ts`
+  - 新增练习类目页回归测试，覆盖类目加载、类目失败、同步课时部分失败三条链路
+
 ## 验证结果
 
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-withdrawals.spec.ts`：1 个测试文件、5 个用例通过
@@ -87,3 +97,4 @@
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/payment.spec.ts`：1 个测试文件、6 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/paper-config.spec.ts`：1 个测试文件、4 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-dashboard.spec.ts`：1 个测试文件、3 个用例通过
+- `cd frontend-web && npm.cmd test -- src/__tests__/pages/exercise-category.spec.ts`：1 个测试文件、3 个用例通过
