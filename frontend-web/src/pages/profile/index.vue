@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { getMyBalance, getUserStats } from '@/api/modules/auth'
 import { useAuthStore } from '@/stores/auth'
 
@@ -12,19 +13,27 @@ const stats = ref({
   balance: 0,
 })
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
 onMounted(async () => {
   try {
     const data = await getUserStats()
     stats.value.totalPapers = data.totalPapers ?? 0
     stats.value.totalPaid = data.totalPaid ?? 0
   }
-  catch {}
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '个人统计加载失败'))
+  }
 
   try {
     const data = await getMyBalance()
     stats.value.balance = data?.balance ?? 0
   }
-  catch {}
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '账户余额加载失败'))
+  }
 })
 
 const quickActions = [

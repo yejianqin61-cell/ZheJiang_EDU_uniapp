@@ -300,6 +300,13 @@
 - 为地址删除分支区分弹窗取消与接口失败，避免真实失败静默
 - 补充页面回归测试，覆盖地址加载失败和删除地址失败的提示行为
 
+### 44. 个人中心首页静默失败收口
+
+- 新增 [Issue_20260622_Profile_Index_Silent_Error_Handling_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Profile_Index_Silent_Error_Handling_Gap.md)，记录个人中心首页数据加载链路仍存在静默失败的问题
+- 为个人统计和账户余额加载补充明确失败提示
+- 保持页面默认值兜底，避免渲染中断，同时保留现有入口、展示和跳转行为
+- 补充页面回归测试，覆盖个人统计加载失败和余额加载失败的提示行为
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -329,8 +336,9 @@
 - 定向测试：`src/__tests__/pages/admin-exercises.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-exercise-contributions.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/address-list.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/profile-index.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm test`：48 个测试文件、196 个用例通过
+- `cd frontend-web && npm test`：48 个测试文件、198 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
