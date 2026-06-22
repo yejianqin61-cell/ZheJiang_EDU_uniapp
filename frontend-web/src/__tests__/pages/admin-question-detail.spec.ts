@@ -4,6 +4,10 @@ import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminQuestionDetailPage from '@/pages/admin/questions/detail/index.vue'
 
+type AdminQuestionDetailPageVm = {
+  del: () => Promise<void>
+}
+
 const routerBack = vi.fn()
 const routeState = vi.hoisted(() => ({
   params: { id: 'question-1' },
@@ -48,6 +52,10 @@ describe('Admin question detail page', () => {
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.error).mockReset()
   })
+
+  function getVm(wrapper: ReturnType<typeof mountPage>) {
+    return wrapper.vm as AdminQuestionDetailPageVm
+  }
 
   it('loads question detail on mount', async () => {
     adminApiMocks.getQuestion.mockResolvedValue({
@@ -94,10 +102,19 @@ describe('Admin question detail page', () => {
     const wrapper = mountPage()
     await nextTick()
 
-    await (wrapper.vm as any).del()
+    await getVm(wrapper).del()
 
     expect(adminApiMocks.deleteQuestion).toHaveBeenCalledWith('question-1')
     expect(ElMessage.success).toHaveBeenCalledWith('已删除')
     expect(routerBack).toHaveBeenCalled()
+  })
+  it('shows error when loading question detail fails', async () => {
+    adminApiMocks.getQuestion.mockRejectedValue(new Error('题目详情服务异常'))
+
+    mountPage()
+    await nextTick()
+    await nextTick()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('题目详情服务异常')
   })
 })
