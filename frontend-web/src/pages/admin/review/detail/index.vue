@@ -13,6 +13,18 @@ const loading = ref(true)
 
 const knowledgePointText = computed(() => item.value?.knowledgePoints?.join(' / ') || '—')
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message
+  }
+
+  return '操作失败'
+}
+
 onMounted(async () => {
   try {
     item.value = await getReviewDetail(String(route.params.id))
@@ -26,8 +38,8 @@ async function approve() {
     await approveQuestion(String(route.params.id))
     ElMessage.success('已通过')
     router.back()
-  } catch (error: any) {
-    ElMessage.error(error?.message ?? '操作失败')
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error))
   }
 }
 
@@ -36,8 +48,8 @@ async function reject() {
     await rejectQuestion(String(route.params.id))
     ElMessage.success('已拒绝')
     router.back()
-  } catch (error: any) {
-    ElMessage.error(error?.message ?? '操作失败')
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error))
   }
 }
 </script>

@@ -11,6 +11,18 @@ const loading = ref(true)
 const selected = ref<string[]>([])
 const pagination = ref<Pagination>({ page: 1, pageSize: 20, total: 0, totalPages: 0 })
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message
+  }
+
+  return '操作失败'
+}
+
 onMounted(() => {
   void fetchList()
 })
@@ -59,8 +71,8 @@ async function singleAction(id: string, action: 'approve' | 'reject') {
     }
     ElMessage.success('操作成功')
     await fetchList()
-  } catch (error: any) {
-    ElMessage.error(error?.message ?? '操作失败')
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error))
   }
 }
 </script>

@@ -193,6 +193,12 @@
 - 订单列表页将下载/打印表格的 `row-click` 事件收口为脚本内显式 typed handler，移除模板里的 `row: any`
 - 标签页当前值与切换函数改为直接复用共享 `OrderType`，避免页面局部断言继续变宽
 
+### 28. 管理端审核页错误类型收口
+
+- 新增 [Issue_20260622_Admin_Review_Error_Type_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Review_Error_Type_Gap.md)，记录管理端审核列表页和详情页仍在使用弱错误类型的问题
+- 审核列表页和审核详情页统一改为用 `unknown` 接住审核动作异常，并在页面内收口错误消息提取逻辑
+- 保持原有“操作成功/失败”提示、刷新列表和返回上一页行为不变，只收紧错误分支类型
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -206,6 +212,7 @@
 - 定向测试：`src/__tests__/api/exercise.spec.ts` 与 `src/__tests__/pages/admin-exercise-contributions.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/payment.spec.ts` 与 `src/__tests__/pages/profile-withdraw.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/orders-index.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/admin-review.spec.ts` 与 `src/__tests__/pages/admin-review-detail.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm test`：48 个测试文件、181 个用例通过
 - `cd frontend-web && npm run build`：通过
