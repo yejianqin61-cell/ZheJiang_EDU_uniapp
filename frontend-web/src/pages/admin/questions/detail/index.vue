@@ -11,6 +11,18 @@ const router = useRouter()
 const item = ref<QuestionDetail | null>(null)
 const loading = ref(true)
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message
+  }
+
+  return '删除失败'
+}
+
 onMounted(async () => {
   try {
     item.value = await getQuestion(route.params.id as string)
@@ -26,8 +38,8 @@ async function del() {
     await deleteQuestion(route.params.id as string)
     ElMessage.success('已删除')
     router.back()
-  } catch (error: any) {
-    ElMessage.error(error?.message ?? '删除失败')
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error))
   }
 }
 </script>
