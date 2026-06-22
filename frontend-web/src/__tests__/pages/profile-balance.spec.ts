@@ -1,3 +1,4 @@
+import { ElMessage } from 'element-plus'
 import { flushPromises, mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -23,6 +24,7 @@ const mountPage = () =>
 describe('Profile balance page', () => {
   beforeEach(() => {
     authApiMocks.getMyBalance.mockReset()
+    vi.mocked(ElMessage.error).mockReset()
   })
 
   it('loads balance summary on mount', async () => {
@@ -40,5 +42,15 @@ describe('Profile balance page', () => {
     expect(wrapper.text()).toContain('123.45')
     expect(wrapper.text()).toContain('234.56')
     expect(wrapper.text()).toContain('111.11')
+  })
+
+  it('shows error when balance summary fails to load', async () => {
+    authApiMocks.getMyBalance.mockRejectedValue(new Error('余额汇总加载失败'))
+
+    mountPage()
+    await nextTick()
+    await flushPromises()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('余额汇总加载失败')
   })
 })

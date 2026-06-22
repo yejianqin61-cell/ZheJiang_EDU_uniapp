@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import { getMyBalance } from '@/api/modules/auth'
 
 const summary = ref({
@@ -9,6 +10,10 @@ const summary = ref({
 })
 const loading = ref(true)
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
 onMounted(async () => {
   try {
     const data = await getMyBalance()
@@ -16,7 +21,9 @@ onMounted(async () => {
     summary.value.totalEarned = data?.totalEarned ?? 0
     summary.value.totalSpent = data?.totalSpent ?? 0
   }
-  catch {}
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '余额数据加载失败'))
+  }
   finally {
     loading.value = false
   }
