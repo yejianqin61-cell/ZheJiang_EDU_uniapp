@@ -36,6 +36,14 @@ onMounted(async () => {
   catch {}
 })
 
+function hasResponse(error: unknown) {
+  return typeof error === 'object' && error !== null && 'response' in error
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : '创建订单失败'
+}
+
 function getTier() {
   if (!pricing.value) {
     return null
@@ -80,10 +88,13 @@ async function handleSubmit() {
     ElMessage.success('订单已创建')
     router.push(`/payment?paperId=${paperId.value}&type=print`)
   }
-  catch (error: any) {
-    if (!error.response) {
+  catch (error: unknown) {
+    if (!hasResponse(error)) {
       ElMessage.error('创建订单失败')
+      return
     }
+
+    ElMessage.error(getErrorMessage(error))
   }
   finally {
     submitting.value = false

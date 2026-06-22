@@ -126,4 +126,19 @@ describe('Print checkout page', () => {
     expect(ElMessage.success).toHaveBeenCalledWith('订单已创建')
     expect(routerPush).toHaveBeenCalledWith('/payment?paperId=paper-1&type=print')
   })
+
+  it('shows backend error message when create order fails with response', async () => {
+    pricingApiMocks.getPublicPricing.mockResolvedValue({ print: [{ minQuantity: 1, maxQuantity: null, unitPrice: 200 }] })
+    addressApiMocks.listAddresses.mockResolvedValue([{ id: 'addr-1', receiverName: '张三', phone: '13800000000', province: '浙', city: '杭', district: '西湖', detail: '1号' }])
+    orderApiMocks.createOrder.mockRejectedValue(Object.assign(new Error('库存不足'), { response: { status: 400 } }))
+
+    const wrapper = mountPage()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    ;(wrapper.vm as any).selectedAddr = 'addr-1'
+    await (wrapper.vm as any).handleSubmit()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('库存不足')
+  })
 })

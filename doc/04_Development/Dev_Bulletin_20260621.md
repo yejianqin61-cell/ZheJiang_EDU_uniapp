@@ -251,6 +251,14 @@
 - 补充页面回归测试，覆盖提审请求失败时的错误提示行为
 - 保持原有题目预览、提审成功跳转与失败提示行为不变
 
+### 37. 打印结算页异常处理收口
+
+- 新增 [Issue_20260622_Print_Checkout_Error_Handling_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Print_Checkout_Error_Handling_Gap.md)，记录打印结算页仍存在弱错误类型和服务端失败静默的问题
+- 打印结算页改为使用 `unknown` 接住下单异常，并在页面内收口最小错误消息提取逻辑
+- 区分网络失败兜底提示与服务端业务错误提示，避免后端返回业务错误时页面静默
+- 补充页面回归测试，覆盖下单请求返回服务端错误消息时的提示行为
+- 保持原有价格展示、地址选择、下单成功跳转行为不变
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -273,8 +281,9 @@
 - 定向测试：`src/__tests__/pages/admin-withdrawals.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/contribute-upload.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/contribute-preview.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/print-checkout.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm test`：48 个测试文件、184 个用例通过
+- `cd frontend-web && npm test`：48 个测试文件、185 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
