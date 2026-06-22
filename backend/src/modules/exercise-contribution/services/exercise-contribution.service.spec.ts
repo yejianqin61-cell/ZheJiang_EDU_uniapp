@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Logger, NotFoundException } from '@nestjs/common';
 import { ExerciseContributionService } from './exercise-contribution.service';
 import { TeacherExerciseUpload } from '../../../database/entities/teacher-exercise-upload.entity';
 import { ExercisePaper } from '../../../database/entities/exercise-paper.entity';
@@ -9,6 +9,7 @@ import { ExerciseLesson } from '../../../database/entities/exercise-lesson.entit
 import { PricingService } from '../../print/services/pricing.service';
 import { BalanceService } from '../../balance/services/balance.service';
 import { ThumbnailService } from '../../exercise/services/thumbnail.service';
+import * as fs from 'fs';
 
 describe('ExerciseContributionService', () => {
   let service: ExerciseContributionService;
@@ -18,6 +19,11 @@ describe('ExerciseContributionService', () => {
   let lessonRepo: any;
   let pricingService: any;
   let balanceService: any;
+  let thumbnailService: { generate: jest.Mock };
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   beforeEach(async () => {
     uploadRepo = {
@@ -45,6 +51,9 @@ describe('ExerciseContributionService', () => {
     balanceService = {
       addBalance: jest.fn().mockResolvedValue({ balance: 1500 }),
     };
+    thumbnailService = {
+      generate: jest.fn().mockResolvedValue('/uploads/thumb.png'),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -55,7 +64,7 @@ describe('ExerciseContributionService', () => {
         { provide: getRepositoryToken(ExerciseLesson), useValue: lessonRepo },
         { provide: PricingService, useValue: pricingService },
         { provide: BalanceService, useValue: balanceService },
-        { provide: ThumbnailService, useValue: { generate: jest.fn().mockResolvedValue('/uploads/thumb.png') } },
+        { provide: ThumbnailService, useValue: thumbnailService },
       ],
     }).compile();
 
@@ -107,6 +116,54 @@ describe('ExerciseContributionService', () => {
       uploadRepo.findOne.mockResolvedValue({ id: 'upload-1', status: 'approved' });
 
       await expect(service.approve('upload-1', 'admin-1')).rejects.toThrow(ConflictException);
+    });
+
+    it('should log warning and keep approval success when cashback fails', async () => {
+      const loggerSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+      balanceService.addBalance.mockRejectedValue(new Error('cashback failed'));
+      uploadRepo.findOne.mockResolvedValue({
+        id: 'upload-1',
+        userId: 'teacher-1',
+        title: '五年级数学同步练习',
+        fileUrl: '/uploads/exercises/file.pdf',
+        fileType: 'pdf',
+        fileSize: 1024,
+        thumbnailUrl: '/uploads/thumb.png',
+        categoryId: 'cat-1',
+        lessonId: 'lesson-1',
+        status: 'pending_review',
+      });
+
+      const result = await service.approve('upload-1', 'admin-1');
+
+      expect(result).toEqual({ paperId: 'paper-1', cashbackAmount: 500 });
+      expect(loggerSpy).toHaveBeenCalledWith(
+        'Failed to grant exercise cashback for upload upload-1',
+        expect.any(String),
+      );
+    });
+  });
+
+  describe('upload', () => {
+    it('should log warning and keep upload success when thumbnail generation fails', async () => {
+      const loggerSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      jest.spyOn(fs, 'writeFileSync').mockImplementation(() => undefined);
+      thumbnailService.generate.mockRejectedValue(new Error('thumbnail failed'));
+
+      const result = await service.upload(
+        'teacher-1',
+        { filename: 'exercise.pdf', buffer: Buffer.from('pdf'), size: 3 },
+        { title: '同步练习', subject: '数学', grade: '五年级', exerciseType: '同步练习' },
+      );
+
+      await new Promise(process.nextTick);
+
+      expect(result).toEqual({ id: 'upload-1', status: 'pending_review' });
+      expect(loggerSpy).toHaveBeenCalledWith(
+        'Failed to generate thumbnail for upload upload-1',
+        expect.any(String),
+      );
     });
   });
 

@@ -134,6 +134,7 @@
 - `cd backend && npm.cmd test -- src/modules/auth/services/sms.service.spec.ts`：1 个测试文件、9 个用例通过
 - `cd backend && npm.cmd test -- src/modules/auth/services/sms.service.spec.ts src/modules/auth/auth.service.spec.ts src/modules/auth/auth.controller.spec.ts`：3 个测试文件、29 个用例通过
 - `cd backend && npm.cmd test -- src/modules/order/order.service.spec.ts`：1 个测试文件、16 个用例通过
+- `cd backend && npm.cmd test -- src/modules/exercise-contribution/services/exercise-contribution.service.spec.ts`：1 个测试文件、9 个用例通过
 
 ### 12. 短信发送失败显式报错与状态回滚
 
@@ -156,3 +157,14 @@
 - `backend/src/modules/order/order.service.spec.ts`
   - 新增练习科目回退失败、订单列表标题回退失败、订单详情标题回退失败三条回归用例
   - 校验异常场景下服务会记录明确告警，并继续按现有兜底结果返回
+
+### 14. 练习试卷上传与返现静默失败收口
+
+- 对应 Issue：
+  - [Issue_20260622_Backend_Silent_Error_Cleanup_Backlog.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Backend_Silent_Error_Cleanup_Backlog.md)
+- `backend/src/modules/exercise-contribution/services/exercise-contribution.service.ts`
+  - 为缩略图异步生成失败补充明确告警，避免上传后缩略图链路继续静默失败
+  - 为审核通过后的教师返现失败补充明确告警，保持审核主流程不中断，但后台可追踪补偿
+- `backend/src/modules/exercise-contribution/services/exercise-contribution.service.spec.ts`
+  - 新增“缩略图生成失败仍上传成功并记录告警”“返现失败仍审核成功并记录告警”两条回归用例
+  - 通过文件系统桩避免测试写入本地上传产物，保证该组单测纯净可重复

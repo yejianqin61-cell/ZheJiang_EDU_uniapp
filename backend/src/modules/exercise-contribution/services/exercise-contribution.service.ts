@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { TeacherExerciseUpload } from '../../../database/entities/teacher-exercise-upload.entity';
@@ -30,6 +30,8 @@ export interface ListUploadsParams {
 
 @Injectable()
 export class ExerciseContributionService {
+  private readonly logger = new Logger(ExerciseContributionService.name);
+
   constructor(
     @InjectRepository(TeacherExerciseUpload)
     private readonly uploadRepo: Repository<TeacherExerciseUpload>,
@@ -85,7 +87,12 @@ export class ExerciseContributionService {
     // 异步生成缩略图（不阻塞上传响应）
     this.thumbnailService.generate(file.buffer, file.filename).then((url) => {
       if (url) this.uploadRepo.update(upload.id, { thumbnailUrl: url });
-    }).catch(() => {});
+    }).catch((error) => {
+      this.logger.warn(
+        `Failed to generate thumbnail for upload ${upload.id}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+    });
 
     return { id: upload.id, status: upload.status };
   }
@@ -230,7 +237,12 @@ export class ExerciseContributionService {
         refId: upload.id,
         note: `练习试卷审核通过：${upload.title}`,
       });
-    } catch { /* cashback fail should not block approval */ }
+    } catch (error) {
+      this.logger.warn(
+        `Failed to grant exercise cashback for upload ${upload.id}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+    }
 
     return { paperId: paper.id, cashbackAmount: cashbackPrice };
   }
