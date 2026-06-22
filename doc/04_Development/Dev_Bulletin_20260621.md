@@ -93,10 +93,17 @@
 - 订单详情页改为复用共享 `getOrder()`、`getOrderDownload()` 与 `exportDocx()`，统一下载订单与试卷导出链路的接口入口
 - 补充 API 层、store 层与页面层回归测试，覆盖订单列表加载、分页透传、练习订单创建、下载链接获取、订单详情加载与导出流程
 
+### 14. 题库贡献链路 API 收口
+
+- 新增共享 `contribution` API 模块，集中收口题库贡献列表、详情、预览题目读取、提审与上传接口
+- 题库贡献列表页、详情页、上传页、预览页改为复用共享 `contribution` API 模块，移除页面层对底层 `api` 的直接依赖
+- 为题库贡献链路补齐 `ContributionItem`、`ContributionQuestion` 类型约束，并在 API 层统一归一化贡献列表与预览题目结构
+- 补充 API 层与页面层回归测试，覆盖贡献列表加载、详情回显、上传进度回调、预览题目读取与提交审核流程
+
 ## 验证结果
 
 - 定向测试：4 个测试文件、14 个用例通过
-- `cd frontend-web && npm test`：45 个测试文件、158 个用例通过
+- `cd frontend-web && npm test`：46 个测试文件、163 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -115,4 +122,5 @@
 - `77dd650` `refactor: align admin upload pages with api modules`
 - `0b580e7` `refactor: align address pages with api module`
 - `5f973d0` `refactor: align profile pages with auth api module`
-- 本批提交：订单链路 API 收口
+- `436a2d8` `refactor: align order pages with api modules`
+- 本批提交：题库贡献链路 API 收口

@@ -207,6 +207,26 @@ export interface KnowledgePoint {
   questionCount: number
 }
 
+// === Question Contribution ===
+export interface ContributionQuestion {
+  type: string
+  content: string
+  options?: string[]
+}
+
+export interface ContributionItem {
+  id: string
+  filename?: string | null
+  originalName?: string | null
+  subject: string
+  grade: string
+  status: 'pending_review' | 'approved' | 'rejected'
+  questionCount?: number | null
+  reward?: number | null
+  questions?: ContributionQuestion[]
+  createdAt: string
+}
+
 // === Exercise Contribution ===
 export interface ExerciseUploadItem {
   id: string

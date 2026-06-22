@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ContributeUploadPage from '@/pages/contribute/upload/index.vue'
 
 const routerPush = vi.fn()
-const apiMocks = vi.hoisted(() => ({
-  post: vi.fn(),
+const contributionApiMocks = vi.hoisted(() => ({
+  uploadContributionFile: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -14,8 +14,8 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/contribution', () => ({
+  uploadContributionFile: contributionApiMocks.uploadContributionFile,
 }))
 
 const mountPage = () =>
@@ -34,7 +34,7 @@ const mountPage = () =>
 describe('Contribute upload page', () => {
   beforeEach(() => {
     routerPush.mockReset()
-    apiMocks.post.mockReset()
+    contributionApiMocks.uploadContributionFile.mockReset()
     vi.mocked(ElMessage.warning).mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.error).mockReset()
@@ -46,7 +46,7 @@ describe('Contribute upload page', () => {
     await (wrapper.vm as any).submit()
 
     expect(ElMessage.warning).toHaveBeenCalledWith('请选择学科和年级')
-    expect(apiMocks.post).not.toHaveBeenCalled()
+    expect(contributionApiMocks.uploadContributionFile).not.toHaveBeenCalled()
   })
 
   it('warns when file is missing', async () => {
@@ -60,9 +60,9 @@ describe('Contribute upload page', () => {
   })
 
   it('uploads contribution file, reports progress and redirects on success', async () => {
-    apiMocks.post.mockImplementation(async (_url, _data, config) => {
-      config?.onUploadProgress?.({ loaded: 4, total: 10 })
-      config?.onUploadProgress?.({ loaded: 10, total: 10 })
+    contributionApiMocks.uploadContributionFile.mockImplementation(async (_formData, config) => {
+      config?.onUploadProgress?.({ loaded: 4, total: 10 } as any)
+      config?.onUploadProgress?.({ loaded: 10, total: 10 } as any)
       return { ok: true }
     })
 
@@ -75,7 +75,7 @@ describe('Contribute upload page', () => {
 
     await (wrapper.vm as any).submit()
 
-    expect(apiMocks.post).toHaveBeenCalledTimes(1)
+    expect(contributionApiMocks.uploadContributionFile).toHaveBeenCalledTimes(1)
     expect((wrapper.vm as any).uploadPercent).toBe(100)
     expect(ElMessage.success).toHaveBeenCalledWith('上传成功，AI解析中...')
     expect(routerPush).toHaveBeenCalledWith('/contribute')

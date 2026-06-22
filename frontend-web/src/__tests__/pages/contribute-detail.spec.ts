@@ -6,16 +6,16 @@ import ContributeDetailPage from '@/pages/contribute/detail/index.vue'
 const routeState = vi.hoisted(() => ({
   params: { id: 'contribution-1' },
 }))
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
+const contributionApiMocks = vi.hoisted(() => ({
+  getContribution: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
   useRoute: () => routeState,
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/contribution', () => ({
+  getContribution: contributionApiMocks.getContribution,
 }))
 
 const mountPage = () =>
@@ -30,11 +30,11 @@ const mountPage = () =>
 
 describe('Contribute detail page', () => {
   beforeEach(() => {
-    apiMocks.get.mockReset()
+    contributionApiMocks.getContribution.mockReset()
   })
 
   it('loads contribution detail on mount', async () => {
-    apiMocks.get.mockResolvedValue({
+    contributionApiMocks.getContribution.mockResolvedValue({
       filename: '数学题库.docx',
       subject: '数学',
       grade: '五年级',
@@ -48,7 +48,7 @@ describe('Contribute detail page', () => {
     await nextTick()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/contributions/contribution-1')
+    expect(contributionApiMocks.getContribution).toHaveBeenCalledWith('contribution-1')
     expect(wrapper.text()).toContain('数学题库.docx')
     expect(wrapper.text()).toContain('¥3.00')
   })

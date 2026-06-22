@@ -8,9 +8,9 @@ const routerReplace = vi.fn()
 const routeState = vi.hoisted(() => ({
   query: { id: 'contribution-1' },
 }))
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  post: vi.fn(),
+const contributionApiMocks = vi.hoisted(() => ({
+  getContributionQuestions: vi.fn(),
+  submitContribution: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -20,8 +20,9 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/contribution', () => ({
+  getContributionQuestions: contributionApiMocks.getContributionQuestions,
+  submitContribution: contributionApiMocks.submitContribution,
 }))
 
 vi.mock('@/composables/useMarkdown', () => ({
@@ -42,35 +43,35 @@ const mountPage = () =>
 describe('Contribute preview page', () => {
   beforeEach(() => {
     routerReplace.mockReset()
-    apiMocks.get.mockReset()
-    apiMocks.post.mockReset()
+    contributionApiMocks.getContributionQuestions.mockReset()
+    contributionApiMocks.submitContribution.mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.error).mockReset()
   })
 
   it('loads parsed questions on mount', async () => {
-    apiMocks.get.mockResolvedValue({
-      questions: [{ type: '选择题', content: '1 + 1 = ?', options: ['1', '2'] }],
-    })
+    contributionApiMocks.getContributionQuestions.mockResolvedValue([
+      { type: '选择题', content: '1 + 1 = ?', options: ['1', '2'] },
+    ])
 
     const wrapper = mountPage()
     await nextTick()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/contributions/contribution-1')
+    expect(contributionApiMocks.getContributionQuestions).toHaveBeenCalledWith('contribution-1')
     expect(wrapper.text()).toContain('1 + 1 = ?')
   })
 
   it('submits contribution for review and returns to contribute list', async () => {
-    apiMocks.get.mockResolvedValue({ questions: [] })
-    apiMocks.post.mockResolvedValue({ ok: true })
+    contributionApiMocks.getContributionQuestions.mockResolvedValue([])
+    contributionApiMocks.submitContribution.mockResolvedValue({ ok: true })
 
     const wrapper = mountPage()
     await nextTick()
 
     await (wrapper.vm as any).submit()
 
-    expect(apiMocks.post).toHaveBeenCalledWith('/contributions/contribution-1/submit')
+    expect(contributionApiMocks.submitContribution).toHaveBeenCalledWith('contribution-1')
     expect(ElMessage.success).toHaveBeenCalledWith('已提交审核')
     expect(routerReplace).toHaveBeenCalledWith('/contribute')
   })

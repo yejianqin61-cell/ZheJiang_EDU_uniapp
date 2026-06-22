@@ -1,22 +1,122 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'; import { useRoute, useRouter } from 'vue-router'; import api from '@/api/index'; import { ElMessage } from 'element-plus'; import { renderMarkdown } from '@/composables/useMarkdown'
-const route = useRoute(); const router = useRouter(); const questions = ref<any[]>([]); const loading = ref(true); const submitting = ref(false)
-onMounted(async () => { try { const d = await api.get(`/contributions/${route.query.id}`); questions.value = d?.questions??d??[] } catch {} finally { loading.value = false } })
-async function submit() { submitting.value=true; try { await api.post(`/contributions/${route.query.id}/submit`); ElMessage.success('已提交审核'); router.replace('/contribute') } catch(e:any) { ElMessage.error(e?.message??'提交失败') } finally { submitting.value=false } }
+import { onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { renderMarkdown } from '@/composables/useMarkdown'
+import { getContributionQuestions, submitContribution } from '@/api/modules/contribution'
+import type { ContributionQuestion } from '@/types'
+
+const route = useRoute()
+const router = useRouter()
+const questions = ref<ContributionQuestion[]>([])
+const loading = ref(true)
+const submitting = ref(false)
+
+onMounted(async () => {
+  try {
+    questions.value = await getContributionQuestions(String(route.query.id))
+  }
+  catch {
+    questions.value = []
+  }
+  finally {
+    loading.value = false
+  }
+})
+
+async function submit() {
+  submitting.value = true
+
+  try {
+    await submitContribution(String(route.query.id))
+    ElMessage.success('已提交审核')
+    router.replace('/contribute')
+  }
+  catch (error: any) {
+    ElMessage.error(error?.message ?? '提交失败')
+  }
+  finally {
+    submitting.value = false
+  }
+}
 </script>
 
 <template>
   <div class="preview-page">
-    <div class="breadcrumb"><router-link to="/">首页</router-link><span class="breadcrumb__separator">›</span><router-link to="/contribute">我的贡献</router-link><span class="breadcrumb__separator">›</span><span class="breadcrumb__current">题目预览</span></div>
-    <div v-if="loading" class="text-center" style="padding:80px 0"><p class="text-secondary">AI 解析中...</p></div>
+    <div class="breadcrumb">
+      <router-link to="/">首页</router-link>
+      <span class="breadcrumb__separator">›</span>
+      <router-link to="/contribute">我的贡献</router-link>
+      <span class="breadcrumb__separator">›</span>
+      <span class="breadcrumb__current">题目预览</span>
+    </div>
+    <div v-if="loading" class="loading-wrap">
+      <p class="text-secondary">AI 解析中...</p>
+    </div>
     <div v-else>
-      <div v-for="(q,i) in questions" :key="i" class="page-card question-card"><div class="q-header"><span class="q-index">{{ i+1 }}.</span><el-tag size="small">{{ q.type }}</el-tag></div><p class="q-content" v-html="renderMarkdown(q.content)"></p><div v-if="q.options?.length" class="q-options"><div v-for="(o,j) in q.options" :key="j" class="q-option">{{ o }}</div></div></div>
-      <div class="actions"><el-button type="primary" size="large" :loading="submitting" @click="submit" style="width:100%">确认无误，提交审核</el-button></div>
+      <div v-for="(question, index) in questions" :key="index" class="page-card question-card">
+        <div class="q-header">
+          <span class="q-index">{{ index + 1 }}.</span>
+          <el-tag size="small">{{ question.type }}</el-tag>
+        </div>
+        <p class="q-content" v-html="renderMarkdown(question.content)"></p>
+        <div v-if="question.options?.length" class="q-options">
+          <div v-for="(option, optionIndex) in question.options" :key="optionIndex" class="q-option">{{ option }}</div>
+        </div>
+      </div>
+      <div class="actions">
+        <el-button type="primary" size="large" :loading="submitting" class="submit-button" @click="submit">确认无误，提交审核</el-button>
+      </div>
     </div>
   </div>
 </template>
+
 <style scoped lang="scss">
-.preview-page{max-width:1500px}
-.question-card{margin-bottom:$spacing-md;.q-header{display:flex;align-items:center;gap:$spacing-sm;margin-bottom:$spacing-md}.q-index{font-weight:700;font-size:$font-size-lg}.q-content{font-size:$font-size-base;line-height:1.8;white-space:pre-wrap}.q-options{margin-top:$spacing-md}.q-option{padding:4px 0;color:$text-color-secondary}}
-.actions{padding:$spacing-lg 0}
+.preview-page {
+  max-width: 1500px;
+}
+
+.loading-wrap {
+  padding: 80px 0;
+  text-align: center;
+}
+
+.question-card {
+  margin-bottom: $spacing-md;
+
+  .q-header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-md;
+  }
+
+  .q-index {
+    font-size: $font-size-lg;
+    font-weight: 700;
+  }
+
+  .q-content {
+    font-size: $font-size-base;
+    line-height: 1.8;
+    white-space: pre-wrap;
+  }
+
+  .q-options {
+    margin-top: $spacing-md;
+  }
+
+  .q-option {
+    padding: 4px 0;
+    color: $text-color-secondary;
+  }
+}
+
+.actions {
+  padding: $spacing-lg 0;
+}
+
+.submit-button {
+  width: 100%;
+}
 </style>

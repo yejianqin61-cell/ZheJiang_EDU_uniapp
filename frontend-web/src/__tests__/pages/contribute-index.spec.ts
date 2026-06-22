@@ -5,8 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ContributeIndexPage from '@/pages/contribute/index.vue'
 
 const routerPush = vi.fn()
-const apiMocks = vi.hoisted(() => ({
-  get: vi.fn(),
+const contributionApiMocks = vi.hoisted(() => ({
+  listContributions: vi.fn(),
 }))
 const exerciseApiMocks = vi.hoisted(() => ({
   getMyExerciseUploads: vi.fn(),
@@ -18,8 +18,8 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('@/api/index', () => ({
-  default: apiMocks,
+vi.mock('@/api/modules/contribution', () => ({
+  listContributions: contributionApiMocks.listContributions,
 }))
 
 vi.mock('@/api/modules/exercise', () => ({
@@ -47,25 +47,25 @@ const mountPage = () =>
 describe('Contribute index page', () => {
   beforeEach(() => {
     routerPush.mockReset()
-    apiMocks.get.mockReset()
+    contributionApiMocks.listContributions.mockReset()
     exerciseApiMocks.getMyExerciseUploads.mockReset()
     vi.mocked(ElMessage.error).mockReset()
   })
 
   it('loads question contributions on mount', async () => {
-    apiMocks.get.mockResolvedValue({
-      list: [{ id: 'c1', filename: '数学题库.docx', status: 'pending_review' }],
-    })
+    contributionApiMocks.listContributions.mockResolvedValue([
+      { id: 'c1', filename: '数学题库.docx', status: 'pending_review' },
+    ])
 
     const wrapper = mountPage()
     await nextTick()
 
-    expect(apiMocks.get).toHaveBeenCalledWith('/contributions')
+    expect(contributionApiMocks.listContributions).toHaveBeenCalledTimes(1)
     expect(wrapper.text()).toContain('我的贡献')
   })
 
   it('loads exercise contributions after switching tab', async () => {
-    apiMocks.get.mockResolvedValue({ list: [] })
+    contributionApiMocks.listContributions.mockResolvedValue([])
     exerciseApiMocks.getMyExerciseUploads.mockResolvedValue({
       list: [{ id: 'e1', title: '同步练习', exerciseType: 'sync', status: 'approved', cashbackAmount: 300 }],
     })
@@ -79,7 +79,7 @@ describe('Contribute index page', () => {
   })
 
   it('shows empty state for question contributions when list is empty', async () => {
-    apiMocks.get.mockResolvedValue({ list: [] })
+    contributionApiMocks.listContributions.mockResolvedValue([])
 
     const wrapper = mountPage()
     await nextTick()
