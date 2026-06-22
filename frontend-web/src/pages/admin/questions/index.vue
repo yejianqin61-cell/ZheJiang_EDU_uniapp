@@ -29,6 +29,14 @@ const diffs = [{ v: '', l: '全部' }, { v: '1', l: '简单' }, { v: '2', l: '�
 
 onMounted(() => fetchList())
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
+function isCancelAction(error: unknown) {
+  return error === 'cancel' || error === 'close'
+}
+
 async function fetchList() {
   loading.value = true
   const params = {
@@ -46,8 +54,9 @@ async function fetchList() {
     const data = await getQuestions(params) as QuestionListResponse | QuestionListItem[]
     list.value = Array.isArray(data) ? data : (data.list ?? [])
     if (!Array.isArray(data) && data.pagination) pagination.value = data.pagination
-  } catch {
-    // ignore list fallback
+  } catch (error: unknown) {
+    list.value = []
+    ElMessage.error(getErrorMessage(error, '题库列表加载失败'))
   } finally {
     loading.value = false
   }
@@ -65,8 +74,12 @@ async function del(id: string) {
     await deleteQuestion(id)
     ElMessage.success('已删除')
     fetchList()
-  } catch {
-    // user cancelled or request failed
+  } catch (error: unknown) {
+    if (isCancelAction(error)) {
+      return
+    }
+
+    ElMessage.error(getErrorMessage(error, '删除题目失败'))
   }
 }
 </script>
