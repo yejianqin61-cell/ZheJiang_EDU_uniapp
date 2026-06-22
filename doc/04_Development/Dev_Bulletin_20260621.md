@@ -382,6 +382,13 @@
 - 保持单条审核、列表刷新与选中重置逻辑不变
 - 补充页面回归测试，覆盖批量取消和批量失败分支
 
+### 55. 组卷知识点 store 静默失败收口
+
+- 新增 [Issue_20260622_Paper_Store_Knowledge_Points_Silent_Error_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Paper_Store_Knowledge_Points_Silent_Error_Gap.md)，记录组卷知识点 store 仍存在静默失败分支的问题
+- 为知识点加载失败补充明确提示，并在失败时清空旧知识点列表
+- 保持现有组卷条件、试卷生成与 store 结构不变
+- 补充 store 回归测试，覆盖知识点加载失败分支
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -421,7 +428,7 @@
 - 定向测试：`src/__tests__/pages/exercise-upload.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-review.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm.cmd test`：48 个测试文件、216 个用例通过
+- `cd frontend-web && npm.cmd test`：48 个测试文件、217 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -454,3 +461,4 @@
 - `b02aa0c` `test: type print checkout fixtures`
 - 本批提交：练习试卷上传页静默失败收口
 - 本批提交：管理端入库审核批量静默失败收口
+- 本批提交：组卷知识点 store 静默失败收口
