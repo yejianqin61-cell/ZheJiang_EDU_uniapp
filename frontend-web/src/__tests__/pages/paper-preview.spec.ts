@@ -81,19 +81,16 @@ describe('Paper preview page', () => {
     const pinia = createPinia()
     setActivePinia(pinia)
     const paperStore = usePaperStore()
-    paperStore.currentPaper = {
-      paperId: 'paper-1',
-      title: '五年级数学测试卷',
-      generateTime: 2,
+    paperStore.currentPaper = createPaper({
       questions: [
-        { index: 1, type: '选择题', content: '题目1', options: ['A', 'B'] },
-        { index: 2, type: '填空题', content: '题目2', options: [] },
-        { index: 3, type: '判断题', content: '题目3', options: [] },
-        { index: 4, type: '选择题', content: '题目4', options: ['A', 'B'] },
-        { index: 5, type: '应用题', content: '题目5', options: [] },
-        { index: 6, type: '应用题', content: '题目6', options: [] },
+        createQuestion(1, '选择题', '题目1', ['A', 'B']),
+        createQuestion(2, '填空题', '题目2'),
+        createQuestion(3, '判断题', '题目3'),
+        createQuestion(4, '选择题', '题目4', ['A', 'B']),
+        createQuestion(5, '应用题', '题目5'),
+        createQuestion(6, '应用题', '题目6'),
       ],
-    } as any
+    })
     pricingApiMocks.getPublicPricing.mockResolvedValue({
       download: { unitPrice: 150 },
       print: [
@@ -117,12 +114,10 @@ describe('Paper preview page', () => {
     const pinia = createPinia()
     setActivePinia(pinia)
     const paperStore = usePaperStore()
-    paperStore.currentPaper = {
+    paperStore.currentPaper = createPaper({
       paperId: 'paper-2',
       title: '测试卷',
-      generateTime: 1,
-      questions: [{ index: 1, type: '选择题', content: '题目1', options: [] }],
-    } as any
+    })
     pricingApiMocks.getPublicPricing.mockRejectedValue(new Error('定价接口加载失败'))
 
     mountPage(pinia)
@@ -136,12 +131,10 @@ describe('Paper preview page', () => {
     const pinia = createPinia()
     setActivePinia(pinia)
     const paperStore = usePaperStore()
-    paperStore.currentPaper = {
+    paperStore.currentPaper = createPaper({
       paperId: 'paper-9',
       title: '测试卷',
-      generateTime: 1,
-      questions: [{ index: 1, type: '选择题', content: '题目1', options: [] }],
-    } as any
+    })
     pricingApiMocks.getPublicPricing.mockResolvedValue({
       download: { unitPrice: 100 },
       print: [{ minQuantity: 1, maxQuantity: null, unitPrice: 50 }],
@@ -150,8 +143,8 @@ describe('Paper preview page', () => {
     const wrapper = mountPage(pinia)
     await nextTick()
 
-    await (wrapper.vm as any).goDownloadPay()
-    await (wrapper.vm as any).goPrintCheckout()
+    ;(wrapper.vm as PaperPreviewPageVm).goDownloadPay()
+    ;(wrapper.vm as PaperPreviewPageVm).goPrintCheckout()
 
     expect(routerPush).toHaveBeenNthCalledWith(1, '/payment?paperId=paper-9&type=download')
     expect(routerPush).toHaveBeenNthCalledWith(2, '/print/checkout?paperId=paper-9')
