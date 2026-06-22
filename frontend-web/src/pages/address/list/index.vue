@@ -13,14 +13,23 @@ onMounted(async () => {
   await fetchList()
 })
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
+function isCancelAction(error: unknown) {
+  return error === 'cancel' || error === 'close'
+}
+
 async function fetchList() {
   loading.value = true
 
   try {
     list.value = await listAddresses()
   }
-  catch {
+  catch (error: unknown) {
     list.value = []
+    ElMessage.error(getErrorMessage(error, '地址加载失败'))
   }
   finally {
     loading.value = false
@@ -34,7 +43,13 @@ async function del(id: string) {
     ElMessage.success('已删除')
     await fetchList()
   }
-  catch {}
+  catch (error: unknown) {
+    if (isCancelAction(error)) {
+      return
+    }
+
+    ElMessage.error(getErrorMessage(error, '删除地址失败'))
+  }
 }
 </script>
 

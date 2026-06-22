@@ -293,6 +293,13 @@
 - 对真实失败补充明确错误提示，保持原有成功提示与列表刷新行为不变
 - 补充页面回归测试，覆盖单条审核失败和批量审核失败的提示行为
 
+### 43. 地址列表页静默失败收口
+
+- 新增 [Issue_20260622_Address_List_Silent_Error_Handling_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Address_List_Silent_Error_Handling_Gap.md)，记录地址列表页删除链路仍存在静默失败的问题
+- 为地址删除分支区分弹窗取消与接口失败
+- 对真实失败补充明确错误提示，保持原有成功提示与列表刷新行为不变
+- 补充页面回归测试，覆盖删除请求失败时的提示行为
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -321,8 +328,9 @@
 - 定向测试：`src/__tests__/pages/login.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-exercises.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/admin-exercise-contributions.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/address-list.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm test`：48 个测试文件、194 个用例通过
+- `cd frontend-web && npm test`：48 个测试文件、196 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交

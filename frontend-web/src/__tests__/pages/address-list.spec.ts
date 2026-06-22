@@ -38,6 +38,7 @@ describe('Address list page', () => {
     addressApiMocks.listAddresses.mockReset()
     addressApiMocks.deleteAddress.mockReset()
     vi.mocked(ElMessage.success).mockReset()
+    vi.mocked(ElMessage.error).mockReset()
     vi.mocked(ElMessageBox.confirm).mockReset()
   })
 
@@ -64,6 +65,16 @@ describe('Address list page', () => {
     expect(wrapper.text()).toContain('暂无收货地址')
   })
 
+  it('shows error when loading addresses fails', async () => {
+    addressApiMocks.listAddresses.mockRejectedValue(new Error('地址服务异常'))
+
+    mountPage()
+    await nextTick()
+    await nextTick()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('地址服务异常')
+  })
+
   it('deletes address and refreshes list after confirmation', async () => {
     addressApiMocks.listAddresses
       .mockResolvedValueOnce([{ id: 'a1', receiverName: '张三', phone: '13800000000', province: '浙江', city: '杭州', district: '西湖', detail: '1号', isDefault: false }])
@@ -79,5 +90,18 @@ describe('Address list page', () => {
     expect(addressApiMocks.deleteAddress).toHaveBeenCalledWith('a1')
     expect(ElMessage.success).toHaveBeenCalledWith('已删除')
     expect(addressApiMocks.listAddresses).toHaveBeenCalledTimes(2)
+  })
+
+  it('shows error when deleting address fails', async () => {
+    addressApiMocks.listAddresses.mockResolvedValue([])
+    addressApiMocks.deleteAddress.mockRejectedValue(new Error('删除失败'))
+    vi.mocked(ElMessageBox.confirm).mockResolvedValue('confirm' as any)
+
+    const wrapper = mountPage()
+    await nextTick()
+
+    await (wrapper.vm as any).del('a1')
+
+    expect(ElMessage.error).toHaveBeenCalledWith('删除失败')
   })
 })
