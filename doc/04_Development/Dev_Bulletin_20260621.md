@@ -314,12 +314,12 @@
 - 保持页面默认值兜底和现有余额展示逻辑不变，避免渲染中断
 - 补充页面回归测试，覆盖余额汇总加载失败时的提示行为
 
-### 45. 余额页静默失败收口
+### 46. 提现页余额加载静默失败收口
 
-- 新增 [Issue_20260622_Profile_Balance_Silent_Error_Handling_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Profile_Balance_Silent_Error_Handling_Gap.md)，记录余额页汇总加载链路仍存在静默失败的问题
-- 为余额汇总加载补充明确失败提示，避免接口失败时页面静默回退为默认值
-- 保持余额、累计收入、累计支出的默认值兜底与原有展示行为不变
-- 补充页面回归测试，覆盖余额汇总加载失败时的提示行为
+- 新增 [Issue_20260622_Profile_Withdraw_Silent_Error_Handling_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Profile_Withdraw_Silent_Error_Handling_Gap.md)，记录提现页余额加载链路仍存在静默失败的问题
+- 为提现页初始化余额加载失败补充明确提示，避免用户把接口异常误判成余额不足或余额为 0
+- 保持现有提现校验、提交流程和默认值兜底不变，避免渲染中断
+- 补充页面回归测试，覆盖余额加载失败时的提示行为
 
 ## 验证结果
 
@@ -352,8 +352,9 @@
 - 定向测试：`src/__tests__/pages/address-list.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/profile-index.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/profile-balance.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/profile-withdraw.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm.cmd test`：48 个测试文件、199 个用例通过
+- `cd frontend-web && npm.cmd test`：48 个测试文件、200 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
@@ -376,3 +377,4 @@
 - `0423ee6` `refactor: align contribution pages with api module`
 - `ff227ca` `refactor: align payment pages with api modules`
 - 本批提交：Paper 链路 API 收口
+- `c483dac` `refactor: tighten profile balance errors`

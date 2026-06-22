@@ -54,13 +54,23 @@ describe('Profile withdraw page', () => {
     expect(wrapper.text()).toContain('¥50.00')
   })
 
+  it('shows error when balance load fails', async () => {
+    authApiMocks.getMyBalance.mockRejectedValue(new Error('余额汇总加载失败'))
+
+    mountPage()
+    await nextTick()
+    await flushPromises()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('余额汇总加载失败')
+  })
+
   it('warns when withdraw amount is missing', async () => {
     authApiMocks.getMyBalance.mockResolvedValue({ balance: 5000 })
     const wrapper = mountPage()
     await nextTick()
     await flushPromises()
 
-    await (wrapper.vm as any).submit()
+    await (wrapper.vm as { submit: () => Promise<void> }).submit()
 
     expect(ElMessage.warning).toHaveBeenCalledWith('请输入金额')
     expect(authApiMocks.withdraw).not.toHaveBeenCalled()
@@ -71,9 +81,9 @@ describe('Profile withdraw page', () => {
     const wrapper = mountPage()
     await nextTick()
     await flushPromises()
-    ;(wrapper.vm as any).amount = 60
 
-    await (wrapper.vm as any).submit()
+    ;(wrapper.vm as { amount: number }).amount = 60
+    await (wrapper.vm as { submit: () => Promise<void> }).submit()
 
     expect(ElMessage.warning).toHaveBeenCalledWith('余额不足')
     expect(authApiMocks.withdraw).not.toHaveBeenCalled()
@@ -85,9 +95,9 @@ describe('Profile withdraw page', () => {
     const wrapper = mountPage()
     await nextTick()
     await flushPromises()
-    ;(wrapper.vm as any).amount = 20
 
-    await (wrapper.vm as any).submit()
+    ;(wrapper.vm as { amount: number }).amount = 20
+    await (wrapper.vm as { submit: () => Promise<void> }).submit()
 
     expect(authApiMocks.withdraw).toHaveBeenCalledWith(2000)
     expect(ElMessage.success).toHaveBeenCalledWith('提现申请已提交')
