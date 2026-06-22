@@ -1,5 +1,5 @@
 import api from '../index'
-import type { ExercisePaper } from '@/types'
+import type { ExercisePaper, ExerciseUploadItem, Pagination } from '@/types'
 
 export type ExerciseCategoryType = 'unit' | 'topic' | 'exam'
 
@@ -53,6 +53,41 @@ export interface ExerciseLessonUpdatePayload {
 
 interface ExercisePaperListResponse {
   list: ExercisePaper[]
+}
+
+export interface ExerciseUploadListParams {
+  page?: number
+  pageSize?: number
+  status?: ExerciseUploadItem['status']
+  subject?: string
+  grade?: string
+  exerciseType?: ExerciseUploadItem['exerciseType']
+}
+
+export interface ExerciseUploadListResponse {
+  list: ExerciseUploadItem[]
+  pagination: Pagination
+}
+
+export interface ExerciseUploadBatchPayload {
+  ids: string[]
+  action: 'approve' | 'reject'
+  note?: string
+}
+
+export interface ExerciseUploadBatchResultItem {
+  id: string
+  success: boolean
+  error?: string
+}
+
+export interface ExerciseUploadApproveResponse {
+  paperId: string
+  cashbackAmount: number
+}
+
+export interface ExerciseUploadRejectResponse {
+  status: 'rejected'
 }
 
 export function getExerciseCategories(params: { type?: string; grade?: string; subject?: string }) {
@@ -118,11 +153,11 @@ export function adminDeletePaper(id: string) {
 export function uploadExercisePaper(formData: FormData) {
   return api.post('/exercise-contributions/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
 }
-export function getMyExerciseUploads(params: { page?: number; pageSize?: number; status?: string }) {
-  return api.get('/exercise-contributions', { params })
+export function getMyExerciseUploads(params: Pick<ExerciseUploadListParams, 'page' | 'pageSize' | 'status'>) {
+  return api.get<ExerciseUploadListResponse>('/exercise-contributions', { params })
 }
 export function getMyExerciseUploadDetail(id: string) {
-  return api.get(`/exercise-contributions/${id}`)
+  return api.get<ExerciseUploadItem>(`/exercise-contributions/${id}`)
 }
 export function deleteMyExerciseUpload(id: string) {
   return api.delete(`/exercise-contributions/${id}`)
@@ -134,15 +169,15 @@ export function getUploadLessons(categoryId: string) {
   return api.get('/exercise-contributions/lessons', { params: { categoryId } })
 }
 
-export function adminListExerciseUploads(params: { page?: number; pageSize?: number; status?: string; subject?: string; grade?: string; exerciseType?: string }) {
-  return api.get('/exercise-contributions/admin/list', { params })
+export function adminListExerciseUploads(params: ExerciseUploadListParams) {
+  return api.get<ExerciseUploadListResponse>('/exercise-contributions/admin/list', { params })
 }
 export function adminApproveExerciseUpload(id: string) {
-  return api.post(`/exercise-contributions/admin/${id}/approve`)
+  return api.post<ExerciseUploadApproveResponse>(`/exercise-contributions/admin/${id}/approve`)
 }
 export function adminRejectExerciseUpload(id: string, note?: string) {
-  return api.post(`/exercise-contributions/admin/${id}/reject`, { note })
+  return api.post<ExerciseUploadRejectResponse>(`/exercise-contributions/admin/${id}/reject`, { note })
 }
-export function adminBatchExerciseUploads(data: { ids: string[]; action: 'approve' | 'reject'; note?: string }) {
-  return api.post('/exercise-contributions/admin/batch', data)
+export function adminBatchExerciseUploads(data: ExerciseUploadBatchPayload) {
+  return api.post<ExerciseUploadBatchResultItem[]>('/exercise-contributions/admin/batch', data)
 }

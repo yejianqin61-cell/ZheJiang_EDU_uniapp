@@ -173,6 +173,13 @@
 - 强化 `dashboard.service` 单测，对学科和年级分布的返回值增加显式数值断言
 - 管理端 dashboard 页面去掉图表数据映射中的局部 `any`，直接消费共享统计类型
 
+### 25. 练习审核 admin 链路类型收口
+
+- 新增 [Issue_20260622_Exercise_Contribution_Admin_Type_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Exercise_Contribution_Admin_Type_Gap.md)，记录练习审核 admin API 与页面长期缺少共享类型的问题
+- 为 `exercise` API 模块补齐练习审核列表、审核通过/拒绝、批量审核的显式返回类型与 payload 类型
+- 管理端 `admin/exercise-contributions` 页面改为直接消费共享分页与列表类型，移除局部 `any` 和弱类型断言
+- 保留页面原有审核、批量审核、下载和分页行为，只收紧脚本契约和状态结构
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -183,6 +190,7 @@
 - 定向测试：2 个测试文件、18 个用例通过
 - 定向测试：2 个测试文件、12 个用例通过
 - 定向测试：`backend/src/modules/admin/services/dashboard.service.spec.ts` 与 `frontend-web/src/__tests__/pages/admin-dashboard.spec.ts` 通过
+- 定向测试：`src/__tests__/api/exercise.spec.ts` 与 `src/__tests__/pages/admin-exercise-contributions.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm test`：48 个测试文件、181 个用例通过
 - `cd frontend-web && npm run build`：通过
