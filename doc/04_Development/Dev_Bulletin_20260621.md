@@ -438,6 +438,13 @@
 - 在两条列表加载失败时清空当前列表，避免用户把请求异常误判成真实空态
 - 为 `src/__tests__/pages/contribute-index.spec.ts` 提取带类型的页面 VM 访问辅助，并补充题库列表失败与练习列表失败回归测试
 
+### 63. 投稿详情页静默失败收口
+
+- 新增 [Issue_20260622_Contribute_Detail_Silent_Error_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Contribute_Detail_Silent_Error_Gap.md)，记录投稿详情页加载失败仍会静默吞错的问题
+- 为 `src/pages/contribute/detail/index.vue` 补充统一错误消息提取逻辑，保证详情加载失败时给出明确提示
+- 在详情加载失败时清空当前详情数据，避免旧态残留
+- 为 `src/__tests__/pages/contribute-detail.spec.ts` 补充详情加载失败回归测试
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -480,10 +487,12 @@
 - 定向测试：`src/__tests__/pages/admin-knowledge.spec.ts` 通过（3 个用例）
 - 定向测试：`src/__tests__/pages/contribute-index.spec.ts` 通过（3 个用例）
 - 定向测试：`src/__tests__/pages/contribute-index.spec.ts` 通过（5 个用例）
+- 定向测试：`src/__tests__/pages/contribute-detail.spec.ts` 在沙箱路径下触发 Vitest `setup.ts` 绝对路径解析异常，代码改动已通过全量回归验证
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm.cmd test`：48 个测试文件、222 个用例通过
 - `cd frontend-web && npm.cmd test`：48 个测试文件、223 个用例通过
 - `cd frontend-web && npm.cmd test`：48 个测试文件、225 个用例通过
+- `cd frontend-web && npm.cmd test`：48 个测试文件、226 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交

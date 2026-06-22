@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { getContribution } from '@/api/modules/contribution'
 import type { ContributionItem } from '@/types'
 
@@ -13,12 +14,17 @@ const stLabels: Record<string, string> = {
   rejected: '已驳回',
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
 onMounted(async () => {
   try {
     item.value = await getContribution(String(route.params.id))
   }
-  catch {
+  catch (error: unknown) {
     item.value = null
+    ElMessage.error(getErrorMessage(error, '贡献详情加载失败'))
   }
   finally {
     loading.value = false

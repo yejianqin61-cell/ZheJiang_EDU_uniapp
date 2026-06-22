@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils'
+import { ElMessage } from 'element-plus'
 import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ContributeDetailPage from '@/pages/contribute/detail/index.vue'
@@ -31,6 +32,7 @@ const mountPage = () =>
 describe('Contribute detail page', () => {
   beforeEach(() => {
     contributionApiMocks.getContribution.mockReset()
+    vi.mocked(ElMessage.error).mockReset()
   })
 
   it('loads contribution detail on mount', async () => {
@@ -51,5 +53,14 @@ describe('Contribute detail page', () => {
     expect(contributionApiMocks.getContribution).toHaveBeenCalledWith('contribution-1')
     expect(wrapper.text()).toContain('数学题库.docx')
     expect(wrapper.text()).toContain('¥3.00')
+  })
+  it('shows error when loading contribution detail fails', async () => {
+    contributionApiMocks.getContribution.mockRejectedValue(new Error('贡献详情服务异常'))
+
+    mountPage()
+    await nextTick()
+    await nextTick()
+
+    expect(ElMessage.error).toHaveBeenCalledWith('贡献详情服务异常')
   })
 })
