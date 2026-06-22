@@ -1,5 +1,7 @@
-import { mount } from '@vue/test-utils'
+import type { AxiosProgressEvent, AxiosRequestConfig } from 'axios'
+import { mount, type VueWrapper } from '@vue/test-utils'
 import { ElMessage } from 'element-plus'
+import type { ComponentPublicInstance } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ContributeUploadPage from '@/pages/contribute/upload/index.vue'
 
@@ -31,6 +33,33 @@ const mountPage = () =>
     },
   })
 
+type ContributeUploadForm = {
+  subject: string
+  grade: string
+  file: File | null
+}
+
+type ContributeUploadPageVm = ComponentPublicInstance & {
+  form: ContributeUploadForm
+  uploadPercent: number
+  submit(): Promise<void>
+}
+
+const getPageVm = (wrapper: VueWrapper<ComponentPublicInstance>) => wrapper.vm as ContributeUploadPageVm
+
+const buildUploadProgressEvent = (loaded: number, total: number): AxiosProgressEvent => ({
+  loaded,
+  total,
+  lengthComputable: true,
+  bytes: loaded,
+  progress: total ? loaded / total : undefined,
+  estimated: 0,
+  rate: undefined,
+  upload: true,
+  download: false,
+  event: undefined,
+})
+
 describe('Contribute upload page', () => {
   beforeEach(() => {
     routerPush.mockReset()
@@ -43,7 +72,7 @@ describe('Contribute upload page', () => {
   it('warns when subject or grade is missing', async () => {
     const wrapper = mountPage()
 
-    await (wrapper.vm as any).submit()
+    await getPageVm(wrapper).submit()
 
     expect(ElMessage.warning).toHaveBeenCalledWith('请选择学科和年级')
     expect(contributionApiMocks.uploadContributionFile).not.toHaveBeenCalled()
@@ -51,32 +80,34 @@ describe('Contribute upload page', () => {
 
   it('warns when file is missing', async () => {
     const wrapper = mountPage()
-    ;(wrapper.vm as any).form.subject = '数学'
-    ;(wrapper.vm as any).form.grade = '五年级'
+    const vm = getPageVm(wrapper)
+    vm.form.subject = '数学'
+    vm.form.grade = '五年级'
 
-    await (wrapper.vm as any).submit()
+    await vm.submit()
 
     expect(ElMessage.warning).toHaveBeenCalledWith('请选择文件')
   })
 
   it('uploads contribution file, reports progress and redirects on success', async () => {
-    contributionApiMocks.uploadContributionFile.mockImplementation(async (_formData, config) => {
-      config?.onUploadProgress?.({ loaded: 4, total: 10 } as any)
-      config?.onUploadProgress?.({ loaded: 10, total: 10 } as any)
+    contributionApiMocks.uploadContributionFile.mockImplementation(async (_formData: FormData, config?: AxiosRequestConfig<FormData>) => {
+      config?.onUploadProgress?.(buildUploadProgressEvent(4, 10))
+      config?.onUploadProgress?.(buildUploadProgressEvent(10, 10))
       return { ok: true }
     })
 
     const wrapper = mountPage()
-    ;(wrapper.vm as any).form.subject = '数学'
-    ;(wrapper.vm as any).form.grade = '五年级'
-    ;(wrapper.vm as any).form.file = new File(['demo'], 'questions.docx', {
+    const vm = getPageVm(wrapper)
+    vm.form.subject = '数学'
+    vm.form.grade = '五年级'
+    vm.form.file = new File(['demo'], 'questions.docx', {
       type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     })
 
-    await (wrapper.vm as any).submit()
+    await vm.submit()
 
     expect(contributionApiMocks.uploadContributionFile).toHaveBeenCalledTimes(1)
-    expect((wrapper.vm as any).uploadPercent).toBe(100)
+    expect(vm.uploadPercent).toBe(100)
     expect(ElMessage.success).toHaveBeenCalledWith('上传成功，AI解析中...')
     expect(routerPush).toHaveBeenCalledWith('/contribute')
   })
@@ -85,13 +116,14 @@ describe('Contribute upload page', () => {
     contributionApiMocks.uploadContributionFile.mockRejectedValue(new Error('上传服务异常'))
 
     const wrapper = mountPage()
-    ;(wrapper.vm as any).form.subject = '数学'
-    ;(wrapper.vm as any).form.grade = '五年级'
-    ;(wrapper.vm as any).form.file = new File(['demo'], 'questions.docx', {
+    const vm = getPageVm(wrapper)
+    vm.form.subject = '数学'
+    vm.form.grade = '五年级'
+    vm.form.file = new File(['demo'], 'questions.docx', {
       type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     })
 
-    await (wrapper.vm as any).submit()
+    await vm.submit()
 
     expect(ElMessage.error).toHaveBeenCalledWith('上传服务异常')
   })

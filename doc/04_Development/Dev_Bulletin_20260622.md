@@ -100,6 +100,14 @@
   - 为练习抽卷页下载/打印分流动作补齐显式页面方法类型辅助
   - 移除页面方法调用中的 `as any`
 
+### 10. 贡献上传页测弱类型收口
+
+- 对应 Issue：
+  - [Issue_20260622_Admin_Test_AsAny_Backlog.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Test_AsAny_Backlog.md)
+- `frontend-web/src/__tests__/pages/contribute-upload.spec.ts`
+  - 为贡献上传页表单状态、页面提交方法和上传进度回调补齐显式类型
+  - 移除提交动作、表单赋值和进度事件模拟中的 `as any`
+
 ## 验证结果
 
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-withdrawals.spec.ts`：1 个测试文件、5 个用例通过
@@ -111,3 +119,4 @@
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/admin-dashboard.spec.ts`：1 个测试文件、3 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/exercise-category.spec.ts`：1 个测试文件、3 个用例通过
 - `cd frontend-web && npm.cmd test -- src/__tests__/pages/home.spec.ts src/__tests__/pages/exercises-index.spec.ts src/__tests__/pages/exercise-draw.spec.ts`：3 个测试文件、9 个用例通过
+- `cd frontend-web && npm.cmd test -- src/__tests__/pages/contribute-upload.spec.ts`：1 个测试文件、4 个用例通过
