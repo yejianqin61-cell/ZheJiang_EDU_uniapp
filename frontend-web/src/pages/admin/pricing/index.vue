@@ -21,6 +21,14 @@ function defaults(): PricingConfig {
 const pricing = ref<PricingConfig>(defaults())
 const loading = ref(true)
 
+function isDismissedMessageBoxAction(error: unknown) {
+  return error === 'cancel' || error === 'close'
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
 function mergePricingConfig(remoteConfig: Partial<PricingConfig> | undefined): PricingConfig {
   const base = defaults()
 
@@ -39,8 +47,11 @@ onMounted(async () => {
   try {
     const remoteConfig = await getPricing()
     pricing.value = mergePricingConfig(remoteConfig)
-  } catch {
-  } finally {
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '定价配置加载失败'))
+  }
+  finally {
     loading.value = false
   }
 })
@@ -50,7 +61,13 @@ async function save() {
     await ElMessageBox.confirm('确认更新定价配置？', '保存确认', { type: 'warning' })
     await updatePricing(pricing.value)
     ElMessage.success('定价已更新')
-  } catch {
+  }
+  catch (error: unknown) {
+    if (isDismissedMessageBoxAction(error)) {
+      return
+    }
+
+    ElMessage.error(getErrorMessage(error, '定价更新失败'))
   }
 }
 </script>

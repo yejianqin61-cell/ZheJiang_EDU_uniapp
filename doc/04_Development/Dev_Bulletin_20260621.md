@@ -341,6 +341,13 @@
 - 去掉页面实例调用中的弱类型断言，减少测试维护时的隐式结构漂移风险
 - 保持现有预览页行为断言和回归覆盖范围不变
 
+### 50. 管理端定价配置页静默失败收口
+
+- 新增 [Issue_20260622_Admin_Pricing_Silent_Error_Handling_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Admin_Pricing_Silent_Error_Handling_Gap.md)，记录管理端定价配置页仍存在静默失败分支的问题
+- 为定价配置加载失败补充明确提示，避免后台误把接口异常当成默认配置
+- 为保存操作区分弹窗取消与真实接口失败，对真实失败补充明确提示
+- 补充页面回归测试，覆盖加载失败和保存失败时的提示行为
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -375,8 +382,9 @@
 - 定向测试：`src/__tests__/pages/profile-withdraw.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/payment.spec.ts` 通过
 - 定向测试：`src/__tests__/pages/paper-preview.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/admin-pricing.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
-- `cd frontend-web && npm.cmd test`：48 个测试文件、202 个用例通过
+- `cd frontend-web && npm.cmd test`：48 个测试文件、205 个用例通过
 - `cd frontend-web && npm run build`：通过
 
 ## 对应提交
