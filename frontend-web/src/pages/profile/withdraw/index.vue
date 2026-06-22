@@ -9,12 +9,23 @@ const balance = ref(0)
 const amount = ref(0)
 const submitting = ref(false)
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message
+  }
+
+  return '提现申请提交失败'
+}
+
 onMounted(async () => {
   try {
     const data = await getMyBalance()
     balance.value = data?.balance ?? 0
-  }
-  catch {}
+  } catch {}
 })
 
 async function submit() {
@@ -34,11 +45,9 @@ async function submit() {
     await withdraw(amount.value * 100)
     ElMessage.success('提现申请已提交')
     router.back()
-  }
-  catch (error: any) {
-    ElMessage.error(error?.message ?? '提交失败')
-  }
-  finally {
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error))
+  } finally {
     submitting.value = false
   }
 }

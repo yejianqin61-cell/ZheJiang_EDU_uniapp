@@ -180,6 +180,13 @@
 - 管理端 `admin/exercise-contributions` 页面改为直接消费共享分页与列表类型，移除局部 `any` 和弱类型断言
 - 保留页面原有审核、批量审核、下载和分页行为，只收紧脚本契约和状态结构
 
+### 26. 余额支付链路错误类型收口
+
+- 新增 [Issue_20260622_Balance_Payment_Error_Type_Gap.md](/C:/Users/USER/Desktop/浙江ai组卷uniapp/doc/04_Development/Issue_20260622_Balance_Payment_Error_Type_Gap.md)，记录余额支付与提现页仍在使用弱错误类型的问题
+- 支付页改为用 `unknown` 接住创建订单、余额支付、Mock 支付异常，并通过最小错误识别逻辑保留原有提示与回退行为
+- 提现页改为收口异常消息解析，移除 `error: any` 和直接可选链取 message 的弱类型写法
+- 同时将余额支付可用性判断与订单类型标签函数补成显式类型，避免页面局部推断继续变宽
+
 ## 验证结果
 
 - 定向测试：3 个测试文件、20 个用例通过
@@ -191,6 +198,7 @@
 - 定向测试：2 个测试文件、12 个用例通过
 - 定向测试：`backend/src/modules/admin/services/dashboard.service.spec.ts` 与 `frontend-web/src/__tests__/pages/admin-dashboard.spec.ts` 通过
 - 定向测试：`src/__tests__/api/exercise.spec.ts` 与 `src/__tests__/pages/admin-exercise-contributions.spec.ts` 通过
+- 定向测试：`src/__tests__/pages/payment.spec.ts` 与 `src/__tests__/pages/profile-withdraw.spec.ts` 通过
 - `cd frontend-web && npm.cmd run build`：通过
 - `cd frontend-web && npm test`：48 个测试文件、181 个用例通过
 - `cd frontend-web && npm run build`：通过

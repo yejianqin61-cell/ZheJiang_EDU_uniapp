@@ -16,21 +16,23 @@ const balanceLoaded = ref(false)
 const paperId = ref((route.query.paperId as string) || '')
 const orderType = ref<'download' | 'print' | 'exercise'>(((route.query.type as string) || 'download') as 'download' | 'print' | 'exercise')
 
+function hasResponse(error: unknown): error is { response: unknown } {
+  return typeof error === 'object' && error !== null && 'response' in error
+}
+
 onMounted(async () => {
   try {
     const data = await getMyBalance()
     userBalance.value = data?.balance ?? 0
-  }
-  catch {}
+  } catch {}
 
   balanceLoaded.value = true
 
   if (paperId.value && !order.currentOrder) {
     try {
       await order.create(paperId.value, orderType.value)
-    }
-    catch (error: any) {
-      if (!error.response) {
+    } catch (error: unknown) {
+      if (!hasResponse(error)) {
         ElMessage.error('创建订单失败')
       }
       setTimeout(() => router.back(), 1200)
@@ -43,7 +45,7 @@ onMounted(async () => {
   }
 })
 
-const canBalancePay = computed(() => order.currentOrder && userBalance.value >= order.currentOrder.amount)
+const canBalancePay = computed(() => !!order.currentOrder && userBalance.value >= order.currentOrder.amount)
 
 async function handleBalancePay() {
   if (!order.currentOrder) {
@@ -61,22 +63,20 @@ async function handleBalancePay() {
     await payByBalance(order.currentOrder.orderId)
     ElMessage.success('支付成功')
     setTimeout(() => router.replace(`/orders/${order.currentOrder!.orderId}`), 800)
-  }
-  catch (error: any) {
-    if (!error.response) {
+  } catch (error: unknown) {
+    if (!hasResponse(error)) {
       ElMessage.error('支付失败')
     }
-  }
-  finally {
+  } finally {
     paying.value = false
   }
 }
 
-function tagType(type: string) {
+function tagType(type: 'download' | 'print' | 'exercise') {
   return type === 'print' ? 'warning' : type === 'exercise' ? 'success' : 'primary'
 }
 
-function tagLabel(type: string) {
+function tagLabel(type: 'download' | 'print' | 'exercise') {
   return type === 'print' ? '🖨️ 打印服务' : type === 'exercise' ? '📚 练习服务' : '📥 下载服务'
 }
 
@@ -91,13 +91,11 @@ async function handleMockPay() {
     await payMock(order.currentOrder.orderId)
     ElMessage.success('Mock 支付成功（开发模式）')
     setTimeout(() => router.replace(`/orders/${order.currentOrder!.orderId}`), 800)
-  }
-  catch (error: any) {
-    if (!error.response) {
+  } catch (error: unknown) {
+    if (!hasResponse(error)) {
       ElMessage.error('Mock支付失败')
     }
-  }
-  finally {
+  } finally {
     paying.value = false
   }
 }
@@ -129,11 +127,9 @@ async function handleAlipay() {
     } else {
       ElMessage.warning('支付宝未就绪，请稍后重试或改用余额支付')
     }
-  }
-  catch {
+  } catch {
     ElMessage.error('支付失败')
-  }
-  finally {
+  } finally {
     paying.value = false
   }
 }
