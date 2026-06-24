@@ -63,8 +63,10 @@ export class AuthService {
       // 已有账号 → 更新密码
       await this.userRepo.update(user.id, { passwordHash, emailVerified: true });
     } else {
+      const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map(s => s.trim()).filter(Boolean);
+      const role = adminEmails.includes(email) ? 'admin' : 'teacher';
       user = await this.userRepo.save(
-        this.userRepo.create({ email, passwordHash, emailVerified: true, role: 'teacher' }),
+        this.userRepo.create({ email, passwordHash, emailVerified: true, role }),
       );
     }
 

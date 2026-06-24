@@ -196,12 +196,7 @@ async function devLoginAs(role: 'admin' | 'teacher') {
         <p>中小学教师专属组题平台</p>
       </div>
 
-      <div class="login-tabs">
-        <span :class="{ active: activeTab === 'email' }" @click="activeTab = 'email'">邮箱登录</span>
-        <span :class="{ active: activeTab === 'phone' }" @click="activeTab = 'phone'">手机号登录</span>
-      </div>
-
-      <div v-if="activeTab === 'email'" class="login-form">
+      <div class="login-form">
         <div class="form-item">
           <label>邮箱</label>
           <el-input v-model="loginEmail" placeholder="请输入邮箱" size="large" clearable @keyup.enter="handleEmailLogin" />
@@ -235,22 +230,6 @@ async function devLoginAs(role: 'admin' | 'teacher') {
           </div>
           <el-button type="success" size="large" class="login-btn" :loading="regSubmitting" @click="handleRegister">注册</el-button>
         </div>
-      </div>
-
-      <div v-if="activeTab === 'phone'" class="login-form">
-        <div class="form-item">
-          <label>手机号</label>
-          <el-input v-model="phone" placeholder="请输入手机号" maxlength="11" size="large" clearable />
-        </div>
-        <div class="form-item">
-          <label>验证码</label>
-          <div class="sms-row">
-            <el-input v-model="smsCode" placeholder="请输入验证码" maxlength="6" size="large" @keyup.enter="handlePhoneLogin" />
-            <el-button type="primary" size="large" :disabled="!phoneValid || smsCountdown > 0" :loading="authStore.loading" @click="handleSendSms">{{ smsCountdown > 0 ? `${smsCountdown}s` : '获取验证码' }}</el-button>
-          </div>
-        </div>
-        <el-button type="primary" size="large" class="login-btn" :disabled="!phoneValid || !smsCode" @click="handlePhoneLogin">登录 / 注册</el-button>
-        <p class="login-tip">首次登录将自动注册账号</p>
       </div>
 
       <div v-if="false" class="dev-section">
