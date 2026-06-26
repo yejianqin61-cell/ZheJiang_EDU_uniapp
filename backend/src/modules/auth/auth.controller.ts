@@ -55,6 +55,17 @@ class LoginByPasswordDto {
   password: string;
 }
 
+class ResetPasswordDto {
+  @IsString() @IsNotEmpty()
+  email: string;
+
+  @IsString() @IsNotEmpty()
+  code: string;
+
+  @IsString() @IsNotEmpty()
+  newPassword: string;
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -85,6 +96,12 @@ export class AuthController {
   @Post('login-by-password')
   async loginByPassword(@Body() dto: LoginByPasswordDto) {
     return this.authService.loginByPassword(dto.email, dto.password);
+  }
+
+  @Public()
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPasswordByEmail(dto.email, dto.code, dto.newPassword);
   }
 
   @Public()

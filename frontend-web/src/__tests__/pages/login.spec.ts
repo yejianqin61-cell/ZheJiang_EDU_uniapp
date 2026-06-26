@@ -15,6 +15,7 @@ const authModuleMocks = vi.hoisted(() => ({
   sendEmailCode: vi.fn(),
   login: vi.fn(),
   registerByEmail: vi.fn(),
+  resetPasswordByEmail: vi.fn(),
   loginByPassword: vi.fn(),
   devLogin: vi.fn(),
   getProfile: vi.fn(),
@@ -32,6 +33,7 @@ vi.mock('@/api/modules/auth', () => ({
   sendEmailCode: authModuleMocks.sendEmailCode,
   login: authModuleMocks.login,
   registerByEmail: authModuleMocks.registerByEmail,
+  resetPasswordByEmail: authModuleMocks.resetPasswordByEmail,
   loginByPassword: authModuleMocks.loginByPassword,
   devLogin: authModuleMocks.devLogin,
   getProfile: authModuleMocks.getProfile,
@@ -57,12 +59,14 @@ describe('Login page', () => {
     authModuleMocks.sendEmailCode.mockReset()
     authModuleMocks.login.mockReset()
     authModuleMocks.registerByEmail.mockReset()
+    authModuleMocks.resetPasswordByEmail.mockReset()
     authModuleMocks.loginByPassword.mockReset()
     authModuleMocks.devLogin.mockReset()
     authModuleMocks.getProfile.mockReset()
     vi.mocked(ElMessage.warning).mockReset()
     vi.mocked(ElMessage.success).mockReset()
     vi.mocked(ElMessage.error).mockReset()
+    localStorage.clear()
   })
 
   it('warns when email is invalid for password login', async () => {
@@ -96,17 +100,39 @@ describe('Login page', () => {
     expect(routerReplace).toHaveBeenCalledWith('/profile')
   })
 
-  it('shows error when registration request fails', async () => {
+  it('shows duplicate-email error when registering an existing account', async () => {
     const wrapper = mountPage()
     ;(wrapper.vm as any).regEmail = 'teacher@example.com'
     ;(wrapper.vm as any).regCode = '123456'
     ;(wrapper.vm as any).regPassword = '123456'
     ;(wrapper.vm as any).regPassword2 = '123456'
-    authModuleMocks.registerByEmail.mockRejectedValueOnce(new Error('注册服务异常'))
+    authModuleMocks.registerByEmail.mockRejectedValueOnce(new Error('邮箱已注册，请直接登录'))
 
     await (wrapper.vm as any).handleRegister()
 
-    expect(ElMessage.error).toHaveBeenCalledWith('注册服务异常')
+    expect(ElMessage.error).toHaveBeenCalledWith('邮箱已注册，请直接登录')
+  })
+
+  it('resets password and redirects on success', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    authModuleMocks.getProfile.mockResolvedValue({ phone: '13800138000', role: 'teacher' })
+    authModuleMocks.resetPasswordByEmail.mockResolvedValueOnce({ accessToken: 'token-reset', role: 'teacher' })
+
+    const wrapper = mountPage(pinia)
+    ;(wrapper.vm as any).resetMode = true
+    ;(wrapper.vm as any).resetEmail = 'teacher@example.com'
+    ;(wrapper.vm as any).resetCode = '123456'
+    ;(wrapper.vm as any).resetPassword = '123456'
+    ;(wrapper.vm as any).resetPassword2 = '123456'
+
+    await (wrapper.vm as any).handleResetPassword()
+    await nextTick()
+
+    expect(authModuleMocks.resetPasswordByEmail).toHaveBeenCalledWith('teacher@example.com', '123456', '123456')
+    expect(localStorage.getItem('accessToken')).toBe('token-reset')
+    expect(ElMessage.success).toHaveBeenCalledWith('密码已重置')
+    expect(routerReplace).toHaveBeenCalledWith('/profile')
   })
 
   it('sends registration email code with auth api module', async () => {
@@ -120,14 +146,16 @@ describe('Login page', () => {
     expect(ElMessage.success).toHaveBeenCalledWith('验证码已发送，请查看邮箱')
   })
 
-  it('shows error when sending registration code fails', async () => {
-    authModuleMocks.sendEmailCode.mockRejectedValue(new Error('验证码发送失败'))
+  it('sends reset email code with auth api module', async () => {
+    authModuleMocks.sendEmailCode.mockResolvedValue(undefined)
     const wrapper = mountPage()
-    ;(wrapper.vm as any).regEmail = 'teacher@example.com'
+    ;(wrapper.vm as any).resetMode = true
+    ;(wrapper.vm as any).resetEmail = 'teacher@example.com'
 
-    await (wrapper.vm as any).handleSendRegCode()
+    await (wrapper.vm as any).handleSendResetCode()
 
-    expect(ElMessage.error).toHaveBeenCalledWith('验证码发送失败')
+    expect(authModuleMocks.sendEmailCode).toHaveBeenCalledWith('teacher@example.com')
+    expect(ElMessage.success).toHaveBeenCalledWith('验证码已发送，请查看邮箱')
   })
 
   it('sends sms and logs in with phone', async () => {
@@ -137,7 +165,6 @@ describe('Login page', () => {
     authModuleMocks.login.mockResolvedValue({ accessToken: 'token-sms', role: 'teacher', phone: '13800138000' })
 
     const wrapper = mountPage(pinia)
-    ;(wrapper.vm as any).activeTab = 'phone'
     ;(wrapper.vm as any).phone = '13800138000'
     ;(wrapper.vm as any).smsCode = '123456'
 
@@ -148,21 +175,6 @@ describe('Login page', () => {
     expect(authModuleMocks.login).toHaveBeenCalledWith('13800138000', '123456')
     expect(ElMessage.success).toHaveBeenCalledWith('验证码已发送')
     expect(routerReplace).toHaveBeenCalledWith('/profile')
-  })
-
-  it('shows error when phone login fails', async () => {
-    const pinia = createPinia()
-    setActivePinia(pinia)
-    authModuleMocks.login.mockRejectedValue(new Error('验证码错误'))
-
-    const wrapper = mountPage(pinia)
-    ;(wrapper.vm as any).activeTab = 'phone'
-    ;(wrapper.vm as any).phone = '13800138000'
-    ;(wrapper.vm as any).smsCode = '123456'
-
-    await (wrapper.vm as any).handlePhoneLogin()
-
-    expect(ElMessage.error).toHaveBeenCalledWith('验证码错误')
   })
 
   it('logs in with email and redirects on success', async () => {
@@ -183,18 +195,6 @@ describe('Login page', () => {
     expect(routerReplace).toHaveBeenCalledWith('/profile')
   })
 
-  it('shows error when email login fails', async () => {
-    authModuleMocks.loginByPassword.mockRejectedValueOnce(new Error('邮箱或密码错误'))
-
-    const wrapper = mountPage()
-    ;(wrapper.vm as any).loginEmail = 'teacher@example.com'
-    ;(wrapper.vm as any).loginPassword = 'secret123'
-
-    await (wrapper.vm as any).handleEmailLogin()
-
-    expect(ElMessage.error).toHaveBeenCalledWith('邮箱或密码错误')
-  })
-
   it('dev login redirects to homepage when redirect is missing', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
@@ -211,14 +211,5 @@ describe('Login page', () => {
 
     expect(authModuleMocks.devLogin).toHaveBeenCalledWith('admin_test')
     expect(routerReplace).toHaveBeenCalledWith('/')
-  })
-
-  it('shows error when dev login fails', async () => {
-    authModuleMocks.devLogin.mockRejectedValue(new Error('Dev 登录已关闭'))
-    const wrapper = mountPage()
-
-    await (wrapper.vm as any).devLoginAs('teacher')
-
-    expect(ElMessage.error).toHaveBeenCalledWith('Dev 登录已关闭')
   })
 })

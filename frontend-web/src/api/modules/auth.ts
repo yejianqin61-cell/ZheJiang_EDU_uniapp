@@ -88,6 +88,10 @@ export function registerByEmail(email: string, code: string, password: string): 
   return api.post('/auth/register', { email, code, password })
 }
 
+export function resetPasswordByEmail(email: string, code: string, newPassword: string): Promise<LoginResponse> {
+  return api.post('/auth/reset-password', { email, code, newPassword })
+}
+
 export function loginByPassword(email: string, password: string): Promise<LoginResponse> {
   return api.post('/auth/login-by-password', { email, password })
 }

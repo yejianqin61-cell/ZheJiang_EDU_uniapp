@@ -20,16 +20,25 @@ export class AuthService {
     private readonly emailService: EmailService,
   ) {}
 
-  // ========== 短信验证码登录 ==========
+  private getAdminEmails() {
+    return (process.env.ADMIN_EMAILS ?? '')
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
+  }
+
+  private normalizeEmail(email: string) {
+    return email.trim().toLowerCase();
+  }
+
+  // ========== SMS login ==========
 
   async loginByPhone(phone: string, smsCode: string) {
-    // 验证短信验证码
     this.smsService.verifyCode(phone, smsCode);
 
     let user = await this.userRepo.findOne({ where: { phone } });
     if (!user) {
-      // 首次登录 → 自动注册
-      const adminPhones = (process.env.ADMIN_PHONES ?? '').split(',').map(s => s.trim()).filter(Boolean);
+      const adminPhones = (process.env.ADMIN_PHONES ?? '').split(',').map((s) => s.trim()).filter(Boolean);
       const isAdmin = adminPhones.includes(phone);
       user = await this.userRepo.save(
         this.userRepo.create({ phone, phoneVerified: true, role: isAdmin ? 'admin' : 'teacher' }),
@@ -44,40 +53,72 @@ export class AuthService {
     };
   }
 
-  // ========== 邮箱验证码注册 ==========
+  // ========== Email register ==========
 
   async registerByEmail(email: string, code: string, password: string) {
+    const normalizedEmail = this.normalizeEmail(email);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new BadRequestException({ code: 10020, message: '邮箱格式不正确' });
     }
     if (password.length < 6) {
       throw new BadRequestException({ code: 10021, message: '密码至少6位' });
     }
-    if (!this.emailService.verifyCode(email, code)) {
+    if (!this.emailService.verifyCode(normalizedEmail, code)) {
       throw new BadRequestException({ code: 10022, message: '验证码错误或已过期' });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
-    let user = await this.userRepo.findOne({ where: { email } });
-    if (user) {
-      // 已有账号 → 更新密码
-      await this.userRepo.update(user.id, { passwordHash, emailVerified: true });
-    } else {
-      const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map(s => s.trim()).filter(Boolean);
-      const role = adminEmails.includes(email) ? 'admin' : 'teacher';
-      user = await this.userRepo.save(
-        this.userRepo.create({ email, passwordHash, emailVerified: true, role }),
-      );
+    const existingUser = await this.userRepo.findOne({ where: { email: normalizedEmail } });
+    if (existingUser) {
+      throw new BadRequestException({ code: 10025, message: '邮箱已注册，请直接登录' });
     }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const role = this.getAdminEmails().includes(normalizedEmail) ? 'admin' : 'teacher';
+    const user = await this.userRepo.save(
+      this.userRepo.create({ email: normalizedEmail, passwordHash, emailVerified: true, role }),
+    );
 
     const token = this.jwtService.sign({ sub: user.id, email: user.email, role: user.role });
     return { accessToken: token, role: user.role, email: user.email };
   }
 
-  // ========== 邮箱密码登录 ==========
+  async resetPasswordByEmail(email: string, code: string, newPassword: string) {
+    const normalizedEmail = this.normalizeEmail(email);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new BadRequestException({ code: 10020, message: '邮箱格式不正确' });
+    }
+    if (newPassword.length < 6) {
+      throw new BadRequestException({ code: 10021, message: '密码至少6位' });
+    }
+    if (!this.emailService.verifyCode(normalizedEmail, code)) {
+      throw new BadRequestException({ code: 10022, message: '验证码错误或已过期' });
+    }
+
+    const user = await this.userRepo.findOne({ where: { email: normalizedEmail } });
+    if (!user) {
+      throw new BadRequestException({ code: 10023, message: '账号不存在，请先注册' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const nextRole = this.getAdminEmails().includes(normalizedEmail) ? 'admin' : user.role;
+    await this.userRepo.update(user.id, {
+      passwordHash,
+      emailVerified: true,
+      role: nextRole,
+    });
+    user.passwordHash = passwordHash;
+    user.emailVerified = true;
+    user.role = nextRole;
+
+    const token = this.jwtService.sign({ sub: user.id, email: user.email, role: user.role });
+    return { accessToken: token, role: user.role, email: user.email };
+  }
+
+  // ========== Email password login ==========
 
   async loginByPassword(email: string, password: string) {
-    const user = await this.userRepo.findOne({ where: { email } });
+    const normalizedEmail = this.normalizeEmail(email);
+    const user = await this.userRepo.findOne({ where: { email: normalizedEmail } });
     if (!user || !user.passwordHash) {
       throw new BadRequestException({ code: 10023, message: '账号不存在，请先注册' });
     }
@@ -86,21 +127,28 @@ export class AuthService {
       throw new BadRequestException({ code: 10024, message: '密码错误' });
     }
 
+    const nextRole = this.getAdminEmails().includes(normalizedEmail) ? 'admin' : user.role;
+    if (nextRole !== user.role) {
+      await this.userRepo.update(user.id, { role: nextRole });
+      user.role = nextRole;
+    }
+
     const token = this.jwtService.sign({ sub: user.id, email: user.email, role: user.role });
     return { accessToken: token, role: user.role, email: user.email };
   }
 
-  // ========== 发送邮箱验证码 ==========
+  // ========== Send email code ==========
 
   async sendEmailCode(email: string) {
+    const normalizedEmail = this.normalizeEmail(email);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new BadRequestException({ code: 10020, message: '邮箱格式不正确' });
     }
-    await this.emailService.sendCode(email);
+    await this.emailService.sendCode(normalizedEmail);
     return { message: '验证码已发送' };
   }
 
-  // ========== 微信 code 登录（保留兼容） ==========
+  // ========== WeChat code login ==========
 
   async loginByWxCode(code: string, nickname?: string) {
     const openid = await this.codeToOpenid(code);
@@ -109,7 +157,7 @@ export class AuthService {
       .where('u.openid = :openid', { openid })
       .getOne();
     if (!user) {
-      const adminOpenids = (process.env.ADMIN_OPENIDS ?? '').split(',').map(s => s.trim()).filter(Boolean);
+      const adminOpenids = (process.env.ADMIN_OPENIDS ?? '').split(',').map((s) => s.trim()).filter(Boolean);
       const isAdmin = adminOpenids.includes(openid) || openid === 'admin_test';
       const role = isAdmin ? 'admin' : 'teacher';
       user = await this.userRepo.save(
@@ -133,7 +181,7 @@ export class AuthService {
     };
   }
 
-  // ========== Token 刷新 ==========
+  // ========== Token refresh ==========
 
   async refresh(userId: string) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
@@ -144,7 +192,7 @@ export class AuthService {
     return { accessToken: token };
   }
 
-  // ========== 微信 code → openid ==========
+  // ========== WeChat code -> openid ==========
 
   private async codeToOpenid(code: string): Promise<string> {
     const appId = this.config.get<string>('wx.appId');

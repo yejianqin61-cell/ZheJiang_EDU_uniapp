@@ -1,47 +1,85 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { loginByPassword, registerByEmail, sendEmailCode } from '@/api/modules/auth'
+import { loginByPassword, registerByEmail, resetPasswordByEmail, sendEmailCode } from '@/api/modules/auth'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
-const activeTab = ref<'email' | 'phone'>('email')
-
 const phone = ref('')
 const smsCode = ref('')
 const smsCountdown = ref(0)
 let smsTimer: ReturnType<typeof setInterval> | null = null
 
-const phoneValid = computed(() => /^1[3-9]\d{9}$/.test(phone.value))
+const loginEmail = ref('')
+const loginPassword = ref('')
+const loginSubmitting = ref(false)
+
+const regEmail = ref('')
+const regCode = ref('')
+const regPassword = ref('')
+const regPassword2 = ref('')
+const regCountdown = ref(0)
+const regSubmitting = ref(false)
+let regTimer: ReturnType<typeof setInterval> | null = null
+
+const resetMode = ref(false)
+const resetEmail = ref('')
+const resetCode = ref('')
+const resetPassword = ref('')
+const resetPassword2 = ref('')
+const resetCountdown = ref(0)
+const resetSubmitting = ref(false)
+let resetTimer: ReturnType<typeof setInterval> | null = null
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error && error.message ? error.message : fallback
 }
 
-function startSmsCountdown() {
-  smsCountdown.value = 60
-  smsTimer = setInterval(() => {
-    smsCountdown.value--
-    if (smsCountdown.value <= 0) {
-      clearInterval(smsTimer!)
-      smsTimer = null
-    }
-  }, 1000)
+function isValidPhone(value: string) {
+  return /^1[3-9]\d{9}$/.test(value)
+}
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+function startCountdown(target: 'sms' | 'register' | 'reset') {
+  const update = (setter: typeof smsCountdown) => {
+    setter.value = 60
+    return setInterval(() => {
+      setter.value -= 1
+      if (setter.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  }
+
+  let timer: ReturnType<typeof setInterval>
+  if (target === 'sms') {
+    timer = update(smsCountdown)
+    smsTimer = timer
+  } else if (target === 'register') {
+    timer = update(regCountdown)
+    regTimer = timer
+  } else {
+    timer = update(resetCountdown)
+    resetTimer = timer
+  }
 }
 
 async function handleSendSms() {
-  if (!phoneValid.value || smsCountdown.value > 0) {
+  if (!isValidPhone(phone.value) || smsCountdown.value > 0) {
     return
   }
 
   try {
     await authStore.sendSmsCode(phone.value)
     ElMessage.success('验证码已发送')
-    startSmsCountdown()
+    startCountdown('sms')
   }
   catch (error: unknown) {
     ElMessage.error(getErrorMessage(error, '验证码发送失败'))
@@ -49,7 +87,7 @@ async function handleSendSms() {
 }
 
 async function handlePhoneLogin() {
-  if (!phoneValid.value) {
+  if (!isValidPhone(phone.value)) {
     ElMessage.warning('请输入正确的手机号')
     return
   }
@@ -67,27 +105,34 @@ async function handlePhoneLogin() {
   }
 }
 
-const regEmail = ref('')
-const regCode = ref('')
-const regPassword = ref('')
-const regPassword2 = ref('')
-const regCountdown = ref(0)
-const regSubmitting = ref(false)
-let regTimer: ReturnType<typeof setInterval> | null = null
+async function handleEmailLogin() {
+  if (!isValidEmail(loginEmail.value)) {
+    ElMessage.warning('请输入正确的邮箱')
+    return
+  }
+  if (!loginPassword.value) {
+    ElMessage.warning('请输入密码')
+    return
+  }
 
-function startRegCountdown() {
-  regCountdown.value = 60
-  regTimer = setInterval(() => {
-    regCountdown.value--
-    if (regCountdown.value <= 0) {
-      clearInterval(regTimer!)
-      regTimer = null
-    }
-  }, 1000)
+  loginSubmitting.value = true
+  try {
+    const res = await loginByPassword(loginEmail.value, loginPassword.value)
+    authStore.token = res.accessToken
+    localStorage.setItem('accessToken', res.accessToken)
+    await authStore.fetchProfile()
+    doRedirect()
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '登录失败'))
+  }
+  finally {
+    loginSubmitting.value = false
+  }
 }
 
 async function handleSendRegCode() {
-  if (!regEmail.value.includes('@')) {
+  if (!isValidEmail(regEmail.value)) {
     ElMessage.warning('请输入正确的邮箱')
     return
   }
@@ -98,7 +143,7 @@ async function handleSendRegCode() {
   try {
     await sendEmailCode(regEmail.value)
     ElMessage.success('验证码已发送，请查看邮箱')
-    startRegCountdown()
+    startCountdown('register')
   }
   catch (error: unknown) {
     ElMessage.error(getErrorMessage(error, '验证码发送失败'))
@@ -106,7 +151,7 @@ async function handleSendRegCode() {
 }
 
 async function handleRegister() {
-  if (!regEmail.value.includes('@')) {
+  if (!isValidEmail(regEmail.value)) {
     ElMessage.warning('请输入正确的邮箱')
     return
   }
@@ -128,7 +173,7 @@ async function handleRegister() {
     const res = await registerByEmail(regEmail.value, regCode.value, regPassword.value)
     authStore.token = res.accessToken
     localStorage.setItem('accessToken', res.accessToken)
-    authStore.fetchProfile()
+    await authStore.fetchProfile()
     doRedirect()
   }
   catch (error: unknown) {
@@ -139,33 +184,58 @@ async function handleRegister() {
   }
 }
 
-const loginEmail = ref('')
-const loginPassword = ref('')
-const loginSubmitting = ref(false)
-
-async function handleEmailLogin() {
-  if (!loginEmail.value.includes('@')) {
+async function handleSendResetCode() {
+  if (!isValidEmail(resetEmail.value)) {
     ElMessage.warning('请输入正确的邮箱')
     return
   }
-  if (!loginPassword.value) {
-    ElMessage.warning('请输入密码')
+  if (resetCountdown.value > 0) {
     return
   }
 
-  loginSubmitting.value = true
   try {
-    const res = await loginByPassword(loginEmail.value, loginPassword.value)
+    await sendEmailCode(resetEmail.value)
+    ElMessage.success('验证码已发送，请查看邮箱')
+    startCountdown('reset')
+  }
+  catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, '验证码发送失败'))
+  }
+}
+
+async function handleResetPassword() {
+  if (!isValidEmail(resetEmail.value)) {
+    ElMessage.warning('请输入正确的邮箱')
+    return
+  }
+  if (!resetCode.value) {
+    ElMessage.warning('请输入验证码')
+    return
+  }
+  if (resetPassword.value.length < 6) {
+    ElMessage.warning('密码至少6位')
+    return
+  }
+  if (resetPassword.value !== resetPassword2.value) {
+    ElMessage.warning('两次密码不一致')
+    return
+  }
+
+  resetSubmitting.value = true
+  try {
+    const res = await resetPasswordByEmail(resetEmail.value, resetCode.value, resetPassword.value)
     authStore.token = res.accessToken
     localStorage.setItem('accessToken', res.accessToken)
-    authStore.fetchProfile()
+    await authStore.fetchProfile()
+    ElMessage.success('密码已重置')
+    resetMode.value = false
     doRedirect()
   }
   catch (error: unknown) {
-    ElMessage.error(getErrorMessage(error, '登录失败'))
+    ElMessage.error(getErrorMessage(error, '重置失败'))
   }
   finally {
-    loginSubmitting.value = false
+    resetSubmitting.value = false
   }
 }
 
@@ -202,13 +272,46 @@ async function devLoginAs(role: 'admin' | 'teacher') {
           <el-input v-model="loginEmail" placeholder="请输入邮箱" size="large" clearable @keyup.enter="handleEmailLogin" />
         </div>
         <div class="form-item">
-          <label>密码</label>
+          <div class="label-row">
+            <label>密码</label>
+            <button type="button" class="text-link" @click="resetMode = !resetMode">
+              {{ resetMode ? '收起重置密码' : '忘记密码？' }}
+            </button>
+          </div>
           <el-input v-model="loginPassword" type="password" placeholder="请输入密码" size="large" show-password @keyup.enter="handleEmailLogin" />
         </div>
         <el-button type="primary" size="large" class="login-btn" :loading="loginSubmitting" @click="handleEmailLogin">登录</el-button>
 
+        <div v-if="resetMode" class="reset-section">
+          <div class="divider"><span>重置密码</span></div>
+          <p class="helper-text">已注册邮箱请在这里重置密码，不要重复走注册入口。</p>
+          <div class="form-item">
+            <label>邮箱</label>
+            <el-input v-model="resetEmail" placeholder="请输入已注册邮箱" size="large" clearable />
+          </div>
+          <div class="form-item">
+            <label>验证码</label>
+            <div class="sms-row">
+              <el-input v-model="resetCode" placeholder="6位验证码" maxlength="6" size="large" />
+              <el-button type="primary" size="large" :disabled="resetCountdown > 0" @click="handleSendResetCode">
+                {{ resetCountdown > 0 ? `${resetCountdown}s` : '发送验证码' }}
+              </el-button>
+            </div>
+          </div>
+          <div class="form-item">
+            <label>新密码</label>
+            <el-input v-model="resetPassword" type="password" placeholder="至少6位" size="large" show-password />
+          </div>
+          <div class="form-item">
+            <label>确认新密码</label>
+            <el-input v-model="resetPassword2" type="password" placeholder="再次输入新密码" size="large" show-password />
+          </div>
+          <el-button type="warning" size="large" class="login-btn" :loading="resetSubmitting" @click="handleResetPassword">重置密码</el-button>
+        </div>
+
         <div class="register-section">
           <div class="divider"><span>没有账号？快速注册</span></div>
+          <p class="helper-text">注册仅用于首次创建账号。邮箱已注册时请直接登录或使用上方重置密码。</p>
           <div class="form-item">
             <label>邮箱</label>
             <el-input v-model="regEmail" placeholder="请输入邮箱" size="large" clearable />
@@ -217,7 +320,9 @@ async function devLoginAs(role: 'admin' | 'teacher') {
             <label>验证码</label>
             <div class="sms-row">
               <el-input v-model="regCode" placeholder="6位验证码" maxlength="6" size="large" />
-              <el-button type="primary" size="large" :disabled="regCountdown > 0" @click="handleSendRegCode">{{ regCountdown > 0 ? `${regCountdown}s` : '发送验证码' }}</el-button>
+              <el-button type="primary" size="large" :disabled="regCountdown > 0" @click="handleSendRegCode">
+                {{ regCountdown > 0 ? `${regCountdown}s` : '发送验证码' }}
+              </el-button>
             </div>
           </div>
           <div class="form-item">
@@ -229,6 +334,24 @@ async function devLoginAs(role: 'admin' | 'teacher') {
             <el-input v-model="regPassword2" type="password" placeholder="再次输入密码" size="large" show-password />
           </div>
           <el-button type="success" size="large" class="login-btn" :loading="regSubmitting" @click="handleRegister">注册</el-button>
+        </div>
+
+        <div class="phone-section">
+          <div class="divider"><span>手机号登录</span></div>
+          <div class="form-item">
+            <label>手机号</label>
+            <el-input v-model="phone" placeholder="请输入手机号" size="large" clearable />
+          </div>
+          <div class="form-item">
+            <label>验证码</label>
+            <div class="sms-row">
+              <el-input v-model="smsCode" placeholder="6位验证码" maxlength="6" size="large" />
+              <el-button type="primary" size="large" :disabled="smsCountdown > 0" @click="handleSendSms">
+                {{ smsCountdown > 0 ? `${smsCountdown}s` : '发送验证码' }}
+              </el-button>
+            </div>
+          </div>
+          <el-button type="info" plain size="large" class="login-btn" @click="handlePhoneLogin">手机号登录</el-button>
         </div>
       </div>
 
@@ -242,44 +365,147 @@ async function devLoginAs(role: 'admin' | 'teacher') {
 
 <style scoped lang="scss">
 .login-page {
-  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: linear-gradient(135deg, #fef5e7 0%, #fdf2e9 50%, #fef5e7 100%);
 }
+
 .login-card {
-  width: 440px; max-height: 90vh; overflow-y: auto; background: #fff; border-radius: $border-radius-lg;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.1); padding: 40px 36px;
+  width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: $border-radius-lg;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+  padding: 40px 36px;
 }
+
 .login-header {
-  text-align: center; margin-bottom: 28px;
-  h1 { font-family: $font-display; font-size: 26px; color: $color-primary; margin-bottom: 4px; }
-  p { color: $text-color-secondary; font-size: $font-size-sm; }
-}
-.login-tabs {
-  display: flex; border-bottom: 2px solid $border-color; margin-bottom: 20px;
-  span { flex: 1; text-align: center; padding: 10px 0; cursor: pointer; font-size: $font-size-base; color: $text-color-secondary; transition: color 0.2s; border-bottom: 2px solid transparent; margin-bottom: -2px;
-    &:hover { color: $color-primary; }
-    &.active { color: $color-primary; border-bottom-color: $color-primary; font-weight: 600; }
+  text-align: center;
+  margin-bottom: 28px;
+
+  h1 {
+    font-family: $font-display;
+    font-size: 26px;
+    color: $color-primary;
+    margin-bottom: 4px;
+  }
+
+  p {
+    color: $text-color-secondary;
+    font-size: $font-size-sm;
   }
 }
+
 .login-form {
-  .form-item { margin-bottom: $spacing-md;
-    label { display: block; font-size: $font-size-sm; color: $text-color; margin-bottom: 4px; font-weight: 500; }
+  .form-item {
+    margin-bottom: $spacing-md;
+
+    label {
+      display: block;
+      font-size: $font-size-sm;
+      color: $text-color;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
   }
-  .sms-row { display: flex; gap: $spacing-sm;
-    .el-input { flex: 1; }
-    .el-button { min-width: 110px; white-space: nowrap; }
+
+  .sms-row {
+    display: flex;
+    gap: $spacing-sm;
+
+    .el-input {
+      flex: 1;
+    }
+
+    .el-button {
+      min-width: 110px;
+      white-space: nowrap;
+    }
   }
-  .login-btn { width: 100%; height: 44px; font-size: $font-size-lg; }
-  .login-tip { text-align: center; font-size: $font-size-xs; color: $text-color-placeholder; margin-top: $spacing-sm; }
+
+  .login-btn {
+    width: 100%;
+    height: 44px;
+    font-size: $font-size-lg;
+  }
 }
-.register-section { margin-top: $spacing-lg;
-  .divider { text-align: center; margin-bottom: $spacing-md; position: relative;
-    span { background: #fff; padding: 0 12px; font-size: $font-size-xs; color: $text-color-placeholder; position: relative; z-index: 1; }
-    &::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; border-top: 1px solid $border-color; }
+
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.text-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: $color-primary;
+  font-size: $font-size-xs;
+  cursor: pointer;
+}
+
+.helper-text {
+  margin: 0 0 $spacing-md;
+  font-size: $font-size-xs;
+  color: $text-color-secondary;
+  line-height: 1.6;
+}
+
+.register-section,
+.reset-section,
+.phone-section {
+  margin-top: $spacing-lg;
+
+  .divider {
+    text-align: center;
+    margin-bottom: $spacing-md;
+    position: relative;
+
+    span {
+      background: #fff;
+      padding: 0 12px;
+      font-size: $font-size-xs;
+      color: $text-color-placeholder;
+      position: relative;
+      z-index: 1;
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      border-top: 1px solid $border-color;
+    }
   }
 }
-.dev-section { margin-top: $spacing-lg; display: flex; gap: $spacing-sm; }
-.dev-login { flex: 1; padding: $spacing-sm; text-align: center; font-size: $font-size-xs; color: $text-color-placeholder; cursor: pointer; border: 1px dashed $border-color; border-radius: $border-radius;
-  &:hover { color: $color-primary; border-color: $color-primary-light; }
+
+.dev-section {
+  margin-top: $spacing-lg;
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.dev-login {
+  flex: 1;
+  padding: $spacing-sm;
+  text-align: center;
+  font-size: $font-size-xs;
+  color: $text-color-placeholder;
+  cursor: pointer;
+  border: 1px dashed $border-color;
+  border-radius: $border-radius;
+
+  &:hover {
+    color: $color-primary;
+    border-color: $color-primary-light;
+  }
 }
 </style>

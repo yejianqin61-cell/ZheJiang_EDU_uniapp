@@ -20,6 +20,7 @@ describe('AuthService', () => {
   let emailService: any;
 
   beforeEach(async () => {
+    delete process.env.ADMIN_EMAILS;
     userRepo = {
       findOne: jest.fn(),
       save: jest.fn(),
@@ -170,10 +171,64 @@ describe('AuthService', () => {
       });
     });
 
+    it('should reject registration when email already exists', async () => {
+      emailService.verifyCode.mockReturnValue(true);
+      userRepo.findOne.mockResolvedValue({ id: 'u-email-dup', email: 'teacher@example.com', role: 'teacher' });
+
+      await expect(service.registerByEmail('teacher@example.com', '123456', 'secret123')).rejects.toThrow(BadRequestException);
+      expect(userRepo.update).not.toHaveBeenCalled();
+    });
+
+    it('should assign admin role when registering an admin email', async () => {
+      process.env.ADMIN_EMAILS = 'admin@example.com';
+      emailService.verifyCode.mockReturnValue(true);
+      userRepo.findOne.mockResolvedValue(null);
+      userRepo.save.mockResolvedValue({ id: 'u-email-admin', email: 'admin@example.com', role: 'admin' });
+
+      const result = await service.registerByEmail('Admin@Example.com', '123456', 'secret123');
+
+      expect(userRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+        email: 'admin@example.com',
+        role: 'admin',
+      }));
+      expect(result.role).toBe('admin');
+    });
+
     it('should reject registration when email code is invalid', async () => {
       emailService.verifyCode.mockReturnValue(false);
 
       await expect(service.registerByEmail('teacher@example.com', 'bad', 'secret123')).rejects.toThrow(BadRequestException);
+    });
+
+    it('should reset password for an existing account', async () => {
+      emailService.verifyCode.mockReturnValue(true);
+      userRepo.findOne.mockResolvedValue({ id: 'u-email-reset', email: 'teacher@example.com', role: 'teacher', passwordHash: 'old' });
+
+      const result = await service.resetPasswordByEmail('teacher@example.com', '123456', 'secret123');
+
+      expect(userRepo.update).toHaveBeenCalledWith(
+        'u-email-reset',
+        expect.objectContaining({ emailVerified: true, role: 'teacher' }),
+      );
+      expect(result).toEqual({
+        accessToken: 'jwt.token.here',
+        role: 'teacher',
+        email: 'teacher@example.com',
+      });
+    });
+
+    it('should upgrade role on password reset when email is in admin list', async () => {
+      process.env.ADMIN_EMAILS = 'admin@example.com';
+      emailService.verifyCode.mockReturnValue(true);
+      userRepo.findOne.mockResolvedValue({ id: 'u-email-reset-admin', email: 'admin@example.com', role: 'teacher', passwordHash: 'old' });
+
+      const result = await service.resetPasswordByEmail('admin@example.com', '123456', 'secret123');
+
+      expect(userRepo.update).toHaveBeenCalledWith(
+        'u-email-reset-admin',
+        expect.objectContaining({ role: 'admin' }),
+      );
+      expect(result.role).toBe('admin');
     });
 
     it('should login by password for a registered user', async () => {
@@ -188,6 +243,18 @@ describe('AuthService', () => {
         role: 'teacher',
         email: 'teacher@example.com',
       });
+    });
+
+    it('should upgrade role on password login when email is in admin list', async () => {
+      process.env.ADMIN_EMAILS = 'admin@example.com';
+      const bcrypt = await import('bcrypt');
+      const passwordHash = await bcrypt.hash('secret123', 1);
+      userRepo.findOne.mockResolvedValue({ id: 'u-email-admin-login', email: 'admin@example.com', role: 'teacher', passwordHash });
+
+      const result = await service.loginByPassword('admin@example.com', 'secret123');
+
+      expect(userRepo.update).toHaveBeenCalledWith('u-email-admin-login', { role: 'admin' });
+      expect(result.role).toBe('admin');
     });
 
     it('should reject login when password is wrong', async () => {
