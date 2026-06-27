@@ -95,15 +95,11 @@ async function handleAlipay() {
   paying.value = true
 
   try {
-    let payForm = order.currentOrder.payment?.payForm ?? null
-
-    if (!payForm) {
-      const payment = await payAlipay(order.currentOrder.orderId)
-      payForm = payment.payForm
-      order.currentOrder.payment = {
-        provider: 'alipay',
-        payForm,
-      }
+    const payment = await payAlipay(order.currentOrder.orderId)
+    const payForm = payment.payForm
+    order.currentOrder.payment = {
+      provider: 'alipay',
+      payForm,
     }
 
     if (payForm) {

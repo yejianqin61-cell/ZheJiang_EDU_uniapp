@@ -55,7 +55,7 @@ export class AlipayProvider implements PaymentProvider {
       method: 'alipay.trade.page.pay',
       charset: 'utf-8',
       sign_type: 'RSA2',
-      timestamp: new Date().toISOString().replace(/\.\d{3}Z$/, '+0800').replace(/T/, ' '),
+      timestamp: this.formatTimestamp(new Date()),
       version: '1.0',
       notify_url: notifyUrl,
       return_url: returnUrl,
@@ -108,5 +108,10 @@ export class AlipayProvider implements PaymentProvider {
 
   private escapeHtml(s: string): string {
     return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  private formatTimestamp(date: Date): string {
+    const pad = (value: number) => String(value).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
   }
 }

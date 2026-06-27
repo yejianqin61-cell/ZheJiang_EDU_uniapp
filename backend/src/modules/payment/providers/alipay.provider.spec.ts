@@ -50,6 +50,17 @@ describe('AlipayProvider', () => {
     expect(result.amount).toBe(4000)
   })
 
+  it('createPayment — timestamp uses yyyy-MM-dd HH:mm:ss format', async () => {
+    const result = await provider.createPayment({
+      outTradeNo: mockOrder.outTradeNo,
+      amount: mockOrder.amount,
+      subject: mockOrder.paperTitle,
+    })
+
+    const matched = result.payForm?.match(/name="timestamp" value="([^"]+)"/)
+    expect(matched?.[1]).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
+  })
+
   it('verifyCallback — 无效签名应抛出异常', async () => {
     const badData = { out_trade_no: 'X', trade_no: 'Y', total_amount: '40', trade_status: 'TRADE_SUCCESS', sign: 'bad', sign_type: 'RSA2' }
     await expect(provider.verifyCallback(badData)).rejects.toThrow()
